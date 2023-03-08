@@ -16,3 +16,5 @@ jobs:
       with:
         action: test
         directory: build
+        meson-version: 0.63.2
+        ninja-version: 1.11.1
