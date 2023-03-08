@@ -1,0 +1,5 @@
+subdir('stats')
+subdir('rules')
+subdir('objs')
+subdir('judge')
+subdir('time')
