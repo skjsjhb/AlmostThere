@@ -6,12 +6,7 @@
 
 unsigned int JudgeSummary::getTotalScore(const JudgeValue &va)
 {
-    return (notesCount[PF] * va.perfect +
-            notesCount[AT] * va.almost +
-            notesCount[AC] * va.accepted +
-            notesCount[MD] * va.medium +
-            notesCount[TC] * va.touched +
-            notesCount[LT] * va.lost);
+    return (notesCount[PF] * va.perfect + notesCount[AT] * va.almost + notesCount[AC] * va.accepted + notesCount[MD] * va.medium + notesCount[TC] * va.touched + notesCount[LT] * va.lost);
 }
 
 unsigned int JudgeSummary::getFullScore(const JudgeValue &va)

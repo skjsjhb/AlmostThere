@@ -20,7 +20,9 @@ int main()
     WANT((int)(t.getTime() / 5) == (int)((t1 - t0) / 5));
 
     t.pause();
+
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    WANT((int)(t.getTime() / 5) == (int)((t1 - t0) / 5)); // Should still be the same
     t.unpause();
 
     auto t2 = implGetTime();

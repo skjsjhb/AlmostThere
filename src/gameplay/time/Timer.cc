@@ -10,7 +10,7 @@ double Timer::getTime()
 {
     if (paused)
     {
-        return timeBeforePause;
+        return timeBeforePause - baseTimeOffset;
     }
     else
     {

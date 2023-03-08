@@ -44,6 +44,31 @@ int main()
         WANT((int)(ray[i] * 10000) == (int)(e3[i] * 10000));
     }
 
+    // Let's also check the view matrix and projection matrix
+    // Since if all above have passed the inv matrix should be OK
+    // So we just check it with a simple point and verify that they are inversed
+    mat4 p, v, pd, vd, ivp, ivv;
+    wd.camera.getProjectionMatrix(p);
+    wd.camera.getProjectionMatrixInv(ivp);
+    wd.camera.getViewMatrix(v);
+    wd.camera.getViewMatrixInv(ivv);
+    vec4 o = {0, 0, -1, 0};
+    vec4 t;
+    glm_mat4_mulv(v, o, t);
+    glm_mat4_mulv(p, t, o);
+    glm_normalize(o);
+    WANT(o[0] == 0 && o[1] == 0);
+
+    glm_mat4_inv(p, pd);
+    glm_mat4_inv(v, vd);
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            WANT(pd[i][j] == ivp[i][j] && vd[i][j] == ivv[i][j]);
+        }
+    }
+
     // Ура!
     free(ray);
     TEND;
