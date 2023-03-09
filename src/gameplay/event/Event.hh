@@ -5,16 +5,9 @@
 
 enum EventType
 {
-    // Passive
     KEY,   // KBM button down or up
     POS,   // Mouse position change
     TOUCH, // Touch input status change
-
-    // Initiative
-    LOAD,    // An object is going to be loaded
-    UNLOAD,  // An object is going to be unloaded
-    ANIMATE, // Attach an animation
-
 };
 
 struct Event
