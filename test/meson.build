@@ -1,4 +1,4 @@
-progs = ['Mouse Ray Casting', 'Score Calc', 'Timing', 'Check Util']
+progs = ['Mouse Ray Casting', 'Score Calc', 'Timing', 'Check Util', 'Animation']
 
 foreach p : progs
   canonical = p.replace(' ', '')

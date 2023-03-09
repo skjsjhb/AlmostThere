@@ -1,5 +1,7 @@
-subdir('stats')
+subdir('core')
 subdir('rules')
 subdir('objs')
 subdir('judge')
 subdir('time')
+subdir('event')
+subdir('anim')

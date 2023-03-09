@@ -1,5 +1,5 @@
-#ifndef GAMEPLAY_STATS_HEALTHDATA
-#define GAMEPLAY_STATS_HEALTHDATA
+#ifndef GAMEPLAY_CORE_HEALTHDATA
+#define GAMEPLAY_CORE_HEALTHDATA
 
 struct HealthData
 {
@@ -10,4 +10,4 @@ struct HealthData
     unsigned int shieldRechargeRate, regenerationRate, magicReplenishRate;
 };
 
-#endif /* GAMEPLAY_STATS_HEALTHDATA */
+#endif /* GAMEPLAY_CORE_HEALTHDATA */

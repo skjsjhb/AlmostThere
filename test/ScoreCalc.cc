@@ -1,6 +1,6 @@
 #include "TestTools.hh"
 
-#include "gameplay/stats/Score.hh"
+#include "gameplay/core/Score.hh"
 #include <cmath>
 
 int main()

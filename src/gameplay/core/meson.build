@@ -1,0 +1,1 @@
+src += files(['Score.cc', 'Game.cc'])

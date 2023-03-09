@@ -1,5 +1,5 @@
-#ifndef GAMEPLAY_STATS_SCORE
-#define GAMEPLAY_STATS_SCORE
+#ifndef GAMEPLAY_CORE_SCORE
+#define GAMEPLAY_CORE_SCORE
 
 #include "gameplay/rules/GameRules.hh"
 #include "gameplay/objs/Note.hh"
@@ -47,4 +47,4 @@ public:
     void addJudgeGrade(JudgeGrade grade, NoteType);
 };
 
-#endif /* GAMEPLAY_STATS_SCORE */
+#endif /* GAMEPLAY_CORE_SCORE */
