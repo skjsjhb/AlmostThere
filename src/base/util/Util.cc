@@ -14,5 +14,5 @@ void vecmov(const float *src, float *dest, unsigned int deg)
 
 void matmov(const void *src, void *dest, unsigned int a)
 {
-    memcpy(dest, src, a * a * sizeof(float));
+    memcpy(dest, src, static_cast<long>(a) * a * sizeof(float));
 }

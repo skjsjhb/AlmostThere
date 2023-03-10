@@ -26,7 +26,7 @@ ScoreManager::ScoreManager(const GameRules &rulesInit)
 
 double ScoreManager::getAccuracy()
 {
-    auto ra = sqrt(((double)getCurrentScore() * 100) / getFullScore()) * 11;
+    auto ra = sqrt((static_cast<double>(getCurrentScore()) * 100) / getFullScore()) * 11;
     return ra > 100 ? 100 : ra;
 }
 

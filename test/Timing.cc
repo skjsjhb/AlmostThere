@@ -17,18 +17,18 @@ int main()
     auto t0 = implGetTime();
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     auto t1 = implGetTime();
-    WANT((int)(t.getTime() / 5) == (int)((t1 - t0) / 5));
+    WANT(static_cast<int>(t.getTime() / 5) == static_cast<int>((t1 - t0) / 5));
 
     t.pause();
 
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    WANT((int)(t.getTime() / 5) == (int)((t1 - t0) / 5)); // Should still be the same
+    WANT(static_cast<int>(t.getTime() / 5) == static_cast<int>((t1 - t0) / 5)); // Should still be the same
     t.unpause();
 
     auto t2 = implGetTime();
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     auto t3 = implGetTime();
-    WANT((int)(t.getTime() / 5) == (int)((t3 - t2 + t1 - t0) / 5));
+    WANT(static_cast<int>(t.getTime() / 5) == static_cast<int>((t3 - t2 + t1 - t0) / 5));
 
     TEND;
 }

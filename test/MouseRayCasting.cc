@@ -15,7 +15,7 @@ int main()
     // When mouse is at the center, ray should be the same as camera direction
     // In this case -z
     vec2 coord = {50, 50};
-    float *ray = (float *)malloc(3 * sizeof(float));
+    float *ray = static_cast<float *>(malloc(3 * sizeof(float)));
     wd.castMouseRay(coord, ray);
     for (int i = 0; i < 3; i++)
     {
@@ -30,7 +30,7 @@ int main()
     e2[2] = -e2[0];
     for (int i = 0; i < 3; i++)
     {
-        WANT((int)(ray[i] * 10000) == (int)(e2[i] * 10000));
+        WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e2[i] * 10000));
     }
 
     // When mouse is at the top left corner, ray should also have a component in +y direction
@@ -41,7 +41,7 @@ int main()
     e3[0] = e3[1] = -e3[2];
     for (int i = 0; i < 3; i++)
     {
-        WANT((int)(ray[i] * 10000) == (int)(e3[i] * 10000));
+        WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e3[i] * 10000));
     }
 
     // Let's also check the view matrix and projection matrix
