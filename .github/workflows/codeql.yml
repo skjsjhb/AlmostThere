@@ -71,7 +71,7 @@ jobs:
       uses: actions/setup-python@v4.5.0
       
     - name: Setup Build
-      run: pip install meson
+      run: pip install meson && apt install ninja-build
       
     - name: build
       run: |
