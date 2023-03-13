@@ -7,7 +7,11 @@ backend = get_option('backlib')
 incdir = include_directories(['inc', 'src'])
 subdir('src')
 subdir('libs')
-deps = [dependency('glfw3')]
+deps = []
+
+if backend == 'glfw'
+  deps += dependency('glfw3')
+endif
 static_library('atgame', src, include_directories : incdir, dependencies: deps)
 shared_library('atgame', src, include_directories : incdir, dependencies: deps)
 subdir('test')
