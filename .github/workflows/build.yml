@@ -2,19 +2,20 @@ name: Meson Build And Test
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-python@v1
-    - uses: BSFishy/meson-build@v1.0.3
-      with:
-        action: test
-        directory: build
-        meson-version: 0.63.2
-        ninja-version: 1.11.1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v1
+      - uses: BSFishy/meson-build@v1.0.3
+        with:
+          action: test
+          directory: build
+          setup-options: -Dbacklib=headless
+          meson-version: 0.63.2
+          ninja-version: 1.11.1

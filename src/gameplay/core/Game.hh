@@ -3,6 +3,9 @@
 
 #include "PlayerStat.hh"
 #include "gameplay/time/Timer.hh"
+#include "gameplay/objs/Note.hh"
+#include "gameplay/objs/World.hh"
+#include "gameplay/event/Schedule.hh"
 #include <vector>
 
 enum GameStatus
@@ -22,10 +25,15 @@ public:
     void runMainLoop(); // Start the whole main loop, return when game completed
 
 protected:
-    Timer mapTimer;
+    Timer mapTimer, absTimer; // One is for map playing, one is for global animations
     GameStatus status = RUNNING;
+    World world;            // Virtual world definition
     unsigned int cPlayerID; // Current player
     std::vector<PlayerStat> playerStats;
+    Schedule mapSchedule, absSchedule;
+    std::list<AbstractNote> activeNotes;
+    // std::list<UIComponent> uiComponents;
+    // std::list<Slot> slots; std::list<Panel> panels;
 };
 
 #endif /* GAMEPLAY_CORE_GAME */

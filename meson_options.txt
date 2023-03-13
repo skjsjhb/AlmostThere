@@ -1,0 +1,1 @@
+option('backlib', type: 'combo', choices : ['glfw', 'headless'], description : 'Specify backend library to use')

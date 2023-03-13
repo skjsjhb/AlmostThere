@@ -2,10 +2,21 @@
 #define GAMEPLAY_CORE_SCORE
 
 #include "gameplay/rules/GameRules.hh"
-#include "gameplay/objs/Note.hh"
-
 #include <map>
 #include <string>
+
+enum NoteType
+{
+    TAPU,  // Tapu
+    PRSU,  // Puresu
+    SZKU,  // Shizuku
+    AKU,   // Aku
+    HOSHI, // Hoshi
+    HASHI, // Hashi
+    SGKI,  // Sogeki
+    SUI,   // Sui
+    TSAR   // 4D Tesseract
+};
 
 enum JudgeGrade
 {

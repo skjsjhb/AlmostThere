@@ -1,20 +1,17 @@
 #ifndef GAMEPLAY_OBJS_TICKOBJECT
 #define GAMEPLAY_OBJS_TICKOBJECT
 
-enum TickStatus
-{
-    POSTPONE,   // Request a check later, use getNextTickTime() to get details
-    LOAD_NOW,   // Should be loaded now
-    TICK,       // Tick again on the next loop
-    UNLOAD_NOW, // Can be safely unloaded now
-    DISCARD,    // Discard this object
-};
+#include "gameplay/anim/Animation.hh"
+#include <list>
 
 class TickObject
 {
+protected:
+    std::list<Animation> animations;
+
 public:
-    double getNextTickTime();
-    TickStatus tick(double absTime);
+    virtual void tick(double absTime);
+    virtual ~TickObject();
 };
 
 #endif /* GAMEPLAY_OBJS_TICKOBJECT */
