@@ -1,6 +1,6 @@
 #include "engine/virtual/Graphics.hh"
 
-void vtDraw(DrawContext ctx) {}
+void vtDraw(DrawContext &ctx) {}
 
 int vtGetGraphicsError()
 {
