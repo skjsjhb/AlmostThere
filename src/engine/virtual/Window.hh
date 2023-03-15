@@ -7,4 +7,8 @@ extern void *vtGetWindow();
 
 extern void vtStopWindow();
 
+extern void vtWindowLoop();
+
+extern void vtCloseWindow();
+
 #endif /* ENGINE_VIRTUAL_WINDOW */

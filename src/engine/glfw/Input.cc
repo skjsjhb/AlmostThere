@@ -14,7 +14,7 @@ void vtSetActiveInputSet(InputSet *input)
     _activeInputSet = input;
 }
 
-void _internalKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+static void _internalKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (_activeInputSet != NULL)
     {

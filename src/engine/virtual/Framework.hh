@@ -1,0 +1,6 @@
+#ifndef ENGINE_VIRTUAL_FRAMEWORK
+#define ENGINE_VIRTUAL_FRAMEWORK
+
+extern double vtGetTime();
+
+#endif /* ENGINE_VIRTUAL_FRAMEWORK */

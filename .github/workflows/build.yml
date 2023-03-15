@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v1
+      - name: Link Assets
+        run: |
+          mkdir build && cd build && ln -s ../assets ./assets
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test

@@ -4,9 +4,9 @@
 
 void Game::runMainLoop()
 {
+    DrawContext globalCtx;
     while (status != DONE)
     {
-
         auto mapTimeNow = mapTimer.getTime();
         mapSchedule.notify(mapTimeNow);
         absSchedule.notify(absTimer.getTime());
@@ -22,7 +22,7 @@ void Game::runMainLoop()
         // Perform judges
         for (auto &n : activeNotes)
         {
-            n.draw();
+            n.draw(globalCtx);
         }
         // Draw notes
     }

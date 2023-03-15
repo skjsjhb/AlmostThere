@@ -5,11 +5,11 @@
 #define PERSPECTIVE_NEAR 0.1f
 #define PERSPECTIVE_FAR 1000.0f
 
-void Camera::setState(const vec3 pos_, const vec3 direction_, const vec3 up_, double fov_, double aspect_)
+void Camera::setState(vec3 pos_, vec3 direction_, vec3 up_, double fov_, double aspect_)
 {
-    vecmov(pos_, pos, 3);
-    vecmov(direction_, direction, 3);
-    vecmov(up_, up, 3);
+    glm_vec3_copy(pos_, pos);
+    glm_vec3_copy(direction_, direction);
+    glm_vec3_copy(up_, up);
     fov = fov_;
     aspect = aspect_;
 
@@ -23,22 +23,22 @@ void Camera::setState(const vec3 pos_, const vec3 direction_, const vec3 up_, do
 
 void Camera::getViewMatrix(mat4 viewIn)
 {
-    matmov(_cViewMatrix, viewIn, 4);
+    glm_mat4_copy(_cViewMatrix, viewIn);
 }
 
 void Camera::getViewMatrixInv(mat4 viewIn)
 {
-    matmov(_cViewMatrixInv, viewIn, 4);
+    glm_mat4_copy(_cViewMatrixInv, viewIn);
 }
 
 void Camera::getProjectionMatrix(mat4 projIn)
 {
-    matmov(_cProjectionMatrix, projIn, 4);
+    glm_mat4_copy(_cProjectionMatrix, projIn);
 }
 
 void Camera::getProjectionMatrixInv(mat4 projIn)
 {
-    matmov(_cProjectionMatrixInv, projIn, 4);
+    glm_mat4_copy(_cProjectionMatrixInv, projIn);
 }
 
 void World::castMouseRay(const vec2 coord, vec3 rayIn)
@@ -60,6 +60,6 @@ void World::castMouseRay(const vec2 coord, vec3 rayIn)
 
     vec4 fRay;
     glm_mat4_mulv(invView, eyeRay, fRay);
-    vecmov(fRay, rayIn, 3);
+    glm_vec3_copy(fRay, rayIn);
     glm_normalize(rayIn);
 }

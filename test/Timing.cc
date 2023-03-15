@@ -4,31 +4,35 @@
 #include <chrono>
 #include <thread>
 
+static int virtualTime = 0;
+
 double implGetTime()
 {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    return virtualTime;
+}
+
+void timeChange()
+{
+    virtualTime += rand() % 0xfffff;
 }
 
 int main()
 {
-    // Due to hardware limitations the time is not quite accurate
-    // So we divided them by 5
     Timer t(implGetTime);
     auto t0 = implGetTime();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    timeChange();
     auto t1 = implGetTime();
-    WANT(static_cast<int>(t.getTime() / 5) == static_cast<int>((t1 - t0) / 5));
+    WANT(t.getTime() == t1 - t0);
 
     t.pause();
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-    WANT(static_cast<int>(t.getTime() / 5) == static_cast<int>((t1 - t0) / 5)); // Should still be the same
+    timeChange();
+    WANT(t.getTime() == t1 - t0); // Should still be the same
     t.unpause();
 
     auto t2 = implGetTime();
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    timeChange();
     auto t3 = implGetTime();
-    WANT(static_cast<int>(t.getTime() / 5) == static_cast<int>((t3 - t2 + t1 - t0) / 5));
+    WANT(t.getTime() == t3 - t2 + t1 - t0);
 
     TEND;
 }

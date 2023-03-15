@@ -10,8 +10,8 @@ protected:
     std::list<Animation> animations;
 
 public:
-    virtual void tick(double absTime);
-    virtual ~TickObject();
+    virtual void tick(double absTime){};
+    virtual ~TickObject() = default;
 };
 
 #endif /* GAMEPLAY_OBJS_TICKOBJECT */

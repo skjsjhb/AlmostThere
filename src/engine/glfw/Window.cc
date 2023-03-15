@@ -27,3 +27,14 @@ void vtStopWindow()
     glfwDestroyWindow(_internalWindow);
     glfwTerminate();
 }
+
+void vtWindowLoop()
+{
+    glfwSwapBuffers(_internalWindow);
+    glfwPollEvents();
+}
+
+void vtCloseWindow()
+{
+    glfwSetWindowShouldClose(_internalWindow, true);
+}

@@ -1,4 +1,4 @@
-project('Almost There Core Game Components', ['cpp', 'c'], version : '1.0.0', license : 'GPL-3.0-or-later')
+project('Almost There Core Game Components', 'cpp', 'c', version : '1.0.0', license : 'GPL-3.0-or-later')
 
 src = []
 backend = get_option('backlib')
@@ -12,6 +12,6 @@ deps = []
 if backend == 'glfw'
   deps += dependency('glfw3')
 endif
-static_library('atgame', src, include_directories : incdir, dependencies: deps)
-shared_library('atgame', src, include_directories : incdir, dependencies: deps)
+static_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
+shared_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
 subdir('test')

@@ -6,6 +6,7 @@
 #include "gameplay/objs/Note.hh"
 #include "gameplay/objs/World.hh"
 #include "gameplay/event/Schedule.hh"
+#include "engine/virtual/Graphics.hh"
 #include <vector>
 
 enum GameStatus

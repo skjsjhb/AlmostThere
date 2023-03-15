@@ -5,6 +5,7 @@
 #include "TickObject.hh"
 #include "Slot.hh"
 #include "gameplay/core/Score.hh"
+#include "engine/virtual/Graphics.hh"
 
 enum NoteElementType
 {
@@ -21,17 +22,18 @@ enum NoteElementType
 class AbstractNote : public TickObject
 {
 public:
-    virtual void performJudge(double absTime, ScoreManager &sm); // Perform judgement
-    virtual void draw();                                         // Draw using current status
+    virtual void performJudge(double absTime, ScoreManager &sm){}; // Perform judgement
+    virtual void draw(DrawContext &ctx){};                         // Draw using current status
 
-protected:
     // The slot is used to determin the position of the note
-    Slot targetSlot;
+    Slot *targetSlot;
     // Fake notes are not judged but will be ticked
     bool isFake;
     // Auto: System will calculate the position based on fall speed and time
     // Manual: Block auto control and control it by animation only
     bool autoControl;
+    // Since the time it's loaded it will remain visible
+    bool isVisible;
     NoteElementType element;
     // When will the note hit the slot
     // Used to control the position
@@ -44,9 +46,9 @@ protected:
 class Tapu : public AbstractNote
 {
 public:
-    void performJudge(double absTime, ScoreManager &sm);
-    void tick(double absTime);
-    void draw();
+    void performJudge(double absTime, ScoreManager &sm) override;
+    void tick(double absTime) override;
+    void draw(DrawContext &ctx) override;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTE */
