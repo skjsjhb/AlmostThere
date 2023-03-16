@@ -11,7 +11,8 @@ int main()
     // Create a note. Verified in NotePos.cc
     Tapu t;
     Slot s;
-    DrawContext ctx;
+
+    bool running = true;
     t.hitTime = 2;
     t.isFake = false;
     t.isVisible = true;
@@ -22,12 +23,22 @@ int main()
     s.normal[2] = 1;
     s.up[1] = 1;
     s.up[0] = s.up[2] = 0;
-    t.tick(1.8);
-    t.draw(ctx);
+    DrawContext ctx;
     vec3 camPos = {0, 0, 2}, camDir = {0, 0, -1}, camUp = {0, 1, 0};
     ctx.cam.setState(camPos, camDir, camUp, glm_rad(75), 960.0 / 540);
-    vtDraw(ctx);
-    vtWindowLoop();
+    while (running)
+    {
+        if (vtGetTime() > 0.5)
+        {
+            break;
+        }
+        ctx.polygons.clear();
+        t.tick(5 * vtGetTime()); // Test it faster
+        t.draw(ctx);
+        vtDraw(ctx);
+        vtWindowLoop();
+    }
+
     // We cannot verify the output, so let's just verify that there are no errors
     WANT(vtGetGraphicsError() == 0);
     vtStopWindow();

@@ -76,6 +76,8 @@ static GLuint loadTexture(const std::string &name)
 
 void vtDraw(DrawContext &ctx)
 {
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
     mat4 proj, view;
     ctx.cam.getProjectionMatrix(proj);
     ctx.cam.getViewMatrix(view);

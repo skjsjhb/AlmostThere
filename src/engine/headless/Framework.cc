@@ -2,5 +2,5 @@
 
 double vtGetTime()
 {
-    return 0;
+    return 99;
 }
