@@ -17,7 +17,7 @@ int main()
     Animation a;
     double x;
     a.valuePtr = &x;
-    a.control = true;
+    a.control = ASSIGN;
     a.startValue = 0;
     a.endValue = 1;
     a.startTime = 0;
@@ -33,9 +33,9 @@ int main()
     b.valuePtr = &y;
     c.valuePtr = &y;
     d.valuePtr = &y;
-    b.control = false;
-    c.control = false;
-    d.control = false;
+    b.control = ERASE;
+    c.control = MERGE;
+    d.control = ERASE;
     b.startTime = 0;
     b.endTime = 100;
     c.startTime = 50;
@@ -61,6 +61,9 @@ int main()
     c.tick(100);
     d.tick(100);
     WANT(y == -2);
+
+    c.tick(150);
+    WANT(y == -12);
 
     TEND;
 }

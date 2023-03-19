@@ -3,6 +3,13 @@
 
 #include <functional>
 
+enum ControlType
+{
+    ASSIGN, // Re-assign value
+    ERASE,  // Erase last value before add
+    MERGE,  // Add value only, assume that the value will be corrected each time
+};
+
 class Animation
 {
 protected:
@@ -10,7 +17,7 @@ protected:
 
 public:
     // Controlled values are re-assigned. Non-controlled values will respect external changes.
-    bool control;
+    ControlType control;
     double startTime, endTime;
     double startValue, endValue;
     double *valuePtr;

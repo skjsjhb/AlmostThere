@@ -2,12 +2,12 @@
 
 void Animation::tick(double time)
 {
-    if (!control)
+    if (control == ERASE)
     {
         *valuePtr -= _internalValue;
     }
     _internalValue = timeCurve((time - startTime) / (endTime - startTime)) * (endValue - startValue) + startValue;
-    if (control)
+    if (control == ASSIGN)
     {
         *valuePtr = _internalValue;
     }
