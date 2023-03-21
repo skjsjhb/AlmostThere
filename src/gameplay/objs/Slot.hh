@@ -2,6 +2,7 @@
 #define GAMEPLAY_OBJS_SLOT
 
 #include "TickObject.hh"
+#include "engine/virtual/Graphics.hh"
 #include <cglm/cglm.h>
 
 enum SlotShape
@@ -22,14 +23,22 @@ public:
     vec3 normal; // Normal vector
     vec3 up;     // Up direction
     SlotShape shape;
+    void tick(double absTime) override;
+    void draw(DrawContext &ctx);
+
+    bool isVisible;
 };
 
 // Now panel can just be rect but that can be changed
 class Panel : public TickObject
 {
-protected:
+public:
+    void tick(double absTime) override;
+    void draw(DrawContext &ctx);
+
     vec3 basePoint;
     vec3 normal;
+    vec3 up;
 };
 
 #endif /* GAMEPLAY_OBJS_SLOT */

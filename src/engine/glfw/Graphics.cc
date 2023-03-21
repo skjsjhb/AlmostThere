@@ -1,4 +1,5 @@
 #include "engine/virtual/Graphics.hh"
+#include "engine/virtual/Framework.hh"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
@@ -61,10 +62,8 @@ static GLuint loadTexture(const std::string &name)
     auto pt = "assets/textures/" + name + ".png";
     stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(pt.c_str(), &width, &height, &nrChannels, 0);
-    float borderColor[] = {0, 0, 0, 0};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -77,7 +76,7 @@ static GLuint loadTexture(const std::string &name)
 void vtDraw(DrawContext &ctx)
 {
     glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     mat4 proj, view;
     ctx.cam.getProjectionMatrix(proj);
     ctx.cam.getViewMatrix(view);
@@ -120,9 +119,10 @@ void vtDraw(DrawContext &ctx)
             glUseProgram(sd);
             glUniformMatrix4fv(glGetUniformLocation(sd, "view"), 1, GL_FALSE, (float *)view);
             glUniformMatrix4fv(glGetUniformLocation(sd, "proj"), 1, GL_FALSE, (float *)proj);
+            glUniform1f(glGetUniformLocation(sd, "time"), vtGetTime());
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, tx);
-            glUniform1i(glGetUniformLocation(sd, "tex"), 0);
+            glUniform1i(glGetUniformLocation(sd, "baseTex"), 0);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
             glDeleteBuffers(1, &vbo);
             glDeleteBuffers(1, &ebo);
