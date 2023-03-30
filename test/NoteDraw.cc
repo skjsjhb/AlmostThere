@@ -35,6 +35,7 @@ int main()
     DrawContext ctx;
     vec3 camPos = {0, -1, 1}, camDir = {0, 1, -1}, camUp = {0, 1, 1};
     ctx.cam.setState(camPos, camDir, camUp, glm_rad(90), 960.0 / 540);
+    vtGraphicsInit();
     while (running)
     {
         auto time = 5 * vtGetTime();
@@ -53,6 +54,7 @@ int main()
         vtDraw(ctx);
         vtWindowLoop();
     }
+    vtGraphicsCleanUp();
 
     // We cannot verify the output, so let's just verify that there are no errors
     WANT(vtGetGraphicsError() == 0);

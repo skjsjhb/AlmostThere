@@ -6,3 +6,7 @@ int vtGetGraphicsError()
 {
     return 0;
 }
+
+void vtGraphicsInit() {}
+
+void vtGraphicsCleanUp() {}

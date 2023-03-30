@@ -26,6 +26,11 @@ struct DrawContext
     Camera cam;
     std::vector<PolygonShape> polygons;
 };
+
+extern void vtGraphicsInit();
+
+extern void vtGraphicsCleanUp();
+
 extern void vtDraw(DrawContext &ctx);
 
 extern int vtGetGraphicsError();

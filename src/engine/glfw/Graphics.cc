@@ -73,6 +73,26 @@ static GLuint loadTexture(const std::string &name)
     return tex;
 }
 
+static GLuint vbo, ebo, vao;
+
+void vtGraphicsInit()
+{
+    glGenBuffers(1, &vbo);
+    glGenBuffers(1, &ebo);
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+    glBindVertexArray(0);
+}
+
+void vtGraphicsCleanUp()
+{
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &ebo);
+    glDeleteVertexArrays(1, &vao);
+}
+
 void vtDraw(DrawContext &ctx)
 {
     glClearColor(0, 0, 0, 1);
@@ -103,13 +123,7 @@ void vtDraw(DrawContext &ctx)
             vertex[3] = vertex[8] = vertex[9] = vertex[19] = 0;
 
             unsigned int indicies[6] = {0, 1, 2, 2, 1, 3};
-            unsigned int vbo, vao, ebo;
-            glGenBuffers(1, &vbo);
-            glGenBuffers(1, &ebo);
-            glGenVertexArrays(1, &vao);
             glBindVertexArray(vao);
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
             glBufferData(GL_ARRAY_BUFFER, 20 * sizeof(float), vertex, GL_STREAM_DRAW);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indicies, GL_STREAM_DRAW);
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
@@ -124,9 +138,7 @@ void vtDraw(DrawContext &ctx)
             glBindTexture(GL_TEXTURE_2D, tx);
             glUniform1i(glGetUniformLocation(sd, "baseTex"), 0);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-            glDeleteBuffers(1, &vbo);
-            glDeleteBuffers(1, &ebo);
-            glDeleteVertexArrays(1, &vao);
+            glBindVertexArray(0);
             break;
         }
         default:
