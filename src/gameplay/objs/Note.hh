@@ -6,6 +6,7 @@
 #include "Slot.hh"
 #include "gameplay/core/Score.hh"
 #include "engine/virtual/Graphics.hh"
+#include "gameplay/input/InputSet.hh"
 
 enum NoteElementType
 {
@@ -18,13 +19,25 @@ enum NoteElementType
     NONE
 };
 
+enum JudgeStage
+{
+    BUSY,   // The area is not cleared, other inputs may be present (for previous notes)
+    CLEAR,  // Zone cleared, but not yet able to judge (turn to busy if input detected)
+    ACTIVE, // Now accepting input (any input detected will start the judge)
+    JUDGED, // Judge finished, either missed or completed
+};
+
 // Represents a loaded note
 class AbstractNote : public TickObject
 {
 public:
-    virtual void performJudge(double absTime, ScoreManager &sm){}; // Perform judgement
-    virtual void draw(DrawContext &ctx){};                         // Draw using current status
+    virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm){}; // Perform judgement
+    virtual void draw(DrawContext &ctx){};                                          // Draw using current status
 
+    // For PC
+    int keyCode;
+    // Judgement helper
+    JudgeStage jStage = BUSY;
     // The slot is used to determin the position of the note
     Slot *targetSlot;
     // Fake notes are not judged but will be ticked
@@ -46,7 +59,7 @@ public:
 class Tapu : public AbstractNote
 {
 public:
-    void performJudge(double absTime, ScoreManager &sm) override;
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void tick(double absTime) override;
     void draw(DrawContext &ctx) override;
 };

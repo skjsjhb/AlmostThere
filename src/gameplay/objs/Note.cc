@@ -6,15 +6,86 @@
 #define BASE_FALL_SPEED 2
 #define NOTE_SIZE 0.2
 
-void Tapu::performJudge(double absTime, ScoreManager &sm)
+void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
 {
+    if (isFake)
+    {
+        return;
+    }
+    switch (jStage)
+    {
+    case BUSY:
+        if (input.keyInfo[keyCode] == 0)
+        {
+            jStage = CLEAR;
+        }
+        if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && absTime > hitTime)
+        {
+            // Lost
+            sm.addJudgeGrade(LT, TAPU);
+            jStage = JUDGED;
+        }
+        break;
+    case CLEAR:
+        // Accepting judge
+        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
+        {
+            jStage = ACTIVE;
+        }
+        else
+        {
+            if (absTime > hitTime)
+            {
+                // Lost
+                sm.addJudgeGrade(LT, TAPU);
+                jStage = JUDGED;
+            }
+            else if (input.keyInfo[keyCode] == 1)
+            {
+                // Too early
+                jStage = BUSY;
+            }
+        }
+        break;
+    case ACTIVE:
+        if (input.keyInfo[keyCode] == 1)
+        {
+            // Let's do this
+            jStage = JUDGED;
+            if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
+            {
+                sm.addJudgeGrade(PF, TAPU);
+            }
+            else if (isOverlapped(hitTime, sm.rules.judgeTime.almost, absTime, 0))
+            {
+                sm.addJudgeGrade(AT, TAPU);
+            }
+            else if (isOverlapped(hitTime, sm.rules.judgeTime.good, absTime, 0))
+            {
+                sm.addJudgeGrade(AC, TAPU);
+            }
+            else
+            {
+                sm.addJudgeGrade(TC, TAPU);
+            }
+        }
+        else if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
+        {
+            jStage = CLEAR; // Ready to lost
+        }
+        break;
+    case JUDGED:
+    default:
+        // TODO: play animantion and post-process
+        isVisible = false;
+        return;
+    }
 }
 
 void Tapu::tick(double absTime)
 {
-    if (absTime > hitTime)
+    if (!isVisible)
     {
-        isVisible = false;
         return;
     }
     // Obtain fall speed from chart
@@ -55,6 +126,5 @@ void Tapu::draw(DrawContext &ctx)
     pg.points.push_back(std::to_array(lb));
     pg.points.push_back(std::to_array(rt));
     pg.points.push_back(std::to_array(rb));
-
     ctx.polygons.push_back(pg);
 }

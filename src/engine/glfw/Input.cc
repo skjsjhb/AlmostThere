@@ -18,8 +18,7 @@ static void _internalKeyCallback(GLFWwindow *window, int key, int scancode, int 
 {
     if (_activeInputSet != NULL)
     {
-        // Scancode might be better
-        _activeInputSet->keyInfo[scancode] = action == GLFW_PRESS ? 1 : 0;
+        _activeInputSet->keyInfo[key] = action == GLFW_PRESS ? 1 : 0;
     }
 }
 

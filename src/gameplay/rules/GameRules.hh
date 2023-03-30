@@ -7,6 +7,11 @@ struct JudgeValue
     double spaceNotesAmplifier;                                    // Space notes weigh more
 };
 
+struct JudgeTime
+{
+    double range, good, almost, perfect;
+};
+
 struct InputOptn
 {
     double rayCastingAngleThreshold; // Allow
@@ -16,6 +21,7 @@ struct InputOptn
 struct GameRules
 {
     JudgeValue judgeValue;
+    JudgeTime judgeTime;
 };
 
 #endif /* GAMEPLAY_RULES_GAMERULES */

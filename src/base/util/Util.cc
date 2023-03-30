@@ -4,5 +4,5 @@
 
 bool isOverlapped(double p1, double r1, double p2, double r2)
 {
-    return abs(p2 - p1) <= abs(r1) + abs(r2);
+    return std::abs(p2 - p1) <= std::abs(r1) + std::abs(r2);
 }

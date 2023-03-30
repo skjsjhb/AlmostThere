@@ -44,11 +44,12 @@ protected:
 
 class ScoreManager
 {
-    GameRules rules;
     unsigned int combo, maxCombo;
     JudgeSummary nFlatJudges, nSpaceJudges;
 
 public:
+    GameRules rules;
+
     ScoreManager(const GameRules &rulesInit);
 
     double getAccuracy();
