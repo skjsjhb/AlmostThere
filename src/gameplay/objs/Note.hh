@@ -4,20 +4,10 @@
 #include <cglm/cglm.h>
 #include "TickObject.hh"
 #include "Slot.hh"
-#include "gameplay/core/Score.hh"
+#include "NoteDef.hh"
+#include "gameplay/score/Score.hh"
 #include "engine/virtual/Graphics.hh"
 #include "gameplay/input/InputSet.hh"
-
-enum NoteElementType
-{
-    FIRE,
-    WIND,
-    AQUA,
-    SKY,
-    NIGHT,
-    GRASS,
-    NONE
-};
 
 enum JudgeStage
 {

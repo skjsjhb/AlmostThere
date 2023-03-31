@@ -1,3 +1,3 @@
 subdir('gameplay')
-subdir('base')
 subdir('engine')
+subdir('util')

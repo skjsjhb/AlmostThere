@@ -1,7 +1,7 @@
 #ifndef GAMEPLAY_CORE_PLAYERSTAT
 #define GAMEPLAY_CORE_PLAYERSTAT
 
-#include "Score.hh"
+#include "gameplay/score/Score.hh"
 
 #include <string>
 

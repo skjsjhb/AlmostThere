@@ -1,6 +1,6 @@
 #include "World.hh"
 
-#include "base/util/Util.hh"
+#include "util/Util.hh"
 
 #define PERSPECTIVE_NEAR 0.1f
 #define PERSPECTIVE_FAR 1000.0f

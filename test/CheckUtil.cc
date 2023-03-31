@@ -1,6 +1,6 @@
 #include "TestTools.hh"
 
-#include "base/util/Util.hh"
+#include "util/Util.hh"
 
 int main()
 {
