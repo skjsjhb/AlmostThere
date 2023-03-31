@@ -28,6 +28,8 @@ int main()
     t.performJudge(1, ips, sm);
     WANT(t.jStage == BUSY); // Unchanged to CLEAR
 
+    t.isFake = false;
+
     t.performJudge(4, ips, sm);
     t.performJudge(4, ips, sm);
     t.tick(4);

@@ -60,11 +60,12 @@ int main()
 
     vtGraphicsInit();
     inputs.setupInputListeners();
+    unsigned int i = 0;
     while (running)
     {
         inputs.pollInputEvents();
-        auto time = 0.5 * vtGetTime();
-        if (time > 3)
+        auto time = (++i) / 100;
+        if (time > 3) // 300 Ticks
         {
             break;
         }
