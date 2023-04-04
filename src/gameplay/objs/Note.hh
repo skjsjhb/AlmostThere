@@ -23,6 +23,7 @@ class AbstractNote : public TickObject
 public:
     virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm){}; // Perform judgement
     virtual void draw(DrawContext &ctx){};                                          // Draw using current status
+    void tick(double absTime) override;
 
     // For PC
     int keyCode;
@@ -50,7 +51,13 @@ class Tapu : public AbstractNote
 {
 public:
     void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
-    void tick(double absTime) override;
+    void draw(DrawContext &ctx) override;
+};
+
+class Shizuku : public AbstractNote
+{
+public:
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void draw(DrawContext &ctx) override;
 };
 

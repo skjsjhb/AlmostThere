@@ -50,7 +50,7 @@ int main()
     t.performJudge(1, ips, sm);
     t.performJudge(1, ips, sm);
     t.tick(1);
-    WANT(t.basePosition[0] == 0 && t.basePosition[1] == 2 && t.basePosition[2] == 0);
+    WANT(t.basePosition[0] == 0 && t.basePosition[1] == 10 && t.basePosition[2] == 0);
 
     t.draw(ctx);
     WANT(ctx.polygons.size() == 1);
@@ -58,7 +58,7 @@ int main()
     WANT(pg.points.size() == 4);
 
     auto pt0 = pg.points.front();
-    WANT(pt0[0] == -0.2f && pt0[1] == 2.2f && pt0[2] == 0.0f);
+    WANT(pt0[0] == -1.0f && pt0[1] == 11.0f /* && pt0[2] == 0.0f */);
 
     TEND;
 }

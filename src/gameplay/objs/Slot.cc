@@ -1,7 +1,7 @@
 #include "Slot.hh"
 
-#define NOTE_SIZE 0.2
-#define PANEL_SIZE 10
+#define NOTE_SIZE 1
+#define PANEL_SIZE 5
 void Slot::draw(DrawContext &ctx)
 {
     if (!isVisible)

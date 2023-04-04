@@ -6,5 +6,5 @@ uniform sampler2D baseTex;
 uniform float time;
 
 void main() {
-    color = texture(baseTex, texCoord) - vec4(0, 0, 0, 0.4) * (sin(time) + 1);
+    color = texture(baseTex, texCoord);
 }

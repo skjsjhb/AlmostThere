@@ -11,6 +11,7 @@ int main()
 
     // Create a note. Verified in NotePos.cc
     Tapu t;
+    Shizuku k;
     Slot s;
     Panel p;
 
@@ -27,6 +28,14 @@ int main()
     t.targetSlot = &s;
     t.autoControl = true;
     t.keyCode = 87; // Key 'W'
+
+    k.hitTime = 3;
+    k.isFake = false;
+    k.isVisible = true;
+    k.targetSlot = &s;
+    k.autoControl = true;
+    k.keyCode = 87;
+
     s.center[0] = s.center[1] = 0;
     s.center[2] = 0.01;
     s.normal[0] = s.normal[1] = 0;
@@ -35,8 +44,8 @@ int main()
     s.up[0] = s.up[2] = 0;
     s.isVisible = true;
     DrawContext ctx;
-    vec3 camPos = {0, -1, 1}, camDir = {0, 1, -1}, camUp = {0, 1, 1};
-    ctx.cam.setState(camPos, camDir, camUp, glm_rad(90), 960.0 / 540);
+    vec3 camPos = {0, 0, 10}, camDir = {0, 0, -1}, camUp = {0, 1, 0};
+    ctx.cam.setState(camPos, camDir, camUp, glm_rad(60), 1920.0 / 1080);
 
     InputSet inputs;
     GameRules gr;
@@ -65,19 +74,24 @@ int main()
     {
         inputs.pollInputEvents();
         auto time = (++i) / 100;
-        if (time > 3) // 300 Ticks
+        if (time > 4) // 300 Ticks
         {
             break;
         }
-
         ctx.polygons.clear();
-        t.performJudge(time, inputs, sm);
-        t.tick(time); // Test it faster
-        t.draw(ctx);
-        s.tick(time);
-        s.draw(ctx);
+
         p.tick(time);
+        s.tick(time);
+        t.performJudge(time, inputs, sm);
+        t.tick(time);
+        k.performJudge(time, inputs, sm);
+        k.tick(time);
+
         p.draw(ctx);
+        s.draw(ctx);
+        t.draw(ctx);
+        k.draw(ctx);
+
         vtDraw(ctx);
         vtWindowLoop();
     }

@@ -3,8 +3,69 @@
 
 #include <array>
 
-#define BASE_FALL_SPEED 2
-#define NOTE_SIZE 0.2
+#define BASE_FALL_SPEED 10
+#define NOTE_SIZE 1
+
+#define NOTE_FLOAT_THRESHOLD 0.01
+#define SHIZUKU_JUDGE_WINDOW 0.01
+
+void AbstractNote::tick(double absTime)
+{
+    if (!isVisible)
+    {
+        return;
+    }
+    // TODO: Obtain fall speed from chart
+    auto scale = (hitTime - absTime) * BASE_FALL_SPEED;
+    vec3 offset;
+    glm_vec3_scale(targetSlot->up, scale, offset);
+    glm_vec3_add(targetSlot->center, offset, basePosition);
+}
+
+static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractNote *obj)
+{
+    if (!obj->isVisible)
+    {
+        return;
+    }
+    vec3 right;
+    vec3 lt, rt, lb, rb;
+    vec3 dw, dh, threshold;
+    vec3 tmp, pCenter;
+    glm_vec3_cross(obj->targetSlot->up, obj->targetSlot->normal, right);
+    glm_vec3_normalize(right);
+    glm_vec3_scale(obj->targetSlot->normal, NOTE_FLOAT_THRESHOLD, threshold); // Avoid overlap
+    glm_vec3_add(obj->basePosition, threshold, pCenter);
+    glm_vec3_scale(right, NOTE_SIZE, dw);
+    glm_vec3_scale(obj->targetSlot->up, NOTE_SIZE, dh);
+    glm_vec3_add(pCenter, dw, tmp);
+    glm_vec3_add(tmp, dh, rt);
+    glm_vec3_sub(pCenter, dw, tmp);
+    glm_vec3_add(tmp, dh, lt);
+    glm_vec3_add(pCenter, dw, tmp);
+    glm_vec3_sub(tmp, dh, rb);
+    glm_vec3_sub(pCenter, dw, tmp);
+    glm_vec3_sub(tmp, dh, lb);
+    PolygonShape pg;
+    pg.renderPreset = RECT;
+    pg.shader = "rect";
+    pg.texture = sdName;
+    pg.points.push_back(std::to_array(lt));
+    pg.points.push_back(std::to_array(lb));
+    pg.points.push_back(std::to_array(rt));
+    pg.points.push_back(std::to_array(rb));
+    ctx.polygons.push_back(pg);
+}
+
+void Tapu::draw(DrawContext &ctx)
+{
+    commonRectDraw(ctx, "tapu", this);
+}
+
+void Shizuku::draw(DrawContext &ctx)
+{
+    commonRectDraw(ctx, "shizuku", this);
+}
 
 void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
 {
@@ -82,49 +143,38 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     }
 }
 
-void Tapu::tick(double absTime)
+void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
 {
-    if (!isVisible)
+    if (isFake)
     {
         return;
     }
-    // Obtain fall speed from chart
-    auto scale = (hitTime - absTime) * BASE_FALL_SPEED;
-    vec3 offset;
-    // Calculate position
-    glm_vec3_scale(targetSlot->up, scale, offset);
-    glm_vec3_add(targetSlot->center, offset, basePosition);
-}
+    switch (jStage)
+    {
+    case JUDGED:
+        // TODO: add animation
+        isVisible = false;
+        return;
+    default:
+        // In all other cases, check and judge
+        if (isOverlapped(hitTime, SHIZUKU_JUDGE_WINDOW, absTime, 0))
+        {
 
-void Tapu::draw(DrawContext &ctx)
-{
-    if (!isVisible)
-    {
-        return;
+            if (input.keyInfo[keyCode] == 1)
+            {
+                // You got it
+                sm.addJudgeGrade(PF, SZKU);
+                jStage = JUDGED;
+            }
+        }
+        else
+        {
+            if (absTime > hitTime)
+            {
+                // You failed!
+                sm.addJudgeGrade(LT, SZKU);
+                jStage = JUDGED;
+            }
+        }
     }
-    vec3 right;
-    vec3 lt, rt, lb, rb;
-    vec3 dw, dh;
-    vec3 tmp;
-    glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
-    glm_vec3_normalize(right);
-    glm_vec3_scale(right, NOTE_SIZE, dw);
-    glm_vec3_scale(targetSlot->up, NOTE_SIZE, dh);
-    glm_vec3_add(basePosition, dw, tmp);
-    glm_vec3_add(tmp, dh, rt);
-    glm_vec3_sub(basePosition, dw, tmp);
-    glm_vec3_add(tmp, dh, lt);
-    glm_vec3_add(basePosition, dw, tmp);
-    glm_vec3_sub(tmp, dh, rb);
-    glm_vec3_sub(basePosition, dw, tmp);
-    glm_vec3_sub(tmp, dh, lb);
-    PolygonShape pg;
-    pg.renderPreset = RECT;
-    pg.shader = "rect";
-    pg.texture = "tapu";
-    pg.points.push_back(std::to_array(lt));
-    pg.points.push_back(std::to_array(lb));
-    pg.points.push_back(std::to_array(rt));
-    pg.points.push_back(std::to_array(rb));
-    ctx.polygons.push_back(pg);
 }
