@@ -13,8 +13,6 @@ enum SlotShape
     CIRCLE,
 };
 
-// The JudgeLine is actually a Panel.
-
 // Slot is a shape for notes to drop
 class Slot : public TickObject
 {
@@ -27,18 +25,6 @@ public:
     void draw(DrawContext &ctx);
 
     bool isVisible;
-};
-
-// Now panel can just be rect but that can be changed
-class Panel : public TickObject
-{
-public:
-    void tick(double absTime) override;
-    void draw(DrawContext &ctx);
-
-    vec3 basePoint;
-    vec3 normal;
-    vec3 up;
 };
 
 #endif /* GAMEPLAY_OBJS_SLOT */

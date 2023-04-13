@@ -6,4 +6,7 @@ uniform sampler2D baseTex;
 
 void main () {
     color = texture(baseTex, texCoord);
+    if(color.w == 0){
+        discard;
+    }
 }

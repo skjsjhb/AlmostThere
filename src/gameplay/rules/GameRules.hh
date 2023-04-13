@@ -9,12 +9,12 @@ struct JudgeValue
 
 struct JudgeTime
 {
-    double range, good, almost, perfect;
+    double range, good, almost, perfect, allowBreak;
 };
 
 struct InputOptn
 {
-    double rayCastingAngleThreshold; // Allow
+    double rayCastingAngleThreshold; // For touch only
 };
 
 // Generated game rules
@@ -22,6 +22,7 @@ struct GameRules
 {
     JudgeValue judgeValue;
     JudgeTime judgeTime;
+    InputOptn inputOptn;
 };
 
 #endif /* GAMEPLAY_RULES_GAMERULES */

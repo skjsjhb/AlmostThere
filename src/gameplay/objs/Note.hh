@@ -61,4 +61,15 @@ public:
     void draw(DrawContext &ctx) override;
 };
 
+class Puresu : public AbstractNote
+{
+public:
+    double length;             // Length (in seconds) of this puresu, will be adjusted during judgement
+    double absLength;          // Original length, read-only
+    double lastSuccJudge = -1; // Timestamp of the last successful judgement.
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
+    void draw(DrawContext &ctx) override;
+    void tick(double absTime) override;
+};
+
 #endif /* GAMEPLAY_OBJS_NOTE */

@@ -13,14 +13,17 @@ int main()
     Tapu t;
     Shizuku k;
     Slot s;
-    Panel p;
+    Puresu r;
 
     bool running = true;
-    p.basePoint[0] = p.basePoint[1] = p.basePoint[2] = 0;
-    p.normal[0] = p.normal[1] = 0;
-    p.normal[2] = 1;
-    p.up[0] = p.up[2] = 0;
-    p.up[1] = 1;
+    r.isFake = false;
+    r.isVisible = true;
+    r.targetSlot = &s;
+    r.autoControl = true;
+    r.keyCode = 87;
+    r.basePosition[0] = r.basePosition[1] = r.basePosition[2] = 0;
+    r.hitTime = 4;
+    r.absLength = 2;
 
     t.hitTime = 2;
     t.isFake = false;
@@ -37,14 +40,14 @@ int main()
     k.keyCode = 87;
 
     s.center[0] = s.center[1] = 0;
-    s.center[2] = 0.01;
+    s.center[2] = 0;
     s.normal[0] = s.normal[1] = 0;
     s.normal[2] = 1;
     s.up[1] = 1;
     s.up[0] = s.up[2] = 0;
     s.isVisible = true;
     DrawContext ctx;
-    vec3 camPos = {0, 0, 10}, camDir = {0, 0, -1}, camUp = {0, 1, 0};
+    vec3 camPos = {0, -6, 9}, camDir = {0, 0.8, -1}, camUp = {0, 1, 0.8};
     ctx.cam.setState(camPos, camDir, camUp, glm_rad(60), 1920.0 / 1080);
 
     InputSet inputs;
@@ -64,33 +67,40 @@ int main()
         .good = 0.15,
         .almost = 0.08,
         .perfect = 0.04,
+        .allowBreak = 0.04,
     };
     ScoreManager sm(gr);
 
     vtGraphicsInit();
     inputs.setupInputListeners();
     unsigned int i = 0;
+    double time = 0;
     while (running)
     {
         inputs.pollInputEvents();
-        auto time = (++i) / 100;
-        if (time > 4) // 300 Ticks
+        time = (++i) / 10;
+
+        if (time > 8)
         {
             break;
         }
         ctx.polygons.clear();
 
-        p.tick(time);
-        s.tick(time);
-        t.performJudge(time, inputs, sm);
+        // p.tick(time);
+        // s.tick(time);
+        // t.performJudge(time, inputs, sm);
         t.tick(time);
-        k.performJudge(time, inputs, sm);
-        k.tick(time);
+        // k.performJudge(time, inputs, sm);
+        // k.tick(time);
+        // r.performJudge(time, inputs, sm);
+        r.tick(time);
 
-        p.draw(ctx);
+        // p.draw(ctx);
         s.draw(ctx);
+        r.draw(ctx);
+
         t.draw(ctx);
-        k.draw(ctx);
+        //  k.draw(ctx);
 
         vtDraw(ctx);
         vtWindowLoop();

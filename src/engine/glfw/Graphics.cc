@@ -62,14 +62,14 @@ static GLuint loadTexture(const std::string &name)
     auto pt = "assets/textures/" + name + ".png";
     stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(pt.c_str(), &width, &height, &nrChannels, 0);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     if (nrChannels == 3)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-       }
+    }
     else
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -126,8 +126,8 @@ void vtDraw(DrawContext &ctx)
             }
 
             // Set texture mapping
-            vertex[4] = vertex[13] = vertex[14] = vertex[18] = 1;
-            vertex[3] = vertex[8] = vertex[9] = vertex[19] = 0;
+            vertex[4] = vertex[13] = vertex[14] = vertex[18] = 1.0f; // Avoid touching the edge
+            vertex[3] = vertex[8] = vertex[9] = vertex[19] = 0.0f;
 
             unsigned int indicies[6] = {0, 1, 2, 2, 1, 3};
             glBindVertexArray(vao);

@@ -34,7 +34,7 @@ protected:
     Schedule mapSchedule, absSchedule;
     std::list<AbstractNote> activeNotes;
     // std::list<UIComponent> uiComponents;
-    // std::list<Slot> slots; std::list<Panel> panels;
+    std::list<Slot> slots;
 };
 
 #endif /* GAMEPLAY_CORE_GAME */
