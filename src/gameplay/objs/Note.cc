@@ -5,9 +5,10 @@
 
 #define BASE_FALL_SPEED 10.0
 #define FLAT_NOTE_SIZE 1.0
-#define SPACE_NOTE_SIZE 0.8
+#define HOSHI_NOTE_SIZE 0.8
+#define HASHI_NOTE_SIZE 0.6
 #define ASSIST_RING_SIZE 0.3
-#define HASHI_CUT_THRESHOLD 1.0
+#define HASHI_CUT_THRESHOLD 0.4
 #define ASSIST_RING_TIME 1.0
 
 #define NOTE_FLOAT_THRESHOLD 0.01
@@ -123,9 +124,9 @@ void Hoshi::draw(DrawContext &ctx)
     vec3 points[6]; // NS, LR, FB
     glm_cross(targetSlot->up, targetSlot->normal, rightVec);
     glm_vec3_normalize(rightVec);
-    glm_vec3_scale(rightVec, SPACE_NOTE_SIZE, rightVec);
-    glm_vec3_scale(targetSlot->up, SPACE_NOTE_SIZE, upVec);
-    glm_vec3_scale(targetSlot->normal, SPACE_NOTE_SIZE, normVec);
+    glm_vec3_scale(rightVec, HOSHI_NOTE_SIZE, rightVec);
+    glm_vec3_scale(targetSlot->up, HOSHI_NOTE_SIZE, upVec);
+    glm_vec3_scale(targetSlot->normal, HOSHI_NOTE_SIZE, normVec);
     glm_vec3_add(basePosition, rightVec, points[3]);
     glm_vec3_add(basePosition, upVec, points[5]);
     glm_vec3_sub(basePosition, upVec, points[4]);
@@ -173,7 +174,7 @@ void Hashi::draw(DrawContext &ctx)
     vec3 btmPoints[6], headPoints[6]; // CCW start from right
     glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
     glm_vec3_normalize(right);
-    glm_vec3_scale(right, SPACE_NOTE_SIZE, right);
+    glm_vec3_scale(right, HASHI_NOTE_SIZE, right);
 
     PolygonShape ps;
     for (int i = 0; i < 6; i++)
@@ -186,13 +187,13 @@ void Hashi::draw(DrawContext &ctx)
         }
     }
 
-    // Long Hashi notes require cutting
     auto xlen = length * BASE_FALL_SPEED;
     vec3 upLength;
     glm_vec3_copy(targetSlot->normal, upLength);
     glm_vec3_normalize(upLength);
 
-    if (xlen > HASHI_CUT_THRESHOLD)
+    // Long Hashi notes require cutting, or render will not be correct
+    if (xlen > 2 * HASHI_CUT_THRESHOLD)
     {
         int pieces = (int)(xlen / HASHI_CUT_THRESHOLD);
         float pcf = xlen / pieces;
@@ -210,14 +211,8 @@ void Hashi::draw(DrawContext &ctx)
             pse[0].points.push_back(std::to_array(bufferPointsDown[i]));
         }
         pse[0].renderPreset = PRISM_BTM;
-        pse[0].isOpaque = false;
-        pse[0].shader = "hashi";
-        pse[0].texture = "hashi-hat";
-        pse[0].subTexture = "hashi-side";
-        ctx.polygons.push_back(pse[0]);
 
         // Make middle ones
-
         for (int i = 1; i < pieces - 1; i++)
         {
             for (int j = 0; j < 6; j++)
@@ -231,11 +226,6 @@ void Hashi::draw(DrawContext &ctx)
                 glm_vec3_copy(bufferPointsUp[j], bufferPointsDown[j]);
             }
             pse[i].renderPreset = PRISM_SIDE;
-            pse[i].isOpaque = false;
-            pse[i].shader = "hashi";
-            pse[i].texture = "hashi-hat";
-            pse[i].subTexture = "hashi-side";
-            ctx.polygons.push_back(pse[i]);
         }
 
         // Make the top one
@@ -252,11 +242,16 @@ void Hashi::draw(DrawContext &ctx)
             pse[pieces - 1].points.push_back(std::to_array(headPoints[i]));
         }
         pse[pieces - 1].renderPreset = PRISM_HAT;
-        pse[pieces - 1].isOpaque = false;
-        pse[pieces - 1].shader = "hashi";
-        pse[pieces - 1].texture = "hashi-hat";
-        pse[pieces - 1].subTexture = "hashi-side";
-        ctx.polygons.push_back(pse[pieces - 1]);
+
+        // Push all
+        for (int i = 0; i < pieces; i++)
+        {
+            pse[i].isOpaque = false;
+            pse[i].shader = "hashi";
+            pse[i].texture = "hashi-hat";
+            pse[i].subTexture = "hashi-side";
+            ctx.polygons.push_back(pse[i]);
+        }
     }
     else
     {
@@ -274,6 +269,23 @@ void Hashi::draw(DrawContext &ctx)
         ps.texture = "hashi-hat";
         ps.subTexture = "hashi-side";
         ctx.polygons.push_back(ps);
+    }
+    if (assistRingScale > 0 && assistRingScale <= 1)
+    {
+        PolygonShape assist;
+        assist.renderPreset = RECT;
+        assist.shader = "assist-ring";
+        assist.texture = "space-assist";
+        assist.values["opacity"] = 1 - assistRingScale;
+
+        auto size = ASSIST_RING_SIZE * assistRingScale;
+        vec3 rdh, rightVec;
+        glm_vec3_cross(targetSlot->up, targetSlot->normal, rightVec);
+        glm_vec3_normalize(rightVec);
+        glm_vec3_scale(rightVec, size, rightVec);
+        glm_vec3_scale(targetSlot->up, size, rdh);
+        mkRectPoints(assist, targetSlot->center, rdh, rightVec);
+        ctx.polygons.push_back(assist);
     }
 }
 
@@ -610,6 +622,97 @@ void Hoshi::tick(double absTime)
     glm_vec3_add(targetSlot->center, shift, basePosition);
 }
 
-void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm) {}
+void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
+{
+    if (isFake)
+    {
+        return;
+    }
+    switch (jStage)
+    {
+    case JUDGED:
+        // TODO: add animation
+        isVisible = false;
+        return;
+    default:
+        if (absTime > hitTime && absTime < hitTime + absLength)
+        {
+            if (lastSuccJudge == -1)
+            {
+                lastSuccJudge = absTime;
+                return;
+            }
+            if (input.keyInfo[keyCode] == 1)
+            {
+                judgedLength += (absTime - lastSuccJudge);
+            }
+            lastSuccJudge = absTime;
+        }
+        else if (absTime > hitTime + absLength)
+        {
+            jStage = JUDGED;
+            auto comRate = judgedLength / absLength;
+            if (comRate > 0.95)
+            {
+                sm.addJudgeGrade(PF, HASHI);
+            }
+            else if (comRate > 0.85)
+            {
+                sm.addJudgeGrade(AT, HASHI);
+            }
+            else if (comRate > 0.70)
+            {
+                sm.addJudgeGrade(AC, HASHI);
+            }
+            else if (comRate > 0.45)
+            {
+                sm.addJudgeGrade(MD, HASHI);
+            }
+            else if (comRate > 0)
+            {
+                sm.addJudgeGrade(TC, HASHI);
+            }
+            else
+            {
+                sm.addJudgeGrade(LT, HASHI);
+            }
+        }
+    }
+}
 
-void Hashi::tick(double absTime) {}
+void Hashi::tick(double absTime)
+{
+    if (!isVisible)
+    {
+        return;
+    }
+    auto det = hitTime - absTime;
+    if (det > 0 && det < ASSIST_RING_TIME)
+    {
+        assistRingScale = det / ASSIST_RING_TIME + 0.1; // Minor adjustment
+    }
+    else
+    {
+        assistRingScale = -1;
+    }
+    auto len = det * BASE_FALL_SPEED;
+    vec3 shift;
+    glm_vec3_scale(targetSlot->normal, len, shift);
+    glm_vec3_add(targetSlot->center, shift, basePosition);
+    if (absTime >= hitTime)
+    {
+        if (absTime <= hitTime + absLength)
+        {
+            glm_vec3_copy(targetSlot->center, basePosition);
+            length = absLength - (absTime - hitTime);
+        }
+        else
+        {
+            length = 0;
+        }
+    }
+    else
+    {
+        length = absLength;
+    }
+}

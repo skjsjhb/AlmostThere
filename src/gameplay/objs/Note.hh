@@ -98,5 +98,6 @@ public:
 protected:
     double assistRingScale;
     double lastSuccJudge = -1;
+    double judgedLength;
 };
 #endif /* GAMEPLAY_OBJS_NOTE */

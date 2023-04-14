@@ -2,7 +2,7 @@
 
 #include "util/Util.hh"
 
-#define PERSPECTIVE_NEAR 5.0f
+#define PERSPECTIVE_NEAR 1.0f
 #define PERSPECTIVE_FAR 100.0f
 
 void Camera::setState(vec3 pos_, vec3 direction_, vec3 up_, double fov_, double aspect_)
