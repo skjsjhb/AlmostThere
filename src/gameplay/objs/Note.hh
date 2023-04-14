@@ -64,12 +64,15 @@ public:
 class Puresu : public AbstractNote
 {
 public:
-    double length;             // Length (in seconds) of this puresu, will be adjusted during judgement
-    double absLength;          // Original length, read-only
-    double lastSuccJudge = -1; // Timestamp of the last successful judgement.
+    double length;    // Length (in seconds) of this puresu, will be adjusted during judgement
+    double absLength; // Original length, read-only
+
     void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void draw(DrawContext &ctx) override;
     void tick(double absTime) override;
+
+protected:
+    double lastSuccJudge = -1; // Timestamp of the last successful judgement.
 };
 
 class Hoshi : public AbstractNote
@@ -83,4 +86,17 @@ protected:
     double assistRingScale;
 };
 
+class Hashi : public AbstractNote
+{
+public:
+    double length;
+    double absLength;
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
+    void draw(DrawContext &ctx) override;
+    void tick(double absTime) override;
+
+protected:
+    double assistRingScale;
+    double lastSuccJudge = -1;
+};
 #endif /* GAMEPLAY_OBJS_NOTE */

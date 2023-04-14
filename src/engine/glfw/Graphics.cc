@@ -113,21 +113,69 @@ struct Mesh
     vec3 vert[3];
     vec2 texCoord[3];
     vec3 normal;
+    bool isOpaque;
     RenderPreset preset;
     float distanceToCam;
     unsigned int texture, shader;
     std::map<std::string, float> *valueRef;
 };
 
-static float getMeshDistance(vec3 vert[], vec3 cam)
+static bool isAround(float a, float b)
+{
+    auto diff = std::abs(1 - a / b);
+    return diff <= 0.01;
+}
+
+static void getAbsCenter(vec3 vert[], vec3 ctr)
+{
+    vec3 a, b;
+    float d10 = glm_vec3_distance2(vert[1], vert[0]);
+    float d21 = glm_vec3_distance2(vert[2], vert[1]);
+    float d20 = glm_vec3_distance2(vert[2], vert[0]);
+    float sum = (d10 + d21 + d20) / 2;
+    if (isAround(sum, d10) || isAround(sum, d21) || isAround(sum, d20))
+    {
+        // Use hypo point
+        glm_vec3_sub(vert[1], vert[0], a);
+        glm_vec3_sub(vert[2], vert[0], b);
+        glm_vec3_normalize(a);
+        glm_vec3_normalize(b);
+        if (glm_vec3_dot(a, b) < 0.01)
+        {
+            glm_vec3_add(vert[1], vert[2], ctr);
+        }
+        else
+        {
+            if (d10 > d20)
+            {
+                glm_vec3_add(vert[1], vert[0], ctr);
+            }
+            else
+            {
+                glm_vec3_add(vert[2], vert[0], ctr);
+            }
+        }
+        glm_vec3_scale(ctr, 0.5, ctr);
+    }
+    else
+    {
+        // Use weight point
+        for (int i = 0; i < 3; i++)
+        {
+            ctr[i] = (vert[0][i] + vert[1][i] + vert[2][i]) / 3.0;
+        }
+    }
+}
+
+static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
 {
     vec3 ctr;
-    for (int i = 0; i < 3; i++)
-    {
-        ctr[i] = (vert[0][i] + vert[1][i] + vert[2][i]) / 3.0;
-    }
-    auto len = glm_vec3_distance2(ctr, cam);
-    return len;
+    getAbsCenter(vert, ctr);
+    vec3 a, x;
+    glm_vec3_sub(ctr, camPos, a);
+    glm_vec3_copy(camDir, x);
+    glm_vec3_normalize(x);
+    return glm_vec3_dot(a, x);
 }
 
 static void pickPoints(Mesh &ms, const PolygonShape &p, const std::vector<unsigned int> &ptOrder)
@@ -160,12 +208,18 @@ static void pickTex(Mesh &ms, const std::vector<std::pair<float, float>> &st)
 static std::vector<Mesh> makeMeshes(DrawContext &ctx)
 {
     std::vector<Mesh> meshes;
-    vec3 camPos;
+    vec3 camPos, camDir;
     ctx.cam.getPosition(camPos);
+    ctx.cam.getDir(camDir);
     for (auto &p : ctx.polygons)
     {
         auto sd = loadShader(p.shader);
-        auto tx = loadTexture(p.texture, p.renderPreset == OCT ? false : true);
+        auto tx = loadTexture(p.texture, p.renderPreset != OCT);
+        unsigned int stx = 0;
+        if (p.subTexture.size() > 0)
+        {
+            stx = loadTexture(p.subTexture, false);
+        }
         switch (p.renderPreset)
         {
         case RECT:
@@ -181,10 +235,11 @@ static std::vector<Mesh> makeMeshes(DrawContext &ctx)
             // Sort meshes
             ms[0].shader = ms[1].shader = sd;
             ms[0].texture = ms[1].texture = tx;
-            ms[0].distanceToCam = getMeshDistance(ms[0].vert, camPos);
-            ms[1].distanceToCam = getMeshDistance(ms[1].vert, camPos);
+            ms[0].distanceToCam = getMeshDistanceProj(ms[0].vert, camPos, camDir);
+            ms[1].distanceToCam = getMeshDistanceProj(ms[1].vert, camPos, camDir);
             ms[0].preset = ms[1].preset = RECT;
             ms[0].valueRef = ms[1].valueRef = &p.values;
+            ms[0].isOpaque = ms[1].isOpaque = p.isOpaque;
             meshes.push_back(ms[0]);
             meshes.push_back(ms[1]);
 
@@ -215,16 +270,253 @@ static std::vector<Mesh> makeMeshes(DrawContext &ctx)
             {
                 ms[i].shader = sd;
                 ms[i].texture = tx;
-                ms[i].distanceToCam = getMeshDistance(ms[i].vert, camPos);
+                ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
                 ms[i].preset = OCT;
                 ms[i].valueRef = &p.values;
+                ms[i].isOpaque = p.isOpaque;
                 meshes.push_back(ms[i]);
             }
 
             break;
         }
-        case PRISM:
+        // Full prism draw can only be used for short ones
+        case PRISM_FULL:
         {
+            // The prism is a little bit trickey, we must use the center of each square, rather than triangle
+            Mesh ms[20];
+            std::vector<std::vector<unsigned int>> points = {
+                {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+            for (int i = 0; i < 20; i++)
+            {
+                pickPoints(ms[i], p, points[i]);
+            }
+            std::vector<std::vector<std::pair<float, float>>> texCoords = {
+                // Bottom 4 triangles
+                {{0.25, 0.933}, {0, 0.5}, {0.25, 0.067}},
+                {{0.75, 0.933}, {0.25, 0.933}, {0.25, 0.067}},
+                {{0.75, 0.933}, {0.25, 0.067}, {0.75, 0.067}},
+                {{0.75, 0.933}, {0.75, 0.067}, {1, 0.5}},
+
+                // Top 4 triangles
+                {{0.75, 0.067}, {1, 0.5}, {0.75, 0.933}},
+                {{0.75, 0.067}, {0.75, 0.933}, {0.25, 0.933}},
+                {{0.25, 0.067}, {0.75, 0.067}, {0.25, 0.933}},
+                {{0, 0.5}, {0.25, 0.067}, {0.25, 0.933}},
+
+                // Body
+                {{0, 1}, {1, 0}, {1, 1}},
+                {{0, 1}, {0, 0}, {1, 0}},
+
+                {{0, 1}, {0, 0}, {1, 0}},
+                {{0, 1}, {1, 0}, {1, 1}},
+
+                {{0, 1}, {0, 0}, {1, 1}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+            };
+            for (int i = 0; i < 20; i++)
+            {
+                pickTex(ms[i], texCoords[i]);
+            }
+            for (int i = 0; i < 20; i++)
+            {
+                ms[i].shader = sd;
+                if (i < 8)
+                {
+                    ms[i].texture = tx;
+                }
+                else
+                {
+                    ms[i].texture = stx;
+                }
+
+                ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
+                ms[i].isOpaque = p.isOpaque;
+                ms[i].preset = PRISM_FULL;
+                ms[i].valueRef = &p.values;
+                meshes.push_back(ms[i]);
+            }
+            break;
+        }
+
+        case PRISM_BTM:
+        {
+            // The prism is a little bit trickey, we must use the center of each square, rather than triangle
+            Mesh ms[16];
+            std::vector<std::vector<unsigned int>> points = {
+                {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+            for (int i = 0; i < 16; i++)
+            {
+                pickPoints(ms[i], p, points[i]);
+            }
+            std::vector<std::vector<std::pair<float, float>>> texCoords = {
+                // Bottom 4 triangles
+                {{0.25, 0.933}, {0, 0.5}, {0.25, 0.067}},
+                {{0.75, 0.933}, {0.25, 0.933}, {0.25, 0.067}},
+                {{0.75, 0.933}, {0.25, 0.067}, {0.75, 0.067}},
+                {{0.75, 0.933}, {0.75, 0.067}, {1, 0.5}},
+
+                // Body
+                {{0, 1}, {1, 0}, {1, 1}},
+                {{0, 1}, {0, 0}, {1, 0}},
+
+                {{0, 1}, {0, 0}, {1, 0}},
+                {{0, 1}, {1, 0}, {1, 1}},
+
+                {{0, 1}, {0, 0}, {1, 1}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+            };
+            for (int i = 0; i < 16; i++)
+            {
+                pickTex(ms[i], texCoords[i]);
+            }
+            for (int i = 0; i < 16; i++)
+            {
+                ms[i].shader = sd;
+                if (i < 4)
+                {
+                    ms[i].texture = tx;
+                }
+                else
+                {
+                    ms[i].texture = stx;
+                }
+
+                ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
+                ms[i].isOpaque = p.isOpaque;
+                ms[i].preset = PRISM_BTM;
+                ms[i].valueRef = &p.values;
+                meshes.push_back(ms[i]);
+            }
+            break;
+        }
+        case PRISM_HAT:
+        {
+            // The prism is a little bit trickey, we must use the center of each square, rather than triangle
+            Mesh ms[16];
+            std::vector<std::vector<unsigned int>> points = {
+                {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+            for (int i = 0; i < 16; i++)
+            {
+                pickPoints(ms[i], p, points[i]);
+            }
+            std::vector<std::vector<std::pair<float, float>>> texCoords = {
+                // Top 4 triangles
+                {{0.75, 0.067}, {1, 0.5}, {0.75, 0.933}},
+                {{0.75, 0.067}, {0.75, 0.933}, {0.25, 0.933}},
+                {{0.25, 0.067}, {0.75, 0.067}, {0.25, 0.933}},
+                {{0, 0.5}, {0.25, 0.067}, {0.25, 0.933}},
+
+                // Body
+                {{0, 1}, {1, 0}, {1, 1}},
+                {{0, 1}, {0, 0}, {1, 0}},
+
+                {{0, 1}, {0, 0}, {1, 0}},
+                {{0, 1}, {1, 0}, {1, 1}},
+
+                {{0, 1}, {0, 0}, {1, 1}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+            };
+            for (int i = 0; i < 16; i++)
+            {
+                pickTex(ms[i], texCoords[i]);
+            }
+            for (int i = 0; i < 16; i++)
+            {
+                ms[i].shader = sd;
+                if (i < 4)
+                {
+                    ms[i].texture = tx;
+                }
+                else
+                {
+                    ms[i].texture = stx;
+                }
+
+                ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
+                ms[i].isOpaque = p.isOpaque;
+                ms[i].preset = PRISM_HAT;
+                ms[i].valueRef = &p.values;
+                meshes.push_back(ms[i]);
+            }
+            break;
+        }
+        case PRISM_SIDE:
+        {
+            // The prism is a little bit trickey, we must use the center of each square, rather than triangle
+            Mesh ms[12];
+            std::vector<std::vector<unsigned int>> points = {
+                {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+            for (int i = 0; i < 12; i++)
+            {
+                pickPoints(ms[i], p, points[i]);
+            }
+            std::vector<std::vector<std::pair<float, float>>> texCoords = {
+
+                // Body
+                {{0, 1}, {1, 0}, {1, 1}},
+                {{0, 1}, {0, 0}, {1, 0}},
+
+                {{0, 1}, {0, 0}, {1, 0}},
+                {{0, 1}, {1, 0}, {1, 1}},
+
+                {{0, 1}, {0, 0}, {1, 1}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+                {{1, 1}, {0, 1}, {0, 0}},
+                {{1, 1}, {0, 0}, {1, 0}},
+
+            };
+            for (int i = 0; i < 12; i++)
+            {
+                pickTex(ms[i], texCoords[i]);
+            }
+            for (int i = 0; i < 12; i++)
+            {
+                ms[i].shader = sd;
+                ms[i].texture = stx;
+
+                ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
+                ms[i].isOpaque = p.isOpaque;
+                ms[i].preset = PRISM_HAT;
+                ms[i].valueRef = &p.values;
+                meshes.push_back(ms[i]);
+            }
             break;
         }
         default:
@@ -232,7 +524,15 @@ static std::vector<Mesh> makeMeshes(DrawContext &ctx)
         }
     }
     std::sort(meshes.begin(), meshes.end(), [](const Mesh &m1, const Mesh &m2) -> int
-              { return m1.distanceToCam > m2.distanceToCam; });
+              { 
+                if (m1.isOpaque && !m2.isOpaque) {
+                    return 1;
+                } else if (!m1.isOpaque && m2.isOpaque) {
+                    return -1;
+                } else if (m1.isOpaque && m2.isOpaque) {
+                    return 0;
+                }
+                return m1.distanceToCam > m2.distanceToCam; });
     return meshes;
 }
 
@@ -278,12 +578,11 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
             glUniform1f(glGetUniformLocation(m.shader, v.first.c_str()), v.second);
         }
 
-        if (m.preset == OCT)
+        if (m.preset == OCT || m.preset == PRISM_FULL || m.preset == PRISM_BTM || m.preset == PRISM_HAT || m.preset == PRISM_SIDE)
         {
             glUniform3f(glGetUniformLocation(m.shader, "aNormal"), m.normal[0], m.normal[1], m.normal[2]);
             glUniform3f(glGetUniformLocation(m.shader, "camDir"), dir[0], dir[1], dir[2]);
         }
-
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
     }

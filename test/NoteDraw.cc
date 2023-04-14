@@ -15,6 +15,7 @@ int main()
     Slot s;
     Puresu r;
     Hoshi h;
+    Hashi a;
 
     bool running = true;
     r.isFake = false;
@@ -32,6 +33,15 @@ int main()
     t.targetSlot = &s;
     t.autoControl = true;
     t.keyCode = 87; // Key 'W'
+
+    a.hitTime = 2;
+    a.isFake = false;
+    a.isVisible = true;
+    a.targetSlot = &s;
+    a.autoControl = true;
+    a.keyCode = 87;
+    a.basePosition[0] = a.basePosition[1] = a.basePosition[2] = 0;
+    a.absLength = a.length = 0.5;
 
     h.hitTime = 2;
     h.isFake = false;
@@ -87,10 +97,10 @@ int main()
     {
         inputs.pollInputEvents();
         time = vtGetTime();
-
+        a.basePosition[2] = 8 - vtGetTime();
         if (time > 4)
         {
-            break;
+            //  break;
         }
         ctx.polygons.clear();
 
@@ -98,6 +108,10 @@ int main()
         s.up[0] = sin(time);
         s.up[1] = cos(time);
         s.up[2] = 0;
+
+        // h.basePosition[1] = 0;
+        // h.basePosition[0] = 0;
+        // h.basePosition[2] = 2;
         glm_vec3_normalize(s.up);
         s.tick(time);
         // t.performJudge(time, inputs, sm);
@@ -106,16 +120,16 @@ int main()
         // k.tick(time);
         // r.performJudge(time, inputs, sm);
         // r.tick(time);
-        h.performJudge(time, inputs, sm);
-        h.tick(time);
+        // h.performJudge(time, inputs, sm);
+        // h.tick(time);
 
         // p.draw(ctx);
-        s.draw(ctx);
+        // s.draw(ctx);
         //      r.draw(ctx);
-
+        a.draw(ctx);
         //        t.draw(ctx);
         //  k.draw(ctx);
-        h.draw(ctx);
+        // h.draw(ctx);
         vtDraw(ctx);
         vtWindowLoop();
     }

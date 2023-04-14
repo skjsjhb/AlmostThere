@@ -7,6 +7,7 @@
 #define FLAT_NOTE_SIZE 1.0
 #define SPACE_NOTE_SIZE 0.8
 #define ASSIST_RING_SIZE 0.3
+#define HASHI_CUT_THRESHOLD 1.0
 #define ASSIST_RING_TIME 1.0
 
 #define NOTE_FLOAT_THRESHOLD 0.01
@@ -132,6 +133,7 @@ void Hoshi::draw(DrawContext &ctx)
     glm_vec3_add(basePosition, normVec, points[0]);
     glm_vec3_sub(basePosition, normVec, points[1]);
     PolygonShape ps;
+    ps.isOpaque = false;
     ps.renderPreset = OCT;
     ps.shader = "hoshi";
     ps.texture = "hoshi";
@@ -158,6 +160,120 @@ void Hoshi::draw(DrawContext &ctx)
         glm_vec3_scale(targetSlot->up, size, rdh);
         mkRectPoints(assist, targetSlot->center, rdh, rightVec);
         ctx.polygons.push_back(assist);
+    }
+}
+
+void Hashi::draw(DrawContext &ctx)
+{
+    if (!isVisible)
+    {
+        return;
+    }
+    vec3 right;
+    vec3 btmPoints[6], headPoints[6]; // CCW start from right
+    glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
+    glm_vec3_normalize(right);
+    glm_vec3_scale(right, SPACE_NOTE_SIZE, right);
+
+    PolygonShape ps;
+    for (int i = 0; i < 6; i++)
+    {
+        glm_vec3_add(basePosition, right, btmPoints[i]);
+        ps.points.push_back(std::to_array(btmPoints[i]));
+        if (i != 5)
+        {
+            glm_vec3_rotate(right, glm_rad(60.0), targetSlot->normal);
+        }
+    }
+
+    // Long Hashi notes require cutting
+    auto xlen = length * BASE_FALL_SPEED;
+    vec3 upLength;
+    glm_vec3_copy(targetSlot->normal, upLength);
+    glm_vec3_normalize(upLength);
+
+    if (xlen > HASHI_CUT_THRESHOLD)
+    {
+        int pieces = (int)(xlen / HASHI_CUT_THRESHOLD);
+        float pcf = xlen / pieces;
+        vec3 bufferPointsDown[6], bufferPointsUp[6];
+        PolygonShape pse[pieces];
+        // Make the bottom one
+        glm_vec3_scale(upLength, pcf, upLength);
+        for (int i = 0; i < 6; i++)
+        {
+            pse[0].points.push_back(std::to_array(btmPoints[i]));
+        }
+        for (int i = 0; i < 6; i++)
+        {
+            glm_vec3_add(btmPoints[i], upLength, bufferPointsDown[i]);
+            pse[0].points.push_back(std::to_array(bufferPointsDown[i]));
+        }
+        pse[0].renderPreset = PRISM_BTM;
+        pse[0].isOpaque = false;
+        pse[0].shader = "hashi";
+        pse[0].texture = "hashi-hat";
+        pse[0].subTexture = "hashi-side";
+        ctx.polygons.push_back(pse[0]);
+
+        // Make middle ones
+
+        for (int i = 1; i < pieces - 1; i++)
+        {
+            for (int j = 0; j < 6; j++)
+            {
+                pse[i].points.push_back(std::to_array(bufferPointsDown[j]));
+            }
+            for (int j = 0; j < 6; j++)
+            {
+                glm_vec3_add(bufferPointsDown[j], upLength, bufferPointsUp[j]);
+                pse[i].points.push_back(std::to_array(bufferPointsUp[j]));
+                glm_vec3_copy(bufferPointsUp[j], bufferPointsDown[j]);
+            }
+            pse[i].renderPreset = PRISM_SIDE;
+            pse[i].isOpaque = false;
+            pse[i].shader = "hashi";
+            pse[i].texture = "hashi-hat";
+            pse[i].subTexture = "hashi-side";
+            ctx.polygons.push_back(pse[i]);
+        }
+
+        // Make the top one
+        for (int j = 0; j < 6; j++)
+        {
+            pse[pieces - 1].points.push_back(std::to_array(bufferPointsDown[j]));
+        }
+        // Correct mistakes
+        glm_vec3_normalize(upLength);
+        glm_vec3_scale(upLength, xlen, upLength);
+        for (int i = 0; i < 6; i++)
+        {
+            glm_vec3_add(btmPoints[i], upLength, headPoints[i]);
+            pse[pieces - 1].points.push_back(std::to_array(headPoints[i]));
+        }
+        pse[pieces - 1].renderPreset = PRISM_HAT;
+        pse[pieces - 1].isOpaque = false;
+        pse[pieces - 1].shader = "hashi";
+        pse[pieces - 1].texture = "hashi-hat";
+        pse[pieces - 1].subTexture = "hashi-side";
+        ctx.polygons.push_back(pse[pieces - 1]);
+    }
+    else
+    {
+        // Use PRISM-FULL to draw
+        glm_vec3_scale(upLength, xlen, upLength);
+        for (int i = 0; i < 6; i++)
+        {
+            glm_vec3_add(btmPoints[i], upLength, headPoints[i]);
+            ps.points.push_back(std::to_array(headPoints[i]));
+        }
+
+        ps.renderPreset = PRISM_FULL;
+        ps.isOpaque = false;
+        ps.shader = "hashi";
+        ps.texture = "hashi-hat";
+        ps.subTexture = "hashi-side";
+        ctx.polygons.push_back(ps);
     }
 }
 
@@ -493,3 +609,7 @@ void Hoshi::tick(double absTime)
     glm_vec3_scale(targetSlot->normal, len, shift);
     glm_vec3_add(targetSlot->center, shift, basePosition);
 }
+
+void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm) {}
+
+void Hashi::tick(double absTime) {}

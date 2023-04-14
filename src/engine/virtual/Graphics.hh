@@ -10,16 +10,20 @@
 
 enum RenderPreset
 {
-    RECT,  // For most flat notes
-    PRISM, // For Hashi
-    OCT,   // For Hoshi
+    RECT,       // For most flat notes
+    PRISM_FULL, // For Hashi
+    PRISM_BTM,  // Bottom only
+    PRISM_HAT,  // Hat only
+    PRISM_SIDE, // Side only
+    OCT,        // For Hoshi
 };
 
 struct PolygonShape
 {
     // A int pointing which preset to be used, including shaders, etc.
     RenderPreset renderPreset;
-    std::string shader, texture;
+    bool isOpaque = true;
+    std::string shader, texture, subTexture;
     std::vector<std::array<float, 3>> points;
     std::map<std::string, float> values;
 };
