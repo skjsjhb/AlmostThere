@@ -114,6 +114,10 @@ void Puresu::draw(DrawContext &ctx)
 
 void Hoshi::draw(DrawContext &ctx)
 {
+    if (!isVisible)
+    {
+        return;
+    }
     vec3 rightVec, upVec, normVec;
     vec3 points[6]; // NS, LR, FB
     glm_cross(targetSlot->up, targetSlot->normal, rightVec);
@@ -392,17 +396,100 @@ void Puresu::tick(double absTime)
     }
 }
 
-void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm) {}
+void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
+{
+    // Almost the same as Tapu
+    if (isFake)
+    {
+        return;
+    }
+    switch (jStage)
+    {
+    case BUSY:
+        if (input.keyInfo[keyCode] == 0)
+        {
+            jStage = CLEAR;
+        }
+        if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && absTime > hitTime)
+        {
+            // Lost
+            sm.addJudgeGrade(LT, HOSHI);
+            jStage = JUDGED;
+        }
+        break;
+    case CLEAR:
+        // Accepting judge
+        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
+        {
+            jStage = ACTIVE;
+        }
+        else
+        {
+            if (absTime > hitTime)
+            {
+                // Lost
+                sm.addJudgeGrade(LT, HOSHI);
+                jStage = JUDGED;
+            }
+            else if (input.keyInfo[keyCode] == 1)
+            {
+                // Too early
+                jStage = BUSY;
+            }
+        }
+        break;
+    case ACTIVE:
+        if (input.keyInfo[keyCode] == 1)
+        {
+            // Let's do this
+            jStage = JUDGED;
+            if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
+            {
+                sm.addJudgeGrade(PF, HOSHI);
+            }
+            else if (isOverlapped(hitTime, sm.rules.judgeTime.almost, absTime, 0))
+            {
+                sm.addJudgeGrade(AT, HOSHI);
+            }
+            else if (isOverlapped(hitTime, sm.rules.judgeTime.good, absTime, 0))
+            {
+                sm.addJudgeGrade(AC, HOSHI);
+            }
+            else
+            {
+                sm.addJudgeGrade(TC, HOSHI);
+            }
+        }
+        else if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
+        {
+            jStage = CLEAR; // Ready to lost
+        }
+        break;
+    case JUDGED:
+    default:
+        // TODO: play animantion and post-process
+        isVisible = false;
+        return;
+    }
+}
 
 void Hoshi::tick(double absTime)
 {
+    if (!isVisible)
+    {
+        return;
+    }
     auto det = hitTime - absTime;
     if (det > 0 && det < ASSIST_RING_TIME)
     {
-        assistRingScale = det / ASSIST_RING_TIME;
+        assistRingScale = det / ASSIST_RING_TIME + 0.1; // Minor adjustment
     }
     else
     {
         assistRingScale = -1;
     }
+    auto len = det * BASE_FALL_SPEED;
+    vec3 shift;
+    glm_vec3_scale(targetSlot->normal, len, shift);
+    glm_vec3_add(targetSlot->center, shift, basePosition);
 }

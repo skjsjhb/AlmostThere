@@ -88,9 +88,7 @@ int main()
         inputs.pollInputEvents();
         time = vtGetTime();
 
-        h.basePosition[0] = h.basePosition[1] = 0;
-        h.basePosition[2] = 8 - 4 * vtGetTime();
-        if (time > 8)
+        if (time > 4)
         {
             break;
         }
@@ -108,6 +106,7 @@ int main()
         // k.tick(time);
         // r.performJudge(time, inputs, sm);
         // r.tick(time);
+        h.performJudge(time, inputs, sm);
         h.tick(time);
 
         // p.draw(ctx);
