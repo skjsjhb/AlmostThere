@@ -14,6 +14,7 @@ int main()
     Shizuku k;
     Slot s;
     Puresu r;
+    Hoshi h;
 
     bool running = true;
     r.isFake = false;
@@ -31,6 +32,13 @@ int main()
     t.targetSlot = &s;
     t.autoControl = true;
     t.keyCode = 87; // Key 'W'
+
+    h.hitTime = 2;
+    h.isFake = false;
+    h.isVisible = true;
+    h.targetSlot = &s;
+    h.autoControl = true;
+    h.keyCode = 87;
 
     k.hitTime = 3;
     k.isFake = false;
@@ -78,8 +86,10 @@ int main()
     while (running)
     {
         inputs.pollInputEvents();
-        time = (++i) / 10;
+        time = vtGetTime();
 
+        h.basePosition[0] = h.basePosition[1] = 0;
+        h.basePosition[2] = 8 - 4 * vtGetTime();
         if (time > 8)
         {
             break;
@@ -87,21 +97,26 @@ int main()
         ctx.polygons.clear();
 
         // p.tick(time);
-        // s.tick(time);
+        s.up[0] = sin(time);
+        s.up[1] = cos(time);
+        s.up[2] = 0;
+        glm_vec3_normalize(s.up);
+        s.tick(time);
         // t.performJudge(time, inputs, sm);
-        t.tick(time);
+        // t.tick(time);
         // k.performJudge(time, inputs, sm);
         // k.tick(time);
         // r.performJudge(time, inputs, sm);
-        r.tick(time);
+        // r.tick(time);
+        h.tick(time);
 
         // p.draw(ctx);
         s.draw(ctx);
-        r.draw(ctx);
+        //      r.draw(ctx);
 
-        t.draw(ctx);
+        //        t.draw(ctx);
         //  k.draw(ctx);
-
+        h.draw(ctx);
         vtDraw(ctx);
         vtWindowLoop();
     }

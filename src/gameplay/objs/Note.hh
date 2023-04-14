@@ -72,4 +72,15 @@ public:
     void tick(double absTime) override;
 };
 
+class Hoshi : public AbstractNote
+{
+public:
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
+    void draw(DrawContext &ctx) override;
+    void tick(double absTime) override;
+
+protected:
+    double assistRingScale;
+};
+
 #endif /* GAMEPLAY_OBJS_NOTE */

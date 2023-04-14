@@ -4,7 +4,10 @@
 #include <array>
 
 #define BASE_FALL_SPEED 10.0
-#define NOTE_SIZE 1.0
+#define FLAT_NOTE_SIZE 1.0
+#define SPACE_NOTE_SIZE 0.8
+#define ASSIST_RING_SIZE 0.3
+#define ASSIST_RING_TIME 1.0
 
 #define NOTE_FLOAT_THRESHOLD 0.01
 #define SHIZUKU_JUDGE_WINDOW 0.01
@@ -45,11 +48,10 @@ static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractN
     }
     vec3 right;
     vec3 dw, dh;
-    vec3 pCenter;
     glm_vec3_cross(obj->targetSlot->up, obj->targetSlot->normal, right);
     glm_vec3_normalize(right);
-    glm_vec3_scale(right, NOTE_SIZE, dw);
-    glm_vec3_scale(obj->targetSlot->up, NOTE_SIZE, dh);
+    glm_vec3_scale(right, FLAT_NOTE_SIZE, dw);
+    glm_vec3_scale(obj->targetSlot->up, FLAT_NOTE_SIZE, dh);
 
     PolygonShape pg;
     mkRectPoints(pg, obj->basePosition, dh, dw);
@@ -81,8 +83,8 @@ void Puresu::draw(DrawContext &ctx)
 
     glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
     glm_vec3_normalize(right);
-    glm_vec3_scale(right, NOTE_SIZE, rightLen);
-    glm_vec3_scale(targetSlot->up, NOTE_SIZE / 2, upLen);
+    glm_vec3_scale(right, FLAT_NOTE_SIZE, rightLen);
+    glm_vec3_scale(targetSlot->up, FLAT_NOTE_SIZE / 2, upLen);
     glm_vec3_sub(basePosition, upLen, ctr);
     mkRectPoints(head, ctr, upLen, rightLen);
     head.renderPreset = RECT;
@@ -98,7 +100,7 @@ void Puresu::draw(DrawContext &ctx)
     body.texture = "puresu-body";
 
     glm_vec3_add(bCenter, centerMove, tCenter);
-    glm_vec3_scale(targetSlot->up, NOTE_SIZE / 2, upLen);
+    glm_vec3_scale(targetSlot->up, FLAT_NOTE_SIZE / 2, upLen);
     glm_vec3_add(tCenter, upLen, tCenter);
     mkRectPoints(tail, tCenter, upLen, rightLen);
     tail.renderPreset = RECT;
@@ -108,6 +110,51 @@ void Puresu::draw(DrawContext &ctx)
     ctx.polygons.push_back(body);
     ctx.polygons.push_back(tail);
     ctx.polygons.push_back(head);
+}
+
+void Hoshi::draw(DrawContext &ctx)
+{
+    vec3 rightVec, upVec, normVec;
+    vec3 points[6]; // NS, LR, FB
+    glm_cross(targetSlot->up, targetSlot->normal, rightVec);
+    glm_vec3_normalize(rightVec);
+    glm_vec3_scale(rightVec, SPACE_NOTE_SIZE, rightVec);
+    glm_vec3_scale(targetSlot->up, SPACE_NOTE_SIZE, upVec);
+    glm_vec3_scale(targetSlot->normal, SPACE_NOTE_SIZE, normVec);
+    glm_vec3_add(basePosition, rightVec, points[3]);
+    glm_vec3_add(basePosition, upVec, points[5]);
+    glm_vec3_sub(basePosition, upVec, points[4]);
+    glm_vec3_sub(basePosition, rightVec, points[2]);
+    glm_vec3_add(basePosition, normVec, points[0]);
+    glm_vec3_sub(basePosition, normVec, points[1]);
+    PolygonShape ps;
+    ps.renderPreset = OCT;
+    ps.shader = "hoshi";
+    ps.texture = "hoshi";
+    for (int i = 0; i < 6; i++)
+    {
+        ps.points.push_back(std::to_array(points[i]));
+    }
+    ctx.polygons.push_back(ps);
+
+    // Draw the assist ring
+    // TODO: obtain space assist time from chart
+    if (assistRingScale > 0 && assistRingScale <= 1)
+    {
+        PolygonShape assist;
+        assist.renderPreset = RECT;
+        assist.shader = "assist-ring";
+        assist.texture = "space-assist";
+        assist.values["opacity"] = 1 - assistRingScale;
+
+        auto size = ASSIST_RING_SIZE * assistRingScale;
+        vec3 rdh;
+        glm_vec3_normalize(rightVec);
+        glm_vec3_scale(rightVec, size, rightVec);
+        glm_vec3_scale(targetSlot->up, size, rdh);
+        mkRectPoints(assist, targetSlot->center, rdh, rightVec);
+        ctx.polygons.push_back(assist);
+    }
 }
 
 void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
@@ -342,5 +389,20 @@ void Puresu::tick(double absTime)
     else
     {
         length = absLength;
+    }
+}
+
+void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm) {}
+
+void Hoshi::tick(double absTime)
+{
+    auto det = hitTime - absTime;
+    if (det > 0 && det < ASSIST_RING_TIME)
+    {
+        assistRingScale = det / ASSIST_RING_TIME;
+    }
+    else
+    {
+        assistRingScale = -1;
     }
 }
