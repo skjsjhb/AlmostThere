@@ -41,6 +41,16 @@ void Camera::getProjectionMatrixInv(mat4 projIn)
     glm_mat4_copy(_cProjectionMatrixInv, projIn);
 }
 
+void Camera::getPosition(vec3 posIn)
+{
+    glm_vec3_copy(pos, posIn);
+}
+
+void Camera::getDir(vec3 dirIn)
+{
+    glm_vec3_copy(direction, dirIn);
+}
+
 void World::castMouseRay(const vec2 coord, vec3 rayIn)
 {
     vec4 ndc;

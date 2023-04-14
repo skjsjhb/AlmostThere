@@ -12,6 +12,8 @@ public:
     void getProjectionMatrix(mat4 projIn);
     void getProjectionMatrixInv(mat4 projIn);
     void setState(vec3 pos, vec3 direction, vec3 up, double fov, double aspect);
+    void getPosition(vec3 pos);
+    void getDir(vec3 dir);
 
 protected:
     vec3 pos;

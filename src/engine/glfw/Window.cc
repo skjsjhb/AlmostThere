@@ -24,10 +24,10 @@ void vtInitWindow()
 
     // Now GL functions are available
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_POLYGON_SMOOTH);
+    // glEnable(GL_POLYGON_SMOOTH);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_COLOR);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0, 0, 1920, 1080);
 
     // Setup framebuffer callback

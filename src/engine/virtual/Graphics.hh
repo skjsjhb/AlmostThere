@@ -6,11 +6,13 @@
 #include <array>
 #include "gameplay/objs/World.hh"
 #include <string>
+#include <map>
 
 enum RenderPreset
 {
     RECT,  // For most flat notes
-    PRISM, // For Hoshi, Hashi
+    PRISM, // For Hashi
+    OCT,   // For Hoshi
 };
 
 struct PolygonShape
@@ -19,6 +21,7 @@ struct PolygonShape
     RenderPreset renderPreset;
     std::string shader, texture;
     std::vector<std::array<float, 3>> points;
+    std::map<std::string, float> values;
 };
 
 struct DrawContext
