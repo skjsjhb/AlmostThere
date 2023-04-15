@@ -1,2 +1,4 @@
 subdir('virtual')
-subdir(backend)
+if backend != 'nothing'
+  subdir(backend)
+endif

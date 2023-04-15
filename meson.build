@@ -13,5 +13,9 @@ if backend == 'glfw'
   deps += dependency('glfw3')
 endif
 static_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
-shared_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
-subdir('test')
+if backend != 'nothing'
+  shared_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
+  subdir('test')
+else
+  message('Shared libraries and tests are not available when backend library specified as \'nothing\'.')
+endif

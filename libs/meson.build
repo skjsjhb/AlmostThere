@@ -1,2 +1,4 @@
 src += files(['stb_image.cc'])
-subdir(backend)
+if backend != 'nothing'
+  subdir(backend)
+endif
