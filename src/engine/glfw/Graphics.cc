@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <map>
 
+// #define ENABLE_VT_3D_BLENDING
+
 static std::map<std::string, GLuint> texturesCtl;
 static std::map<std::string, GLuint> shadersCtl;
 
@@ -522,9 +524,11 @@ static std::vector<Mesh> makeMeshes(DrawContext &ctx)
     {
         processMeshes(p, camPos, camDir, p.isOpaque ? meshOpaque : meshTrans);
     }
+
+#ifdef ENABLE_VT_3D_BLENDING
     std::sort(meshTrans.begin(), meshTrans.end(), [](const Mesh &m1, const Mesh &m2) -> int
               { return m1.distanceToCam > m2.distanceToCam; });
-
+#endif
     for (auto &t : meshTrans)
     {
         meshOpaque.push_back(t);

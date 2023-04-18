@@ -27,7 +27,7 @@ void AbstractNote::tick(double absTime)
     glm_vec3_add(targetSlot->center, offset, basePosition);
 }
 
-static void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
+void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
 {
     vec3 lt, rt, lb, rb, t;
     glm_vec3_add(center, rightLen, t);
@@ -333,6 +333,7 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     case ACTIVE:
         if (input.keyInfo[keyCode] == 1)
         {
+            targetSlot->inUse = true;
             // Let's do this
             jStage = JUDGED;
             if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
@@ -385,6 +386,7 @@ void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
             if (input.keyInfo[keyCode] == 1)
             {
                 // You got it
+                targetSlot->inUse = true;
                 sm.addJudgeGrade(PF, SZKU);
                 jStage = JUDGED;
             }
@@ -474,7 +476,8 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         else
         {
-            lastSuccJudge = absTime; // Refresh time
+            targetSlot->inUse = true; // Keep the animation playing
+            lastSuccJudge = absTime;  // Refresh time
         }
         if (lastSuccJudge == -1)
         {
@@ -540,13 +543,11 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && absTime > hitTime)
         {
-            // Lost
             sm.addJudgeGrade(LT, HOSHI);
             jStage = JUDGED;
         }
         break;
     case CLEAR:
-        // Accepting judge
         if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
         {
             jStage = ACTIVE;
@@ -555,7 +556,6 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         {
             if (absTime > hitTime)
             {
-                // Lost
                 sm.addJudgeGrade(LT, HOSHI);
                 jStage = JUDGED;
             }
@@ -569,7 +569,7 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     case ACTIVE:
         if (input.keyInfo[keyCode] == 1)
         {
-            // Let's do this
+            targetSlot->inUse = true;
             jStage = JUDGED;
             if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
             {
@@ -590,7 +590,7 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         else if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
         {
-            jStage = CLEAR; // Ready to lost
+            jStage = CLEAR;
         }
         break;
     case JUDGED:
@@ -644,6 +644,7 @@ void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
             }
             if (input.keyInfo[keyCode] == 1)
             {
+                targetSlot->inUse = true;
                 judgedLength += (absTime - lastSuccJudge);
             }
             lastSuccJudge = absTime;

@@ -100,4 +100,7 @@ protected:
     double lastSuccJudge = -1;
     double judgedLength;
 };
+
+void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen);
+
 #endif /* GAMEPLAY_OBJS_NOTE */
