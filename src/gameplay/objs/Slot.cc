@@ -113,7 +113,7 @@ void HitEffect::draw(DrawContext &ctx)
     pg.isOpaque = true;
     pg.shader = "hit-effect";
     pg.texture = "hit-effect";
-    pg.values["alpha"] = opacity;
+    // pg.values["alpha"] = opacity;
     vec3 tUp, tRight;
     glm_vec3_copy(targetSlot->up, tUp);
     glm_vec3_normalize(tUp);

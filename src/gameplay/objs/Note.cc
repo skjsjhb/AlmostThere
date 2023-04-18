@@ -170,6 +170,10 @@ void Hashi::draw(DrawContext &ctx)
     {
         return;
     }
+    if (length <= 0)
+    {
+        return;
+    }
     vec3 right;
     vec3 btmPoints[6], headPoints[6]; // CCW start from right
     glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
