@@ -7,7 +7,8 @@ testProgs = [
 'Schedule',
 'Create Window',
 'Note Pos',
-'Note Draw'
+'Note Draw',
+# 'Audio Test'; Not Ready Yet
 ]
 
 
