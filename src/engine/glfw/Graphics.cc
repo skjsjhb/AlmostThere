@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <map>
 
-// #define ENABLE_VT_3D_BLENDING
+// #define ENABLE_MESH_SORTING
 
 static std::map<std::string, GLuint> texturesCtl;
 static std::map<std::string, GLuint> shadersCtl;
@@ -53,6 +53,10 @@ loadShader(const std::string &name)
 
 static GLuint loadTexture(const std::string &name, bool enableMipmap)
 {
+    if (name.size() == 0)
+    {
+        return 0;
+    }
     if (texturesCtl.contains(name))
     {
         return texturesCtl[name];
@@ -69,13 +73,13 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     if (enableMipmap)
     {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     }
     else
     {
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     }
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     if (nrChannels == 3)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -119,14 +123,18 @@ struct Mesh
     float distanceToCam;
     unsigned int texture, shader;
     std::map<std::string, float> *valueRef;
+    std::map<std::string, std::array<float, 4>> *valueVec4Ref;
 };
 
+#ifdef ENABLE_MESH_SORTING
 static bool isAround(float a, float b)
 {
     auto diff = std::abs(1 - a / b);
     return diff <= 0.01;
 }
+#endif
 
+#ifdef ENABLE_MESH_SORTING
 static void getAbsCenter(vec3 vert[], vec3 ctr)
 {
     vec3 a, b;
@@ -167,9 +175,11 @@ static void getAbsCenter(vec3 vert[], vec3 ctr)
         }
     }
 }
+#endif
 
 static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
 {
+#ifdef ENABLE_MESH_SORTING
     vec3 ctr;
     getAbsCenter(vert, ctr);
     vec3 a, x;
@@ -177,6 +187,9 @@ static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
     glm_vec3_copy(camDir, x);
     glm_vec3_normalize(x);
     return glm_vec3_dot(a, x);
+#else
+    return 0;
+#endif
 }
 
 static void pickPoints(Mesh &ms, const PolygonShape &p, const std::vector<unsigned int> &ptOrder)
@@ -206,6 +219,44 @@ static void pickTex(Mesh &ms, const std::vector<std::pair<float, float>> &st)
     ms.texCoord[2][1] = st[2].second;
 }
 
+// Prism indicies data
+static std::vector<std::vector<std::pair<float, float>>> PRISM_TEX_COORDS = {
+    // Bottom 4 triangles
+    {{0.25, 0.933}, {0, 0.5}, {0.25, 0.067}},
+    {{0.75, 0.933}, {0.25, 0.933}, {0.25, 0.067}},
+    {{0.75, 0.933}, {0.25, 0.067}, {0.75, 0.067}},
+    {{0.75, 0.933}, {0.75, 0.067}, {1, 0.5}},
+
+    // Top 4 triangles
+    {{0.75, 0.067}, {1, 0.5}, {0.75, 0.933}},
+    {{0.75, 0.067}, {0.75, 0.933}, {0.25, 0.933}},
+    {{0.25, 0.067}, {0.75, 0.067}, {0.25, 0.933}},
+    {{0, 0.5}, {0.25, 0.067}, {0.25, 0.933}},
+
+    // Body
+    {{0, 1}, {1, 0}, {1, 1}},
+    {{0, 1}, {0, 0}, {1, 0}},
+
+    {{0, 1}, {0, 0}, {1, 0}},
+    {{0, 1}, {1, 0}, {1, 1}},
+
+    {{0, 1}, {0, 0}, {1, 1}},
+    {{1, 1}, {0, 0}, {1, 0}},
+
+    {{1, 1}, {0, 1}, {0, 0}},
+    {{1, 1}, {0, 0}, {1, 0}},
+
+    {{1, 1}, {0, 1}, {0, 0}},
+    {{1, 1}, {0, 0}, {1, 0}},
+
+    {{1, 1}, {0, 1}, {0, 0}},
+    {{1, 1}, {0, 0}, {1, 0}},
+
+};
+
+static std::vector<std::vector<unsigned int>> PRISM_VERTEX = {
+    {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+
 static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(p.shader);
@@ -227,15 +278,16 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
         pickTex(ms[0], {{0, 1}, {0, 0}, {1, 1}});
         pickTex(ms[1], {{1, 1}, {0, 0}, {1, 0}});
 
-        // Sort meshes
-        ms[0].shader = ms[1].shader = sd;
-        ms[0].texture = ms[1].texture = tx;
-        ms[0].distanceToCam = getMeshDistanceProj(ms[0].vert, camPos, camDir);
-        ms[1].distanceToCam = getMeshDistanceProj(ms[1].vert, camPos, camDir);
-        ms[0].preset = ms[1].preset = RECT;
-        ms[0].valueRef = ms[1].valueRef = &p.values;
-        meshes.push_back(ms[0]);
-        meshes.push_back(ms[1]);
+        for (int i : {0, 1})
+        {
+            ms[i].shader = sd;
+            ms[i].texture = tx;
+            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
+            ms[i].preset = RECT;
+            ms[i].valueRef = &p.values;
+            ms[i].valueVec4Ref = &p.valuesVec4;
+            meshes.push_back(ms[i]);
+        }
 
         break;
     }
@@ -267,6 +319,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = OCT;
             ms[i].valueRef = &p.values;
+            ms[i].valueVec4Ref = &p.valuesVec4;
             meshes.push_back(ms[i]);
         }
 
@@ -277,51 +330,12 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
     {
         // The prism is a little bit trickey, we must use the center of each square, rather than triangle
         Mesh ms[20];
-        std::vector<std::vector<unsigned int>> points = {
-            {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
+        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
         for (int i = 0; i < 20; i++)
         {
             pickPoints(ms[i], p, points[i]);
-        }
-        std::vector<std::vector<std::pair<float, float>>> texCoords = {
-            // Bottom 4 triangles
-            {{0.25, 0.933}, {0, 0.5}, {0.25, 0.067}},
-            {{0.75, 0.933}, {0.25, 0.933}, {0.25, 0.067}},
-            {{0.75, 0.933}, {0.25, 0.067}, {0.75, 0.067}},
-            {{0.75, 0.933}, {0.75, 0.067}, {1, 0.5}},
-
-            // Top 4 triangles
-            {{0.75, 0.067}, {1, 0.5}, {0.75, 0.933}},
-            {{0.75, 0.067}, {0.75, 0.933}, {0.25, 0.933}},
-            {{0.25, 0.067}, {0.75, 0.067}, {0.25, 0.933}},
-            {{0, 0.5}, {0.25, 0.067}, {0.25, 0.933}},
-
-            // Body
-            {{0, 1}, {1, 0}, {1, 1}},
-            {{0, 1}, {0, 0}, {1, 0}},
-
-            {{0, 1}, {0, 0}, {1, 0}},
-            {{0, 1}, {1, 0}, {1, 1}},
-
-            {{0, 1}, {0, 0}, {1, 1}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-        };
-        for (int i = 0; i < 20; i++)
-        {
             pickTex(ms[i], texCoords[i]);
-        }
-        for (int i = 0; i < 20; i++)
-        {
             ms[i].shader = sd;
             if (i < 8)
             {
@@ -335,6 +349,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_FULL;
             ms[i].valueRef = &p.values;
+            ms[i].valueVec4Ref = &p.valuesVec4;
             meshes.push_back(ms[i]);
         }
         break;
@@ -342,47 +357,18 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
 
     case PRISM_BTM:
     {
-        // The prism is a little bit trickey, we must use the center of each square, rather than triangle
         Mesh ms[16];
-        std::vector<std::vector<unsigned int>> points = {
-            {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
+        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
+        for (int i = 0; i < 4; i++)
+        {
+            points.erase(points.begin() + 4); // Remove elements at index 4
+            texCoords.erase(texCoords.begin() + 4);
+        }
         for (int i = 0; i < 16; i++)
         {
             pickPoints(ms[i], p, points[i]);
-        }
-        std::vector<std::vector<std::pair<float, float>>> texCoords = {
-            // Bottom 4 triangles
-            {{0.25, 0.933}, {0, 0.5}, {0.25, 0.067}},
-            {{0.75, 0.933}, {0.25, 0.933}, {0.25, 0.067}},
-            {{0.75, 0.933}, {0.25, 0.067}, {0.75, 0.067}},
-            {{0.75, 0.933}, {0.75, 0.067}, {1, 0.5}},
-
-            // Body
-            {{0, 1}, {1, 0}, {1, 1}},
-            {{0, 1}, {0, 0}, {1, 0}},
-
-            {{0, 1}, {0, 0}, {1, 0}},
-            {{0, 1}, {1, 0}, {1, 1}},
-
-            {{0, 1}, {0, 0}, {1, 1}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-        };
-        for (int i = 0; i < 16; i++)
-        {
             pickTex(ms[i], texCoords[i]);
-        }
-        for (int i = 0; i < 16; i++)
-        {
             ms[i].shader = sd;
             if (i < 4)
             {
@@ -396,114 +382,66 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_BTM;
             ms[i].valueRef = &p.values;
+            ms[i].valueVec4Ref = &p.valuesVec4;
             meshes.push_back(ms[i]);
         }
         break;
     }
     case PRISM_HAT:
     {
-        // The prism is a little bit trickey, we must use the center of each square, rather than triangle
         Mesh ms[16];
-        std::vector<std::vector<unsigned int>> points = {
-            {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
+        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
+        for (int i = 0; i < 4; i++)
+        {
+            points.erase(points.begin());
+            texCoords.erase(texCoords.begin());
+        }
         for (int i = 0; i < 16; i++)
         {
             pickPoints(ms[i], p, points[i]);
-        }
-        std::vector<std::vector<std::pair<float, float>>> texCoords = {
-            // Top 4 triangles
-            {{0.75, 0.067}, {1, 0.5}, {0.75, 0.933}},
-            {{0.75, 0.067}, {0.75, 0.933}, {0.25, 0.933}},
-            {{0.25, 0.067}, {0.75, 0.067}, {0.25, 0.933}},
-            {{0, 0.5}, {0.25, 0.067}, {0.25, 0.933}},
-
-            // Body
-            {{0, 1}, {1, 0}, {1, 1}},
-            {{0, 1}, {0, 0}, {1, 0}},
-
-            {{0, 1}, {0, 0}, {1, 0}},
-            {{0, 1}, {1, 0}, {1, 1}},
-
-            {{0, 1}, {0, 0}, {1, 1}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-        };
-        for (int i = 0; i < 16; i++)
-        {
             pickTex(ms[i], texCoords[i]);
-        }
-        for (int i = 0; i < 16; i++)
-        {
             ms[i].shader = sd;
             if (i < 4)
             {
+                // Attach btm and hat
                 ms[i].texture = tx;
             }
             else
             {
+                // Attach side texture
                 ms[i].texture = stx;
             }
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_HAT;
             ms[i].valueRef = &p.values;
+            ms[i].valueVec4Ref = &p.valuesVec4;
             meshes.push_back(ms[i]);
         }
         break;
     }
     case PRISM_SIDE:
     {
-        // The prism is a little bit trickey, we must use the center of each square, rather than triangle
         Mesh ms[12];
-        std::vector<std::vector<unsigned int>> points = {
-            {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
+        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
+        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
+        for (int i = 0; i < 8; i++)
+        {
+            points.erase(points.begin());
+            texCoords.erase(texCoords.begin());
+        }
+
         for (int i = 0; i < 12; i++)
         {
             pickPoints(ms[i], p, points[i]);
-        }
-        std::vector<std::vector<std::pair<float, float>>> texCoords = {
-
-            // Body
-            {{0, 1}, {1, 0}, {1, 1}},
-            {{0, 1}, {0, 0}, {1, 0}},
-
-            {{0, 1}, {0, 0}, {1, 0}},
-            {{0, 1}, {1, 0}, {1, 1}},
-
-            {{0, 1}, {0, 0}, {1, 1}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-            {{1, 1}, {0, 1}, {0, 0}},
-            {{1, 1}, {0, 0}, {1, 0}},
-
-        };
-        for (int i = 0; i < 12; i++)
-        {
             pickTex(ms[i], texCoords[i]);
-        }
-        for (int i = 0; i < 12; i++)
-        {
             ms[i].shader = sd;
             ms[i].texture = stx;
-
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_HAT;
             ms[i].valueRef = &p.values;
+            ms[i].valueVec4Ref = &p.valuesVec4;
             meshes.push_back(ms[i]);
         }
         break;
@@ -522,10 +460,11 @@ static std::vector<Mesh> makeMeshes(DrawContext &ctx)
 
     for (auto &p : ctx.polygons)
     {
+        // Make sure transparent objects draw last
         processMeshes(p, camPos, camDir, p.isOpaque ? meshOpaque : meshTrans);
     }
 
-#ifdef ENABLE_VT_3D_BLENDING
+#ifdef ENABLE_MESH_SORTING
     std::sort(meshTrans.begin(), meshTrans.end(), [](const Mesh &m1, const Mesh &m2) -> int
               { return m1.distanceToCam > m2.distanceToCam; });
 #endif
@@ -576,6 +515,15 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
         for (auto &v : (*m.valueRef))
         {
             glUniform1f(glGetUniformLocation(m.shader, v.first.c_str()), v.second);
+        }
+        for (auto &v : (*m.valueVec4Ref))
+        {
+            vec4 e;
+            for (int i = 0; i < 4; i++)
+            {
+                e[i] = v.second[i];
+            }
+            glUniform4f(glGetUniformLocation(m.shader, v.first.c_str()), e[0], e[1], e[2], e[3]);
         }
 
         if (m.preset == OCT || m.preset == PRISM_FULL || m.preset == PRISM_BTM || m.preset == PRISM_HAT || m.preset == PRISM_SIDE)

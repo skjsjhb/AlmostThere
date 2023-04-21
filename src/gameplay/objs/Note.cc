@@ -7,7 +7,7 @@
 #define FLAT_NOTE_SIZE 1.0
 #define HOSHI_NOTE_SIZE 0.8
 #define HASHI_NOTE_SIZE 0.6
-#define ASSIST_RING_SIZE 0.3
+#define ASSIST_RING_SIZE 0.6
 #define HASHI_CUT_THRESHOLD 1.0
 #define ASSIST_RING_TIME 1.0
 
@@ -694,7 +694,7 @@ void Hashi::tick(double absTime)
     auto det = hitTime - absTime;
     if (det > 0 && det < ASSIST_RING_TIME)
     {
-        assistRingScale = det / ASSIST_RING_TIME + 0.1; // Minor adjustment
+        assistRingScale = det / ASSIST_RING_TIME + 0.2; // Minor adjustment
     }
     else
     {

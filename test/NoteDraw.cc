@@ -4,6 +4,7 @@
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Input.hh"
 #include "gameplay/objs/Note.hh"
+#include "gameplay/objs/Mask.hh"
 
 int main()
 {
@@ -16,6 +17,14 @@ int main()
     Hoshi h;
     Hashi a;
     Slot s;
+    Mask m;
+
+    vec3 aColor = {0, 1, 1};
+    for (int i = 0; i < 3; i++)
+    {
+        m.color[i] = aColor[i];
+    }
+    m.beginRad = 0.9;
 
     bool running = true;
 
@@ -135,12 +144,15 @@ int main()
         a.performJudge(time, inputs, sm);
         a.tick(time);
 
+        m.tick(time);
+
         s.draw(ctx);
         r.draw(ctx);
         a.draw(ctx);
         t.draw(ctx);
         k.draw(ctx);
         h.draw(ctx);
+        m.draw(ctx);
         vtDraw(ctx);
         vtWindowLoop();
     }

@@ -1,1 +1,1 @@
-src += files(['World.cc', 'Note.cc', 'Slot.cc'])
+src += files(['World.cc', 'Note.cc', 'Slot.cc', 'Mask.cc'])

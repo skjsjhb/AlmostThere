@@ -26,6 +26,7 @@ struct PolygonShape
     std::string shader, texture, subTexture;
     std::vector<std::array<float, 3>> points;
     std::map<std::string, float> values;
+    std::map<std::string, std::array<float, 4>> valuesVec4;
 };
 
 struct DrawContext

@@ -1,6 +1,8 @@
 #include "Slot.hh"
 #include "Note.hh"
 
+#include <cstdlib>
+
 #define SLOT_SIZE 1.2
 #define SLOT_SINK_THRESHOLD 0.001
 #define HIT_EFFECT_SIZE 1.8
@@ -82,8 +84,6 @@ void Slot::tick(double absTime)
     }
 }
 
-#include <cstdlib>
-
 HitEffect::HitEffect()
 {
     initDirection = rand() % 4;
@@ -101,7 +101,7 @@ void HitEffect::tick(double absTime)
         isVisible = false;
         return;
     }
-    auto pct = std::sqrt(dur / HIT_EFFECT_LIFETIME);
+    auto pct = std::pow(dur / HIT_EFFECT_LIFETIME, 0.6) * 0.8 + 0.2;
     size = pct * HIT_EFFECT_SIZE;
     // opacity = (1 - pct) * 0.4 + 0.6;
 }
