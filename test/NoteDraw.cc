@@ -5,6 +5,7 @@
 #include "engine/virtual/Input.hh"
 #include "gameplay/objs/Note.hh"
 #include "gameplay/objs/Mask.hh"
+#include <cglm/cglm.h>
 
 int main()
 {
@@ -19,32 +20,36 @@ int main()
     Slot s;
     Mask m;
 
+    s.center[0] = s.center[1] = 0;
+    s.center[2] = 0;
+    s.normal[0] = s.normal[1] = 0;
+    s.normal[2] = 1;
+    s.up[1] = 1;
+    s.up[0] = s.up[2] = 0;
+    s.isVisible = true;
+
     vec3 aColor = {0, 1, 1};
-    for (int i = 0; i < 3; i++)
-    {
-        m.color[i] = aColor[i];
-    }
-    m.beginRad = 0.9;
+    glm_vec3_copy(aColor, m.color);
 
     bool running = true;
 
     t.hitTime = 2;
     t.isFake = false;
     t.isVisible = true;
-    t.targetSlot = &s;
+    t.bindSlot(&s);
     t.autoControl = true;
     t.keyCode = 87; // Key 'W'
 
     k.hitTime = 4;
     k.isFake = false;
     k.isVisible = true;
-    k.targetSlot = &s;
+    k.bindSlot(&s);
     k.autoControl = true;
     k.keyCode = 87;
 
     r.isFake = false;
     r.isVisible = true;
-    r.targetSlot = &s;
+    r.bindSlot(&s);
     r.autoControl = true;
     r.keyCode = 87;
     r.hitTime = 6;
@@ -53,25 +58,17 @@ int main()
     h.hitTime = 10;
     h.isFake = false;
     h.isVisible = true;
-    h.targetSlot = &s;
+    h.bindSlot(&s);
     h.autoControl = true;
     h.keyCode = 87;
 
     a.hitTime = 12;
     a.isFake = false;
     a.isVisible = true;
-    a.targetSlot = &s;
+    a.bindSlot(&s);
     a.autoControl = true;
     a.keyCode = 87;
     a.absLength = 2;
-
-    s.center[0] = s.center[1] = 0;
-    s.center[2] = 0;
-    s.normal[0] = s.normal[1] = 0;
-    s.normal[2] = 1;
-    s.up[1] = 1;
-    s.up[0] = s.up[2] = 0;
-    s.isVisible = true;
 
     DrawContext ctx;
     vec3 camPos = {0, -6, 9}, camDir = {0, 0.8, -1}, camUp = {0, 1, 0.8};
@@ -109,26 +106,8 @@ int main()
         {
             break;
         }
-        if (time < 2)
-        {
-            s.center[0] = -4;
-        }
-        else if (time > 2 && time < 4)
-        {
-            s.center[0] = -2;
-        }
-        else if (time > 4 && time < 8)
-        {
-            s.center[0] = 0;
-        }
-        else if (time > 8 && time < 10)
-        {
-            s.center[0] = 2;
-        }
-        else if (time > 10 && time < 14)
-        {
-            s.center[0] = 4;
-        }
+        camPos[0] = 5 * sin(time);
+        ctx.cam.setState(camPos, camDir, camUp, glm_rad(60), 1920.0 / 1080);
         ctx.polygons.clear();
 
         glm_vec3_normalize(s.up);

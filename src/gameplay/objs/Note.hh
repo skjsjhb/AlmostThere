@@ -24,13 +24,12 @@ public:
     virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm){}; // Perform judgement
     virtual void draw(DrawContext &ctx){};                                          // Draw using current status
     void tick(double absTime) override;
+    void bindSlot(Slot *slot);
 
     // For PC
     int keyCode;
     // Judgement helper
     JudgeStage jStage = BUSY;
-    // The slot is used to determin the position of the note
-    Slot *targetSlot;
     // Fake notes are not judged but will be ticked
     bool isFake;
     // Auto: System will calculate the position based on fall speed and time
@@ -43,8 +42,11 @@ public:
     // Used to control the position
     // This is the only position method that doesn't use animation
     double hitTime;
-    vec3 basePosition;
-    vec3 up;
+    vec3 basePosition, normal, up;
+
+protected:
+    // The slot will determin the position of the note
+    Slot *targetSlot;
 };
 
 class Tapu : public AbstractNote

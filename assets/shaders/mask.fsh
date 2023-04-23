@@ -12,7 +12,7 @@ void main() {
     if (d <= beginRad) {
         discard;
     } else {
-       float pct = (d - beginRad) / distance(vec3(1, 1, 0), vec3(0, 0, 0));
+       float pct = (d - beginRad) / distance(vec3(1, 1, 0), vec3(0, 0, 0)) - 0.1;
        outColor = color;
        outColor.a *= pct;
     }

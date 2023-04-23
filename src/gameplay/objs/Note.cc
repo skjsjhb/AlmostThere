@@ -23,8 +23,15 @@ void AbstractNote::tick(double absTime)
     // TODO: Obtain fall speed from chart
     auto scale = (hitTime - absTime) * BASE_FALL_SPEED;
     vec3 offset;
-    glm_vec3_scale(targetSlot->up, scale, offset);
+    glm_vec3_scale(up, scale, offset);
     glm_vec3_add(targetSlot->center, offset, basePosition);
+}
+
+void AbstractNote::bindSlot(Slot *s)
+{
+    targetSlot = s;
+    glm_vec3_copy(s->up, up);
+    glm_vec3_copy(s->normal, normal);
 }
 
 void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
@@ -50,10 +57,10 @@ static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractN
     }
     vec3 right;
     vec3 dw, dh;
-    glm_vec3_cross(obj->targetSlot->up, obj->targetSlot->normal, right);
+    glm_vec3_cross(obj->up, obj->normal, right);
     glm_vec3_normalize(right);
     glm_vec3_scale(right, FLAT_NOTE_SIZE, dw);
-    glm_vec3_scale(obj->targetSlot->up, FLAT_NOTE_SIZE, dh);
+    glm_vec3_scale(obj->up, FLAT_NOTE_SIZE, dh);
 
     PolygonShape pg;
     mkRectPoints(pg, obj->basePosition, dh, dw);
@@ -83,17 +90,17 @@ void Puresu::draw(DrawContext &ctx)
     PolygonShape head, tail, body;
     vec3 right, upLen, rightLen, ctr, centerMove, bCenter, tCenter;
 
-    glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
+    glm_vec3_cross(up, normal, right);
     glm_vec3_normalize(right);
     glm_vec3_scale(right, FLAT_NOTE_SIZE, rightLen);
-    glm_vec3_scale(targetSlot->up, FLAT_NOTE_SIZE / 2, upLen);
+    glm_vec3_scale(up, FLAT_NOTE_SIZE / 2, upLen);
     glm_vec3_sub(basePosition, upLen, ctr);
     mkRectPoints(head, ctr, upLen, rightLen);
     head.renderPreset = RECT;
     head.shader = "rect";
     head.texture = "puresu-head";
 
-    glm_vec3_scale(targetSlot->up, length * BASE_FALL_SPEED, upLen);
+    glm_vec3_scale(up, length * BASE_FALL_SPEED, upLen);
     glm_vec3_scale(upLen, 0.5, centerMove);
     glm_vec3_add(basePosition, centerMove, bCenter);
     mkRectPoints(body, bCenter, centerMove, rightLen);
@@ -102,7 +109,7 @@ void Puresu::draw(DrawContext &ctx)
     body.texture = "puresu-body";
 
     glm_vec3_add(bCenter, centerMove, tCenter);
-    glm_vec3_scale(targetSlot->up, FLAT_NOTE_SIZE / 2, upLen);
+    glm_vec3_scale(up, FLAT_NOTE_SIZE / 2, upLen);
     glm_vec3_add(tCenter, upLen, tCenter);
     mkRectPoints(tail, tCenter, upLen, rightLen);
     tail.renderPreset = RECT;
@@ -122,11 +129,11 @@ void Hoshi::draw(DrawContext &ctx)
     }
     vec3 rightVec, upVec, normVec;
     vec3 points[6]; // NS, LR, FB
-    glm_cross(targetSlot->up, targetSlot->normal, rightVec);
+    glm_cross(up, normal, rightVec);
     glm_vec3_normalize(rightVec);
     glm_vec3_scale(rightVec, HOSHI_NOTE_SIZE, rightVec);
-    glm_vec3_scale(targetSlot->up, HOSHI_NOTE_SIZE, upVec);
-    glm_vec3_scale(targetSlot->normal, HOSHI_NOTE_SIZE, normVec);
+    glm_vec3_scale(up, HOSHI_NOTE_SIZE, upVec);
+    glm_vec3_scale(normal, HOSHI_NOTE_SIZE, normVec);
     glm_vec3_add(basePosition, rightVec, points[3]);
     glm_vec3_add(basePosition, upVec, points[5]);
     glm_vec3_sub(basePosition, upVec, points[4]);
@@ -158,7 +165,7 @@ void Hoshi::draw(DrawContext &ctx)
         vec3 rdh;
         glm_vec3_normalize(rightVec);
         glm_vec3_scale(rightVec, size, rightVec);
-        glm_vec3_scale(targetSlot->up, size, rdh);
+        glm_vec3_scale(up, size, rdh);
         mkRectPoints(assist, targetSlot->center, rdh, rightVec);
         ctx.polygons.push_back(assist);
     }
@@ -176,7 +183,7 @@ void Hashi::draw(DrawContext &ctx)
     }
     vec3 right;
     vec3 btmPoints[6], headPoints[6]; // CCW start from right
-    glm_vec3_cross(targetSlot->up, targetSlot->normal, right);
+    glm_vec3_cross(up, normal, right);
     glm_vec3_normalize(right);
     glm_vec3_scale(right, HASHI_NOTE_SIZE, right);
 
@@ -187,13 +194,13 @@ void Hashi::draw(DrawContext &ctx)
         ps.points.push_back(std::to_array(btmPoints[i]));
         if (i != 5)
         {
-            glm_vec3_rotate(right, glm_rad(60.0), targetSlot->normal);
+            glm_vec3_rotate(right, glm_rad(60.0), normal);
         }
     }
 
     auto xlen = length * BASE_FALL_SPEED;
     vec3 upLength;
-    glm_vec3_copy(targetSlot->normal, upLength);
+    glm_vec3_copy(normal, upLength);
     glm_vec3_normalize(upLength);
 
     // Long Hashi notes require cutting, or render will not be correct
@@ -284,10 +291,10 @@ void Hashi::draw(DrawContext &ctx)
 
         auto size = ASSIST_RING_SIZE * assistRingScale;
         vec3 rdh, rightVec;
-        glm_vec3_cross(targetSlot->up, targetSlot->normal, rightVec);
+        glm_vec3_cross(up, normal, rightVec);
         glm_vec3_normalize(rightVec);
         glm_vec3_scale(rightVec, size, rightVec);
-        glm_vec3_scale(targetSlot->up, size, rdh);
+        glm_vec3_scale(up, size, rdh);
         mkRectPoints(assist, targetSlot->center, rdh, rightVec);
         ctx.polygons.push_back(assist);
     }
@@ -622,7 +629,7 @@ void Hoshi::tick(double absTime)
     }
     auto len = det * BASE_FALL_SPEED;
     vec3 shift;
-    glm_vec3_scale(targetSlot->normal, len, shift);
+    glm_vec3_scale(normal, len, shift);
     glm_vec3_add(targetSlot->center, shift, basePosition);
 }
 
@@ -702,7 +709,7 @@ void Hashi::tick(double absTime)
     }
     auto len = det * BASE_FALL_SPEED;
     vec3 shift;
-    glm_vec3_scale(targetSlot->normal, len, shift);
+    glm_vec3_scale(normal, len, shift);
     glm_vec3_add(targetSlot->center, shift, basePosition);
     if (absTime >= hitTime)
     {
