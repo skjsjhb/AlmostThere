@@ -13,7 +13,7 @@ if backend == 'glfw'
   deps += dependency('glfw3')
 endif
 foreach name : ['lua', 'lua5.4', 'lua-5.4', 'lua54']
-    luaDep = dependency(name)
+    luaDep = dependency(name, required: false)
     if luaDep.found()
         deps += luaDep
         break
