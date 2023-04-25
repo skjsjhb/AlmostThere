@@ -5,9 +5,10 @@ testProgs = [
 'Check Util',
 'Schedule',
 'Create Window',
-# 'Note Pos',
-'Note Draw',
-# 'Audio Test'; Not Ready Yet
+# 'Note Pos', ; Waiting for controller ready
+# 'Note Draw', ; Waiting for controller ready
+# 'Audio Test', ; No hardware support
+'Lua Repl'
 ]
 
 
