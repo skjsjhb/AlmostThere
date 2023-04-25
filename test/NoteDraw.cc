@@ -37,20 +37,17 @@ int main()
     t.isFake = false;
     t.isVisible = true;
     t.bindSlot(&s);
-    t.autoControl = true;
     t.keyCode = 87; // Key 'W'
 
     k.hitTime = 4;
     k.isFake = false;
     k.isVisible = true;
     k.bindSlot(&s);
-    k.autoControl = true;
     k.keyCode = 87;
 
     r.isFake = false;
     r.isVisible = true;
     r.bindSlot(&s);
-    r.autoControl = true;
     r.keyCode = 87;
     r.hitTime = 6;
     r.absLength = 2;
@@ -59,14 +56,12 @@ int main()
     h.isFake = false;
     h.isVisible = true;
     h.bindSlot(&s);
-    h.autoControl = true;
     h.keyCode = 87;
 
     a.hitTime = 12;
     a.isFake = false;
     a.isVisible = true;
     a.bindSlot(&s);
-    a.autoControl = true;
     a.keyCode = 87;
     a.absLength = 2;
 
@@ -125,14 +120,15 @@ int main()
 
         m.tick(time);
 
-        s.draw(ctx);
         r.draw(ctx);
         a.draw(ctx);
         t.draw(ctx);
         k.draw(ctx);
         h.draw(ctx);
+        s.draw(ctx);
         m.draw(ctx);
         vtDraw(ctx);
+        vtFinalizeDraw(ctx);
         vtWindowLoop();
     }
     vtGraphicsCleanUp();

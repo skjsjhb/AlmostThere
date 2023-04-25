@@ -12,6 +12,7 @@ deps = []
 if backend == 'glfw'
   deps += dependency('glfw3')
 endif
+deps += dependency('lua')
 static_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
 if backend != 'nothing'
   shared_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])

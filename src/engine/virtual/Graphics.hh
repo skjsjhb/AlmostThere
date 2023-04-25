@@ -41,6 +41,8 @@ extern void vtGraphicsCleanUp();
 
 extern void vtDraw(DrawContext &ctx);
 
+extern void vtFinalizeDraw(DrawContext &ctx);
+
 extern int vtGetGraphicsError();
 
 #endif /* ENGINE_VIRTUAL_GRAPHICS */

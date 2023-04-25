@@ -9,6 +9,7 @@
 #include <stb_image.h>
 #include <algorithm>
 #include <map>
+#include <list>
 
 // #define ENABLE_MESH_SORTING
 
@@ -260,7 +261,7 @@ static std::vector<std::vector<unsigned int>> PRISM_VERTEX = {
 static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(p.shader);
-    auto tx = loadTexture(p.texture, p.renderPreset != OCT);
+    auto tx = loadTexture(p.texture, true);
     unsigned int stx = 0;
     if (p.subTexture.size() > 0)
     {
@@ -451,7 +452,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
     }
 }
 
-static std::vector<Mesh> makeMeshes(DrawContext &ctx)
+static std::pair<std::vector<Mesh>, std::vector<Mesh>> makeMeshes(DrawContext &ctx)
 {
     std::vector<Mesh> meshOpaque, meshTrans;
     vec3 camPos, camDir;
@@ -468,11 +469,7 @@ static std::vector<Mesh> makeMeshes(DrawContext &ctx)
     std::sort(meshTrans.begin(), meshTrans.end(), [](const Mesh &m1, const Mesh &m2) -> int
               { return m1.distanceToCam > m2.distanceToCam; });
 #endif
-    for (auto &t : meshTrans)
-    {
-        meshOpaque.push_back(t);
-    }
-    return meshOpaque;
+    return std::pair(meshOpaque, meshTrans);
 }
 
 static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
@@ -536,13 +533,32 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
     }
 }
 
+static std::list<std::vector<Mesh>> DRAW_BUFFER_OPAQUE, DRAW_BUFFER_ALPHA;
+
 void vtDraw(DrawContext &ctx)
 {
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     auto meshes = makeMeshes(ctx);
-    completeDraw(meshes, ctx);
+    DRAW_BUFFER_OPAQUE.push_back(meshes.first);
+    DRAW_BUFFER_ALPHA.push_back(meshes.second);
 };
+
+void vtFinalizeDraw(DrawContext &ctx)
+{
+    for (auto &p : DRAW_BUFFER_OPAQUE)
+    {
+        completeDraw(p, ctx);
+    }
+    for (auto &p : DRAW_BUFFER_ALPHA)
+    {
+
+        completeDraw(p, ctx);
+    }
+    DRAW_BUFFER_OPAQUE.clear();
+    DRAW_BUFFER_ALPHA.clear();
+}
+
 int vtGetGraphicsError()
 {
     return glGetError();

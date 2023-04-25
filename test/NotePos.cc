@@ -9,7 +9,6 @@ int main()
     t.hitTime = 2;
     t.isFake = false;
     t.isVisible = true;
-    t.autoControl = true;
     s.center[0] = s.center[1] = s.center[2] = 0;
     s.normal[0] = s.normal[1] = 0;
     s.normal[2] = 1;

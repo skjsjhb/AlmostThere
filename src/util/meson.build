@@ -1,1 +1,1 @@
-src += files(['Util.cc', 'Event.cc'])
+src += files(['Util.cc'])

@@ -10,7 +10,9 @@
 #define ASSIST_RING_SIZE 0.6
 #define HASHI_CUT_THRESHOLD 1.0
 #define ASSIST_RING_TIME 1.0
-
+#define HIT_EFFECT_SIZE 1.8
+#define HIT_EFFECT_LIFETIME 0.4
+#define HIT_EFFECT_GEN_INTERVAL 0.2
 #define NOTE_FLOAT_THRESHOLD 0.01
 #define SHIZUKU_JUDGE_WINDOW 0.01
 
@@ -20,18 +22,54 @@ void AbstractNote::tick(double absTime)
     {
         return;
     }
-    // TODO: Obtain fall speed from chart
-    auto scale = (hitTime - absTime) * BASE_FALL_SPEED;
-    vec3 offset;
-    glm_vec3_scale(up, scale, offset);
-    glm_vec3_add(targetSlot->center, offset, basePosition);
+
+    controller->tick(absTime);
+    controller->getPos(basePosition);
+    controller->getUp(up);
+    controller->getNorm(normal);
+
+    // Generating hit effect
+    if (playingHitEffect)
+    {
+        playingHitEffect = false; // Will be set to true in the next tick
+        if (absTime - lastGenTime >= HIT_EFFECT_GEN_INTERVAL)
+        {
+            HitEffect *he = new HitEffect(basePosition, up, normal);
+            he->isVisible = true;
+            he->startTime = absTime;
+            hitEffects.insert(he);
+            lastGenTime = absTime;
+        }
+    }
+    else
+    {
+        lastGenTime = 0;
+    }
+
+    // Ticking
+    for (auto &h : hitEffects)
+    {
+        h->tick(absTime);
+        if (!h->isVisible)
+        {
+            hitEffects.erase(h);
+            delete h;
+        }
+    }
 }
 
 void AbstractNote::bindSlot(Slot *s)
 {
-    targetSlot = s;
     glm_vec3_copy(s->up, up);
     glm_vec3_copy(s->normal, normal);
+}
+
+void AbstractNote::draw(DrawContext &ctx)
+{
+    for (auto &h : hitEffects)
+    {
+        h->draw(ctx);
+    }
 }
 
 void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
@@ -72,16 +110,19 @@ static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractN
 
 void Tapu::draw(DrawContext &ctx)
 {
+    AbstractNote::draw(ctx);
     commonRectDraw(ctx, "tapu", this);
 }
 
 void Shizuku::draw(DrawContext &ctx)
 {
+    AbstractNote::draw(ctx);
     commonRectDraw(ctx, "shizuku", this);
 }
 
 void Puresu::draw(DrawContext &ctx)
 {
+    AbstractNote::draw(ctx);
     // TODO: paint three pos
     if (!isVisible || length <= 0)
     {
@@ -123,6 +164,7 @@ void Puresu::draw(DrawContext &ctx)
 
 void Hoshi::draw(DrawContext &ctx)
 {
+    AbstractNote::draw(ctx);
     if (!isVisible)
     {
         return;
@@ -141,7 +183,6 @@ void Hoshi::draw(DrawContext &ctx)
     glm_vec3_add(basePosition, normVec, points[0]);
     glm_vec3_sub(basePosition, normVec, points[1]);
     PolygonShape ps;
-    ps.isOpaque = false;
     ps.renderPreset = OCT;
     ps.shader = "hoshi";
     ps.texture = "hoshi";
@@ -158,6 +199,7 @@ void Hoshi::draw(DrawContext &ctx)
         PolygonShape assist;
         assist.renderPreset = RECT;
         assist.shader = "assist-ring";
+        assist.isOpaque = false;
         assist.texture = "space-assist";
         assist.values["opacity"] = 1 - assistRingScale;
 
@@ -173,6 +215,7 @@ void Hoshi::draw(DrawContext &ctx)
 
 void Hashi::draw(DrawContext &ctx)
 {
+    AbstractNote::draw(ctx);
     if (!isVisible)
     {
         return;
@@ -257,7 +300,6 @@ void Hashi::draw(DrawContext &ctx)
         // Push all
         for (int i = 0; i < pieces; i++)
         {
-            pse[i].isOpaque = false;
             pse[i].shader = "hashi";
             pse[i].texture = "hashi-hat";
             pse[i].subTexture = "hashi-side";
@@ -275,7 +317,6 @@ void Hashi::draw(DrawContext &ctx)
         }
 
         ps.renderPreset = PRISM_FULL;
-        ps.isOpaque = false;
         ps.shader = "hashi";
         ps.texture = "hashi-hat";
         ps.subTexture = "hashi-side";
@@ -287,6 +328,7 @@ void Hashi::draw(DrawContext &ctx)
         assist.renderPreset = RECT;
         assist.shader = "assist-ring";
         assist.texture = "space-assist";
+        assist.isOpaque = false;
         assist.values["opacity"] = 1 - assistRingScale;
 
         auto size = ASSIST_RING_SIZE * assistRingScale;
@@ -344,7 +386,7 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     case ACTIVE:
         if (input.keyInfo[keyCode] == 1)
         {
-            targetSlot->inUse = true;
+            playingHitEffect = true;
             // Let's do this
             jStage = JUDGED;
             if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
@@ -371,7 +413,6 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         break;
     case JUDGED:
     default:
-        // TODO: play animantion and post-process
         isVisible = false;
         return;
     }
@@ -386,7 +427,6 @@ void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     switch (jStage)
     {
     case JUDGED:
-        // TODO: add animation
         isVisible = false;
         return;
     default:
@@ -397,7 +437,7 @@ void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
             if (input.keyInfo[keyCode] == 1)
             {
                 // You got it
-                targetSlot->inUse = true;
+                playingHitEffect = true;
                 sm.addJudgeGrade(PF, SZKU);
                 jStage = JUDGED;
             }
@@ -487,8 +527,8 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         else
         {
-            targetSlot->inUse = true; // Keep the animation playing
-            lastSuccJudge = absTime;  // Refresh time
+            playingHitEffect = true; // Keep the animation playing
+            lastSuccJudge = absTime; // Refresh time
         }
         if (lastSuccJudge == -1)
         {
@@ -580,7 +620,7 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     case ACTIVE:
         if (input.keyInfo[keyCode] == 1)
         {
-            targetSlot->inUse = true;
+            playingHitEffect = true;
             jStage = JUDGED;
             if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
             {
@@ -606,7 +646,6 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         break;
     case JUDGED:
     default:
-        // TODO: play animantion and post-process
         isVisible = false;
         return;
     }
@@ -642,7 +681,6 @@ void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     switch (jStage)
     {
     case JUDGED:
-        // TODO: add animation
         isVisible = false;
         return;
     default:
@@ -655,7 +693,7 @@ void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
             }
             if (input.keyInfo[keyCode] == 1)
             {
-                targetSlot->inUse = true;
+                playingHitEffect = true;
                 judgedLength += (absTime - lastSuccJudge);
             }
             lastSuccJudge = absTime;
@@ -727,4 +765,49 @@ void Hashi::tick(double absTime)
     {
         length = absLength;
     }
+}
+
+HitEffect::HitEffect(vec3 p, vec3 u, vec3 n)
+{
+    initDirection = rand() % 4;
+    glm_vec3_copy(p, pos);
+    glm_vec3_copy(u, up);
+    glm_vec3_copy(n, normal);
+}
+
+void HitEffect::tick(double absTime)
+{
+    if (!isVisible)
+    {
+        return;
+    }
+    double dur = absTime - startTime;
+    if (dur > HIT_EFFECT_LIFETIME)
+    {
+        isVisible = false;
+        return;
+    }
+    auto pct = dur / HIT_EFFECT_LIFETIME;
+    size = 2.8 * std::log10(1 + 1.275 * pct) * HIT_EFFECT_SIZE;
+    opacity = -4 * std ::pow(pct - 0.5, 3) + 0.5;
+}
+
+void HitEffect::draw(DrawContext &ctx)
+{
+    PolygonShape pg;
+    pg.renderPreset = RECT;
+    pg.isOpaque = false;
+    pg.shader = "hit-effect";
+    pg.texture = "hit-effect";
+    pg.values["alpha"] = opacity;
+    vec3 tUp, tRight;
+    glm_vec3_copy(up, tUp);
+    glm_vec3_normalize(tUp);
+    glm_vec3_rotate(tUp, glm_rad(initDirection * 90), normal);
+    glm_vec3_cross(tUp, normal, tRight);
+    glm_vec3_normalize(tRight);
+    glm_vec3_scale(tUp, size, tUp);
+    glm_vec3_scale(tRight, size, tRight);
+    mkRectPoints(pg, pos, tUp, tRight);
+    ctx.polygons.push_back(pg);
 }

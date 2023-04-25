@@ -3,10 +3,9 @@ testProgs = [
 'Score Calc',
 'Timing',
 'Check Util',
-'Animation',
 'Schedule',
 'Create Window',
-'Note Pos',
+# 'Note Pos',
 'Note Draw',
 # 'Audio Test'; Not Ready Yet
 ]

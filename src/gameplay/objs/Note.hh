@@ -3,6 +3,7 @@
 
 #include <cglm/cglm.h>
 #include "TickObject.hh"
+#include "gameplay/control/NoteControl.hh"
 #include "Slot.hh"
 #include "NoteDef.hh"
 #include "gameplay/score/Score.hh"
@@ -17,12 +18,26 @@ enum JudgeStage
     JUDGED, // Judge finished, either missed or completed
 };
 
+class HitEffect : public TickObject
+{
+public:
+    double startTime;
+    bool isVisible = true;
+    void tick(double absTime) override;
+    void draw(DrawContext &ctx);
+    HitEffect(vec3 pos, vec3 up, vec3 normal);
+
+protected:
+    vec3 pos, up, normal;
+    double size = 0, initDirection, opacity = 1;
+};
+
 // Represents a loaded note
 class AbstractNote : public TickObject
 {
 public:
     virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm){}; // Perform judgement
-    virtual void draw(DrawContext &ctx){};                                          // Draw using current status
+    virtual void draw(DrawContext &ctx);                                            // Draw using current status
     void tick(double absTime) override;
     void bindSlot(Slot *slot);
 
@@ -32,9 +47,6 @@ public:
     JudgeStage jStage = BUSY;
     // Fake notes are not judged but will be ticked
     bool isFake;
-    // Auto: System will calculate the position based on fall speed and time
-    // Manual: Block auto control and control it by animation only
-    bool autoControl;
     // Since the time it's loaded it will remain visible
     bool isVisible;
     NoteElementType element;
@@ -47,6 +59,13 @@ public:
 protected:
     // The slot will determin the position of the note
     Slot *targetSlot;
+    // Controller
+    NoteController *controller;
+
+    // Hit effect
+    bool playingHitEffect = false;
+    double lastGenTime; // Last hit effect played
+    std::set<HitEffect *> hitEffects;
 };
 
 class Tapu : public AbstractNote
