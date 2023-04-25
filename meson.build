@@ -12,7 +12,16 @@ deps = []
 if backend == 'glfw'
   deps += dependency('glfw3')
 endif
-deps += dependency('lua')
+foreach name : ['lua', 'lua5.4', 'lua-5.4', 'lua54']
+    luaDep = dependency(name)
+    if luaDep.found()
+        deps += luaDep
+        break
+    endif
+endforeach
+if not luaDep.found()
+    error('Lua could not be found!')
+endif
 static_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
 if backend != 'nothing'
   shared_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])

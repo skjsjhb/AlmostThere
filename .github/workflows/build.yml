@@ -16,7 +16,7 @@ jobs:
         run: |
           mkdir build && cd build && ln -s ../assets ./assets
       - name: Install Deps
-        run: sudo apt install lua5.3
+        run: sudo apt install lua5.4
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test
