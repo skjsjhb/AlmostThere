@@ -69,7 +69,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4.5.0
       - name: Install Deps
-        run: sudo apt install lua5.4
+        run: sudo apt install lua5.4 liblua5.4-dev
       - name: Setup Build
         run: pip install meson && sudo apt install ninja-build
 
