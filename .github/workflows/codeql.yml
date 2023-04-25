@@ -68,7 +68,8 @@ jobs:
       #     ./location_of_script_within_repo/buildscript.sh
       - name: Setup Python
         uses: actions/setup-python@v4.5.0
-
+      - name: Install Deps
+        run: sudo apt install lua5.3
       - name: Setup Build
         run: pip install meson && sudo apt install ninja-build
 
