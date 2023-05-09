@@ -13,6 +13,7 @@ protected:
     NativeTimerFunc _nativeGetTime;
 
 public:
+    Timer();
     Timer(NativeTimerFunc origin);
     double getTime();
     void pause();

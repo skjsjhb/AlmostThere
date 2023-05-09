@@ -3,7 +3,7 @@
 
 #include <cglm/cglm.h>
 #include "TickObject.hh"
-#include "gameplay/control/NoteControl.hh"
+#include "gameplay/control/Controller.hh"
 #include "Slot.hh"
 #include "NoteDef.hh"
 #include "gameplay/score/Score.hh"
@@ -41,30 +41,30 @@ public:
     void tick(double absTime) override;
     void bindSlot(Slot *slot);
 
-    // For PC
-    int keyCode;
     // Judgement helper
     JudgeStage jStage = BUSY;
     // Fake notes are not judged but will be ticked
-    bool isFake;
+    bool isFake = false;
     // Since the time it's loaded it will remain visible
-    bool isVisible;
+    bool isVisible = true;
     NoteElementType element;
     // When will the note hit the slot
     // Used to control the position
     // This is the only position method that doesn't use animation
     double hitTime;
     vec3 basePosition, normal, up;
+    // For assist-ring displaying
+    Slot *targetSlot = nullptr;
+    // Linked world
+    World *world = nullptr;
+    // Linked score manager
+    // TODO: replace existing score manager with built-in
+    ScoreManager *score = nullptr;
 
 protected:
-    // The slot will determin the position of the note
-    Slot *targetSlot;
-    // Controller
-    NoteController *controller;
-
     // Hit effect
     bool playingHitEffect = false;
-    double lastGenTime; // Last hit effect played
+    double lastGenTime = 0; // Last hit effect played
     std::set<HitEffect *> hitEffects;
 };
 
@@ -96,6 +96,13 @@ protected:
     double lastSuccJudge = -1; // Timestamp of the last successful judgement.
 };
 
+class Kyozetsu : public AbstractNote
+{
+public:
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
+    void draw(DrawContext &ctx) override;
+};
+
 class Hoshi : public AbstractNote
 {
 public:
@@ -121,7 +128,5 @@ protected:
     double lastSuccJudge = -1;
     double judgedLength;
 };
-
-void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen);
 
 #endif /* GAMEPLAY_OBJS_NOTE */

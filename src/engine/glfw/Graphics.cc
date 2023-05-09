@@ -1,6 +1,9 @@
 #include "engine/virtual/Graphics.hh"
 #include "engine/virtual/Framework.hh"
-#include <glad/glad.h>
+#include "engine/virtual/Window.hh"
+#include "support/Resource.hh"
+#include <climits>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <cglm/cglm.h>
 #include <string>
@@ -10,11 +13,130 @@
 #include <algorithm>
 #include <map>
 #include <list>
+#include "spdlog/spdlog.h"
+#include <ft2build.h>
+#include FT_FREETYPE_H
+using namespace spdlog;
+
+#define GRAPH_UI_ORTHO_NEAR_Z 0.1
+#define GRAPH_UI_ORTHO_FAR_Z 2.0
 
 // #define ENABLE_MESH_SORTING
+#ifdef ENABLE_MESH_SORTING
+#warning "The blend sorting system has known flaws and vulnerabilities. It will also reduce FPS significantly."
+#endif
 
 static std::map<std::string, GLuint> texturesCtl;
 static std::map<std::string, GLuint> shadersCtl;
+
+struct Glyph
+{
+    unsigned int texID;
+    vec2 size;
+    vec2 bearing;
+    unsigned int advance;
+};
+
+static std::vector<std::string> faces = {"en.ttf", "zh.otf", "jp.ttf"};
+static std::vector<FT_Face> alterFaces;
+static std::map<wchar_t, Glyph> glyphBuf;
+static std::set<wchar_t> missingChar;
+static FT_Library ftlib;
+
+static Glyph *loadCharGlyph(wchar_t c)
+{
+    if (missingChar.contains(c))
+    {
+        return nullptr;
+    }
+    if (glyphBuf.contains(c))
+    {
+        return &glyphBuf[c];
+    }
+    else
+    {
+        // Generate a new glyph
+        bool loaded = false;
+        for (auto &f : alterFaces)
+        {
+            if (FT_Load_Glyph(f, FT_Get_Char_Index(f, c), FT_LOAD_RENDER) || f->glyph->glyph_index == 0)
+            {
+                // Try next
+                continue;
+            }
+            loaded = true;
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            unsigned int tex;
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                GL_RED,
+                f->glyph->bitmap.width,
+                f->glyph->bitmap.rows,
+                0,
+                GL_RED,
+                GL_UNSIGNED_BYTE,
+                f->glyph->bitmap.buffer);
+            // set texture options
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            Glyph gp;
+            gp.texID = tex;
+            gp.size[0] = f->glyph->bitmap.width;
+            gp.size[1] = f->glyph->bitmap.rows;
+            gp.bearing[0] = f->glyph->bitmap_left;
+            gp.bearing[1] = f->glyph->bitmap_top;
+            gp.advance = f->glyph->advance.x;
+            glyphBuf[c] = gp;
+            return &glyphBuf[c];
+        }
+        if (!loaded)
+        {
+            warn("Missing font for char unicode " + std::to_string((long)c) + ". Check font files.");
+            missingChar.insert(c);
+        }
+    }
+    return nullptr;
+}
+
+static void loadFont()
+{
+    if (FT_Init_FreeType(&ftlib))
+    {
+        error("Could not initialize FreeType library. Is it missing, or not compatible with current platform?");
+        return;
+    }
+    for (auto &f : faces)
+    {
+        FT_Face face;
+        if (FT_New_Face(ftlib, getAppResource("fonts/" + f).c_str(), 0, &face))
+        {
+            error("Could not load font file '" + f + "'. Is this font file corrupted, or not supported by FreeType?");
+            return;
+        }
+        info("Loaded font file '" + f + "'");
+        FT_Set_Pixel_Sizes(face, 0, 96);
+        alterFaces.push_back(face);
+    }
+}
+
+static void cleanFont()
+{
+    for (auto &p : glyphBuf)
+    {
+        glDeleteTextures(1, &p.second.texID);
+    }
+    for (auto &f : alterFaces)
+    {
+        FT_Done_Face(f);
+    }
+    FT_Done_FreeType(ftlib);
+}
 
 static GLuint
 loadShader(const std::string &name)
@@ -23,11 +145,17 @@ loadShader(const std::string &name)
     {
         return shadersCtl[name];
     }
+    info("Compiling new shader '" + name + "'");
     GLuint vsh, fsh, prog;
     vsh = glCreateShader(GL_VERTEX_SHADER);
     fsh = glCreateShader(GL_FRAGMENT_SHADER);
-    std::ifstream vs("assets/shaders/" + name + ".vsh");
-    std::ifstream fs("assets/shaders/" + name + ".fsh");
+    std::ifstream vs(getAppResource("shaders/" + name + ".vsh"));
+    std::ifstream fs(getAppResource("shaders/" + name + ".fsh"));
+    if (vs.fail() || fs.fail())
+    {
+        error("Could not find shader files. Loading shader '" + name + "'");
+        return INT_MAX;
+    }
     std::stringstream vsc, fsc;
     vsc << vs.rdbuf();
     vs.close();
@@ -40,36 +168,68 @@ loadShader(const std::string &name)
     const char *fscrc = fsrc.c_str();
     glShaderSource(vsh, 1, &vscrc, NULL);
     glShaderSource(fsh, 1, &fscrc, NULL);
+
     glCompileShader(vsh);
     glCompileShader(fsh);
+    int success;
+    char infoLog[1024];
+    glGetShaderiv(vsh, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vsh, 1024, NULL, infoLog);
+        error("Shader compilation error detected. In VERT '" + name + "':");
+        error(infoLog);
+        return INT_MAX;
+    };
+    glGetShaderiv(fsh, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fsh, 1024, NULL, infoLog);
+        error("Shader compilation error detected. In FRAG '" + name + "':");
+        error(infoLog);
+        return INT_MAX;
+    };
+
     prog = glCreateProgram();
     glAttachShader(prog, vsh);
     glAttachShader(prog, fsh);
     glLinkProgram(prog);
+
+    glGetProgramiv(prog, GL_LINK_STATUS, &success);
+    if (!success)
+    {
+        glGetProgramInfoLog(prog, 1024, NULL, infoLog);
+        error("Shader program linkage error detected. In '" + name + "':");
+        error(infoLog);
+        return INT_MAX;
+    };
     glDeleteShader(vsh);
     glDeleteShader(fsh);
+
     shadersCtl[name] = prog;
     return prog;
 }
 
 static GLuint loadTexture(const std::string &name, bool enableMipmap)
 {
-    if (name.size() == 0)
-    {
-        return 0;
-    }
     if (texturesCtl.contains(name))
     {
         return texturesCtl[name];
     }
+    info("Loading new texture '" + name + "'");
     GLuint tex;
     glGenTextures(1, &tex);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
     int width, height, nrChannels;
-    auto pt = "assets/textures/" + name + ".png";
+    auto pt = getAppResource("textures/" + name + ".png");
     stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(pt.c_str(), &width, &height, &nrChannels, 0);
+    if (data == NULL)
+    {
+        error("Could not load texture '" + name + "'. Is this file missing, or is stb_image corrupted?");
+        return INT_MAX;
+    }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
     if (enableMipmap)
@@ -83,7 +243,8 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     if (nrChannels == 3)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        // Sample as vec4 (RGBA)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     }
     else
     {
@@ -93,26 +254,64 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
     {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
+    glBindTexture(GL_TEXTURE_2D, 0);
     stbi_image_free(data);
     texturesCtl[name] = tex;
     return tex;
 }
 
-static GLuint vbo, vao;
+static GLuint vbo, vao, textVBO, textVAO;
 
 void vtGraphicsInit()
 {
+    info("Initializing graphics buffers.");
     glGenBuffers(1, &vbo);
     glGenVertexArrays(1, &vao);
+
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+    info("Initializing text buffers.");
+
+    glGenVertexArrays(1, &textVAO);
+    glGenBuffers(1, &textVBO);
+
+    glBindVertexArray(textVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 15, NULL, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+    glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    info("Loading fonts.");
+    loadFont();
 }
 
 void vtGraphicsCleanUp()
 {
+    info("Deleting graphics buffers.");
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
+    for (auto &p : shadersCtl)
+    {
+        glDeleteProgram(p.second);
+    }
+    for (auto &t : texturesCtl)
+    {
+        glDeleteTextures(1, &t.second);
+    }
+    info("Cleaning up fonts.");
+    glDeleteBuffers(1, &textVBO);
+    glDeleteVertexArrays(1, &textVAO);
+    cleanFont();
 }
 
 struct Mesh
@@ -128,14 +327,13 @@ struct Mesh
 };
 
 #ifdef ENABLE_MESH_SORTING
+
 static bool isAround(float a, float b)
 {
     auto diff = std::abs(1 - a / b);
     return diff <= 0.01;
 }
-#endif
 
-#ifdef ENABLE_MESH_SORTING
 static void getAbsCenter(vec3 vert[], vec3 ctr)
 {
     vec3 a, b;
@@ -191,6 +389,91 @@ static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
 #else
     return 0;
 #endif
+}
+static mat4 uiProj;
+
+void vtSetBufferSize(int w, int h)
+{
+    glm_ortho(0, w, 0, h, GRAPH_UI_ORTHO_NEAR_Z, GRAPH_UI_ORTHO_FAR_Z, uiProj);
+}
+static void drawTypography(Typography &t)
+{
+    auto sd = loadShader("text");
+    glUseProgram(sd);
+    glUniform3f(glGetUniformLocation(sd, "tColor"), t.color[0], t.color[1], t.color[2]);
+    glActiveTexture(GL_TEXTURE1); // Use another texture
+    glUniform1i(glGetUniformLocation(sd, "baseTex"), 1);
+    glUniformMatrix4fv(glGetUniformLocation(sd, "proj"), 1, GL_FALSE, (float *)uiProj);
+    glBindVertexArray(textVAO);
+
+    auto x = t.pos[0], y = t.pos[1];
+    float xoffset = 0, yoffset = 0;
+
+    // Calc offset
+    for (auto c : t.text)
+    {
+        auto gptr = loadCharGlyph(c);
+        if (gptr == nullptr)
+        {
+            continue;
+        }
+        Glyph &g = *gptr;
+        float h = g.size[1] * t.size;
+        xoffset += (g.advance >> 6) * t.size;
+        yoffset = h > yoffset ? h : yoffset;
+    }
+    if (t.xAlign == RIGHT)
+    {
+        x -= xoffset;
+    }
+    else if (t.xAlign == CENTER)
+    {
+        x -= xoffset / 2.0;
+    }
+
+    if (t.yAlign == RIGHT)
+    {
+        y -= yoffset;
+    }
+    else if (t.yAlign == CENTER)
+    {
+        y -= yoffset / 2.0;
+    }
+    for (auto c : t.text)
+    {
+        auto gptr = loadCharGlyph(c);
+        if (gptr == nullptr)
+        {
+            continue;
+        }
+        Glyph &g = *gptr;
+
+        float w = g.size[0] * t.size;
+        float h = g.size[1] * t.size;
+
+        float xpos = x + g.bearing[0] * t.size;
+        float ypos = y - (g.size[1] - g.bearing[1]) * t.size;
+        xoffset += (g.advance >> 6) * t.size;
+        yoffset = h > yoffset ? h : yoffset;
+        float vertices[6][4] = {
+            {xpos, ypos + h, 0.0f, 0.0f},
+            {xpos, ypos, 0.0f, 1.0f},
+            {xpos + w, ypos, 1.0f, 1.0f},
+
+            {xpos, ypos + h, 0.0f, 0.0f},
+            {xpos + w, ypos, 1.0f, 1.0f},
+            {xpos + w, ypos + h, 1.0f, 0.0f}};
+
+        glBindTexture(GL_TEXTURE_2D, g.texID);
+        glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+
+        x += (g.advance >> 6) * t.size;
+    }
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 static void pickPoints(Mesh &ms, const PolygonShape &p, const std::vector<unsigned int> &ptOrder)
@@ -261,7 +544,17 @@ static std::vector<std::vector<unsigned int>> PRISM_VERTEX = {
 static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(p.shader);
-    auto tx = loadTexture(p.texture, true);
+    unsigned int tx = 0;
+    if (p.texture.size() > 0)
+    {
+        tx = loadTexture(p.texture, true);
+    }
+    if (sd == INT_MAX || tx == INT_MAX)
+    {
+        // Problem loading, skip render
+        warn("Skipped mesh process due to previous errors. Check log output for details.");
+        return;
+    }
     unsigned int stx = 0;
     if (p.subTexture.size() > 0)
     {
@@ -329,7 +622,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
     // Full prism draw can only be used for short ones
     case PRISM_FULL:
     {
-        // The prism is a little bit trickey, we must use the center of each square, rather than triangle
+        // The prism is a little bit tricky, we must use the center of each square, rather than triangle
         Mesh ms[20];
         std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
         std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
@@ -448,6 +741,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
         break;
     }
     default:
+        warn("Unknown mesh preset: " + std::to_string(p.renderPreset) + ", skipped.");
         break;
     }
 }
@@ -494,12 +788,7 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
                 vertex[5 * i + j] = m.texCoord[i][j - 3];
             }
         }
-        glBindVertexArray(vao);
-        glBufferData(GL_ARRAY_BUFFER, 15 * sizeof(float), vertex, GL_STREAM_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+
         glUseProgram(m.shader);
         glUniformMatrix4fv(glGetUniformLocation(m.shader, "view"), 1, GL_FALSE, (float *)view);
         glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, (float *)proj);
@@ -513,6 +802,7 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
         {
             glUniform1f(glGetUniformLocation(m.shader, v.first.c_str()), v.second);
         }
+
         for (auto &v : (*m.valueVec4Ref))
         {
             vec4 e;
@@ -528,6 +818,10 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
             glUniform3f(glGetUniformLocation(m.shader, "aNormal"), m.normal[0], m.normal[1], m.normal[2]);
             glUniform3f(glGetUniformLocation(m.shader, "camDir"), dir[0], dir[1], dir[2]);
         }
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex), vertex);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glBindVertexArray(0);
     }
@@ -537,6 +831,7 @@ static std::list<std::vector<Mesh>> DRAW_BUFFER_OPAQUE, DRAW_BUFFER_ALPHA;
 
 void vtDraw(DrawContext &ctx)
 {
+    glGetError(); // Dispose previous
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     auto meshes = makeMeshes(ctx);
@@ -546,17 +841,28 @@ void vtDraw(DrawContext &ctx)
 
 void vtFinalizeDraw(DrawContext &ctx)
 {
+    // Meshes
     for (auto &p : DRAW_BUFFER_OPAQUE)
     {
         completeDraw(p, ctx);
     }
     for (auto &p : DRAW_BUFFER_ALPHA)
     {
-
         completeDraw(p, ctx);
     }
     DRAW_BUFFER_OPAQUE.clear();
     DRAW_BUFFER_ALPHA.clear();
+
+    // Typography
+    for (auto &t : ctx.typos)
+    {
+        drawTypography(t);
+    }
+    auto err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        warn("GL error detected: " + std::to_string(err) + ". Check draw instructions.");
+    }
 }
 
 int vtGetGraphicsError()

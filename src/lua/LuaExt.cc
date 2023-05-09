@@ -3,9 +3,10 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <map>
+#include <cglm/cglm.h>
 #include "LuaSupport.hh"
 
-static double sinValue[360], cosValue[360];
+static double sinValue[361], cosValue[361];
 
 static int stdDeg(double rad)
 {
@@ -20,22 +21,61 @@ static int stdDeg(double rad)
 static int quickSin(lua_State *l)
 {
     double rad = lua_tonumber(l, -1);
-    lua_pushnumber(l, sinValue[stdDeg(rad)]);
+    auto d = stdDeg(rad);
+    lua_pushnumber(l, 0.5 * (sinValue[d] + sinValue[d + 1]));
     return 1;
 }
 
 static int quickCos(lua_State *l)
 {
     double rad = lua_tonumber(l, -1);
-    lua_pushnumber(l, cosValue[stdDeg(rad)]);
+    auto d = stdDeg(rad);
+    lua_pushnumber(l, 0.5 * (cosValue[d] + cosValue[d + 1]));
     return 1;
 }
 
 static int quickTan(lua_State *l)
 {
     double rad = lua_tonumber(l, -1);
-    auto i = stdDeg(rad);
-    lua_pushnumber(l, sinValue[i] / cosValue[i]);
+    auto d = stdDeg(rad);
+    lua_pushnumber(l, 0.5 * (sinValue[d] / cosValue[d] + sinValue[d + 1] / cosValue[d + 1]));
+    return 1;
+}
+
+static int rawRotate(lua_State *l)
+{
+    // Sig: __native_rotate(vec3 target, vec3 axis, double radius)
+
+    if (lua_istable(l, -2) && lua_istable(l, -3) & lua_isnumber(l, -1))
+    {
+        vec3 cpTarget, cpAxis;
+        float rad;
+
+        for (int i = 0; i < 3; i++)
+        {
+            lua_pushinteger(l, i + 1);
+            lua_gettable(l, -4);
+            cpTarget[i] = lua_tonumber(l, -1);
+            lua_remove(l, -1);
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            lua_pushinteger(l, i + 1);
+            lua_gettable(l, -3);
+            cpAxis[i] = lua_tonumber(l, -1);
+            lua_remove(l, -1);
+        }
+        rad = lua_tonumber(l, -1);
+        glm_vec3_rotate(cpTarget, rad, cpAxis);
+        for (int i = 0; i < 3; i++)
+        {
+            lua_pushnumber(l, i + 1);
+            lua_pushnumber(l, cpTarget[i]);
+            lua_settable(l, -5);
+        }
+    }
+
     return 1;
 }
 
@@ -46,7 +86,10 @@ void luaSetupExt()
         sinValue[i] = std::sin(i / 180.0 * M_PI);
         cosValue[i] = std::cos(i / 180.0 * M_PI);
     }
-    luaBind("qsin", quickSin);
-    luaBind("qcos", quickCos);
-    luaBind("qtan", quickTan);
+    sinValue[360] = sinValue[0];
+    cosValue[360] = cosValue[0];
+    luaBind("__native_qsin", quickSin);
+    luaBind("__native_qcos", quickCos);
+    luaBind("__native_qtan", quickTan);
+    luaBind("__native_raw_rotate", rawRotate);
 }

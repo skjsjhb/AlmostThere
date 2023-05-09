@@ -1,6 +1,7 @@
 #include "World.hh"
 
 #include "util/Util.hh"
+#include "engine/virtual/Window.hh"
 
 #define PERSPECTIVE_NEAR 1.0f
 #define PERSPECTIVE_FAR 100.0f
@@ -19,6 +20,18 @@ void Camera::setState(vec3 pos_, vec3 direction_, vec3 up_, double fov_, double 
 
     glm_perspective(fov, aspect, PERSPECTIVE_NEAR, PERSPECTIVE_FAR, _cProjectionMatrix);
     glm_mat4_inv(_cProjectionMatrix, _cProjectionMatrixInv);
+}
+
+void Camera::tick(double absTime)
+{
+    controller->tick(absTime);
+    vec3 p, d, u;
+    glm_vec3_copy(controller->currentStatus.pos, p);
+    glm_vec3_copy(controller->currentStatus.up, u);
+    glm_vec3_copy(controller->currentStatus.normal, d);
+    int wx, wy;
+    vtGetWindowSize(wx, wy);
+    setState(p, d, u, fov, wx / (double)wy); // Keep other aspects
 }
 
 void Camera::getViewMatrix(mat4 viewIn)
@@ -54,22 +67,22 @@ void Camera::getDir(vec3 dirIn)
 void World::castMouseRay(const vec2 coord, vec3 rayIn)
 {
     vec4 ndc;
-    ndc[0] = (2.0f * coord[0]) / szScrn[0] - 1.0f;
-    ndc[1] = 1 - (2.0f * coord[1]) / szScrn[1];
+    ndc[0] = (2.0f * coord[0]) / screenSize[0] - 1.0f;
+    ndc[1] = 1 - (2.0f * coord[1]) / screenSize[1];
     ndc[2] = -1;
     ndc[3] = 1;
 
     mat4 invProj, invView;
-    camera.getProjectionMatrixInv(invProj);
-    camera.getViewMatrixInv(invView);
+    activeCamera->getProjectionMatrixInv(invProj);
+    activeCamera->getViewMatrixInv(invView);
 
     vec4 eyeRay;
     glm_mat4_mulv(invProj, ndc, eyeRay);
     eyeRay[2] = -1;
     eyeRay[3] = 0;
-
     vec4 fRay;
     glm_mat4_mulv(invView, eyeRay, fRay);
+
     glm_vec3_copy(fRay, rayIn);
     glm_normalize(rayIn);
 }

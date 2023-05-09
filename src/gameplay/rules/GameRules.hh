@@ -14,7 +14,7 @@ struct JudgeTime
 
 struct InputOptn
 {
-    double rayCastingAngleThreshold; // For touch only
+    double judgeRayAngle; // For touch only
 };
 
 // Generated game rules

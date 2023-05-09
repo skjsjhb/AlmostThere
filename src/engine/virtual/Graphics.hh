@@ -5,8 +5,9 @@
 #include <vector>
 #include <array>
 #include "gameplay/objs/World.hh"
-#include <string>
 #include <map>
+#include <string>
+#include <list>
 
 enum RenderPreset
 {
@@ -29,10 +30,27 @@ struct PolygonShape
     std::map<std::string, std::array<float, 4>> valuesVec4;
 };
 
+enum Align
+{
+    LEFT,  // Or bottom
+    RIGHT, // Or top
+    CENTER
+};
+
+struct Typography
+{
+    std::wstring text;
+    vec2 pos; // Left bottom
+    vec4 color;
+    float size = 0.5;
+    Align xAlign = LEFT, yAlign = LEFT;
+};
+
 struct DrawContext
 {
     Camera cam;
     std::vector<PolygonShape> polygons;
+    std::list<Typography> typos;
 };
 
 extern void vtGraphicsInit();
@@ -44,5 +62,7 @@ extern void vtDraw(DrawContext &ctx);
 extern void vtFinalizeDraw(DrawContext &ctx);
 
 extern int vtGetGraphicsError();
+
+extern void vtSetBufferSize(int w, int h);
 
 #endif /* ENGINE_VIRTUAL_GRAPHICS */

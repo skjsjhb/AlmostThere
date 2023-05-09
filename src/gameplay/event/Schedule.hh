@@ -11,7 +11,8 @@ class Schedule
 {
 
 public:
-    void runTaskLater(double time, Executor xt);
+    void runTaskAt(double time, Executor xt);
+    void runTaskLater(double delay, Executor xt);
     void notify(double absTime);
     double getInterval(); // Get MSPT for displaying
 

@@ -6,12 +6,14 @@ enum NoteType
     TAPU,  // Tapu
     PRSU,  // Puresu
     SZKU,  // Shizuku
+    KZTU,  // Kyozetsu
     AKU,   // Aku
     HOSHI, // Hoshi
     HASHI, // Hashi
     SGKI,  // Sogeki
     SUI,   // Sui
     TSAR   // 4D Tesseract
+
 };
 
 enum NoteElementType
@@ -23,6 +25,13 @@ enum NoteElementType
     NIGHT,
     GRASS,
     NONE
+};
+
+enum SlotVariant
+{
+    CIRCLE,
+    EUREKA,
+    LINE,
 };
 
 #endif /* GAMEPLAY_OBJS_NOTEDEF */

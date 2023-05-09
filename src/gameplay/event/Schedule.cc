@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void Schedule::runTaskLater(double time, Executor xt)
+void Schedule::runTaskAt(double time, Executor xt)
 {
     auto ia = executors.begin();
     while ((*ia).first < time)
@@ -14,6 +14,11 @@ void Schedule::runTaskLater(double time, Executor xt)
         }
     }
     executors.insert(ia, {time, xt});
+}
+
+void Schedule::runTaskLater(double delay, Executor xt)
+{
+    Schedule::runTaskAt(delay + _lastNotify, xt);
 }
 
 void Schedule::notify(double absTime)

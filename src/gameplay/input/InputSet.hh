@@ -5,16 +5,14 @@
 #include <set>
 #include <list>
 #include <map>
+#include <array>
 
 class InputSet
 {
 public:
     void setupInputListeners();
     void pollInputEvents();
-    // Keys: only with GLFW
-    std::map<int, bool> keyInfo;
-    // Touch: only with mobile
-    std::set<vec2> touchPoints;
+    std::set<std::array<float, 2>> touchPoints;
 };
 
 #endif /* GAMEPLAY_INPUT_INPUTSET */

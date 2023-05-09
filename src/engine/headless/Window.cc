@@ -13,4 +13,7 @@ void *vtGetWindow()
 
 void vtStopWindow() {}
 
-void vtWindowLoop() {}
+bool vtWindowLoop()
+{
+    return false;
+}

@@ -1,5 +1,11 @@
 #include "Timer.hh"
 
+Timer::Timer()
+{
+    _nativeGetTime = nullptr;
+    baseTimeOffset = 0;
+}
+
 Timer::Timer(NativeTimerFunc f)
 {
     _nativeGetTime = f;
@@ -8,24 +14,37 @@ Timer::Timer(NativeTimerFunc f)
 
 double Timer::getTime()
 {
-    if (paused)
+    if (_nativeGetTime != nullptr)
     {
-        return timeBeforePause - baseTimeOffset;
+        if (paused)
+        {
+            return timeBeforePause - baseTimeOffset;
+        }
+        else
+        {
+            return _nativeGetTime() - baseTimeOffset;
+        }
     }
     else
     {
-        return _nativeGetTime() - baseTimeOffset;
+        return 0;
     }
 }
 
 void Timer::pause()
 {
-    timeBeforePause = _nativeGetTime();
-    paused = true;
+    if (_nativeGetTime != nullptr)
+    {
+        timeBeforePause = _nativeGetTime();
+        paused = true;
+    }
 }
 
 void Timer::unpause()
 {
-    baseTimeOffset += _nativeGetTime() - timeBeforePause;
-    paused = false;
+    if (_nativeGetTime != nullptr)
+    {
+        baseTimeOffset += _nativeGetTime() - timeBeforePause;
+        paused = false;
+    }
 }

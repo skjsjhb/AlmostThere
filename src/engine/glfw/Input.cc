@@ -1,6 +1,8 @@
 #include "engine/virtual/Input.hh"
 #include "engine/virtual/Window.hh"
 #include <GLFW/glfw3.h>
+#include "spdlog/spdlog.h"
+using namespace spdlog;
 
 void vtPollEvents()
 {
@@ -14,15 +16,46 @@ void vtSetActiveInputSet(InputSet *input)
     _activeInputSet = input;
 }
 
-static void _internalKeyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
+static vec2 mousePos;
+static int mouseCount = 0;
+
+static void updateMouseStatus()
 {
     if (_activeInputSet != NULL)
     {
-        _activeInputSet->keyInfo[key] = action != GLFW_RELEASE ? 1 : 0;
+        _activeInputSet->touchPoints.clear();
+        if (mouseCount > 0)
+        {
+            _activeInputSet->touchPoints.insert(std::to_array(mousePos));
+        }
     }
+}
+
+// On PC there is only one touch point.
+static inline void _internalMousePosCallback(GLFWwindow *window, double x, double y)
+{
+    mousePos[0] = x;
+    mousePos[1] = y;
+    updateMouseStatus();
+}
+
+static void _internalMouseBtnCallback(GLFWwindow *window, int btn, int act, int mods)
+{
+    if (act == GLFW_RELEASE)
+    {
+        mouseCount--;
+    }
+    else if (act == GLFW_PRESS)
+    {
+        mouseCount++;
+    }
+    updateMouseStatus();
 }
 
 void vtSetupKeyListener()
 {
-    glfwSetKeyCallback(static_cast<GLFWwindow *>(vtGetWindow()), _internalKeyCallback);
+    info("Setting up input listeners.");
+    auto w = static_cast<GLFWwindow *>(vtGetWindow());
+    glfwSetCursorPosCallback(w, _internalMousePosCallback);
+    glfwSetMouseButtonCallback(w, _internalMouseBtnCallback);
 }

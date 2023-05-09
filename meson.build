@@ -11,7 +11,9 @@ deps = []
 
 if backend == 'glfw'
   deps += dependency('glfw3')
+  deps += dependency('freetype')
 endif
+deps += dependency('spdlog')
 foreach name : ['lua', 'lua5.4', 'lua-5.4', 'lua54']
     luaDep = dependency(name, required: false)
     if luaDep.found()
@@ -20,7 +22,7 @@ foreach name : ['lua', 'lua5.4', 'lua-5.4', 'lua54']
     endif
 endforeach
 if not luaDep.found()
-    error('Lua could not be found!')
+    error('No Lua found. Almost There requires Lua to run.')
 endif
 static_library('atgame', src, include_directories : incdir, dependencies: deps, override_options : ['c_std=c17', 'cpp_std=c++20'])
 if backend != 'nothing'

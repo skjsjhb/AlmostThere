@@ -8,9 +8,11 @@ int main()
     World wd;
     vec3 e = {0, 0, -1};
     vec3 pos = {0, 0, 1}, d = {0, 0, -1}, u = {1, 0, 0};
-    wd.szScrn[0] = 100;
-    wd.szScrn[1] = 100;
-    wd.camera.setState(pos, d, u, glm_rad(90), wd.szScrn[0] / wd.szScrn[1]);
+    wd.screenSize[0] = 100;
+    wd.screenSize[1] = 100;
+    Camera c;
+    wd.activeCamera = &c;
+    wd.activeCamera->setState(pos, d, u, glm_rad(90), wd.screenSize[0] / wd.screenSize[1]);
 
     // When mouse is at the center, ray should be the same as camera direction
     // In this case -z
@@ -48,10 +50,10 @@ int main()
     // Since if all above have passed the inv matrix should be OK
     // So we just check it with a simple point and verify that they are inversed
     mat4 p, v, pd, vd, ivp, ivv;
-    wd.camera.getProjectionMatrix(p);
-    wd.camera.getProjectionMatrixInv(ivp);
-    wd.camera.getViewMatrix(v);
-    wd.camera.getViewMatrixInv(ivv);
+    wd.activeCamera->getProjectionMatrix(p);
+    wd.activeCamera->getProjectionMatrixInv(ivp);
+    wd.activeCamera->getViewMatrix(v);
+    wd.activeCamera->getViewMatrixInv(ivv);
     vec4 o = {0, 0, -1, 0};
     vec4 t;
     glm_mat4_mulv(v, o, t);

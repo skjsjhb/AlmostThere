@@ -1,1 +1,1 @@
-src += files(['NoteControl.cc'])
+src += files(['Controller.cc'])

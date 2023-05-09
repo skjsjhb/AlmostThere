@@ -18,16 +18,15 @@
 
 void AbstractNote::tick(double absTime)
 {
-    if (!isVisible)
+    // Only blocks self-tick. Hit effect still needs to be played.
+    // TODO: dereference hit effect from note
+    if (isVisible)
     {
-        return;
+        controller->tick(absTime);
+        glm_vec3_copy(controller->currentStatus.pos, basePosition);
+        glm_vec3_copy(controller->currentStatus.up, up);
+        glm_vec3_copy(controller->currentStatus.normal, normal);
     }
-
-    controller->tick(absTime);
-    controller->getPos(basePosition);
-    controller->getUp(up);
-    controller->getNorm(normal);
-
     // Generating hit effect
     if (playingHitEffect)
     {
@@ -47,13 +46,18 @@ void AbstractNote::tick(double absTime)
     }
 
     // Ticking
-    for (auto &h : hitEffects)
+    for (auto ht = hitEffects.begin(); ht != hitEffects.end();)
     {
+        auto &h = *ht;
         h->tick(absTime);
         if (!h->isVisible)
         {
-            hitEffects.erase(h);
+            ht = hitEffects.erase(ht);
             delete h;
+        }
+        else
+        {
+            ++ht;
         }
     }
 }
@@ -72,7 +76,7 @@ void AbstractNote::draw(DrawContext &ctx)
     }
 }
 
-void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
+static void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
 {
     vec3 lt, rt, lb, rb, t;
     glm_vec3_add(center, rightLen, t);
@@ -105,7 +109,39 @@ static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractN
     pg.renderPreset = RECT;
     pg.shader = "rect";
     pg.texture = sdName;
-    ctx.polygons.push_back(pg);
+    ctx.polygons.push_back(std::move(pg));
+}
+
+// Check if this position is 'pressed' through mouse ray casting
+static bool verifyPressed(vec3 pos, World &w, const InputSet &inputs, ScoreManager &sm)
+{
+    if (w.activeCamera == nullptr)
+    {
+        return false;
+    }
+    vec3 cPos, dir;
+    w.activeCamera->getPosition(cPos);
+    glm_vec3_sub(pos, cPos, dir);
+    glm_vec3_normalize(dir);
+    for (auto &i : inputs.touchPoints)
+    {
+        vec3 ray;
+        vec2 pos = {i[0], i[1]};
+        w.castMouseRay(pos, ray);
+        glm_vec3_normalize(ray);
+        for (int i = 0; i < 3; i++)
+        {
+        }
+        double ang = glm_vec3_dot(ray, dir);
+        for (int i = 0; i < 3; i++)
+        {
+        }
+        if (ang >= (1 - sm.rules.inputOptn.judgeRayAngle))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Tapu::draw(DrawContext &ctx)
@@ -157,9 +193,15 @@ void Puresu::draw(DrawContext &ctx)
     tail.shader = "rect";
     tail.texture = "puresu-tail";
 
-    ctx.polygons.push_back(body);
-    ctx.polygons.push_back(tail);
-    ctx.polygons.push_back(head);
+    ctx.polygons.push_back(std::move(body));
+    ctx.polygons.push_back(std::move(tail));
+    ctx.polygons.push_back(std::move(head));
+}
+
+void Kyozetsu::draw(DrawContext &ctx)
+{
+    AbstractNote::draw(ctx);
+    commonRectDraw(ctx, "kyozetsu", this);
 }
 
 void Hoshi::draw(DrawContext &ctx)
@@ -190,7 +232,7 @@ void Hoshi::draw(DrawContext &ctx)
     {
         ps.points.push_back(std::to_array(points[i]));
     }
-    ctx.polygons.push_back(ps);
+    ctx.polygons.push_back(std::move(ps));
 
     // Draw the assist ring
     // TODO: obtain space assist time from chart
@@ -209,7 +251,7 @@ void Hoshi::draw(DrawContext &ctx)
         glm_vec3_scale(rightVec, size, rightVec);
         glm_vec3_scale(up, size, rdh);
         mkRectPoints(assist, targetSlot->center, rdh, rightVec);
-        ctx.polygons.push_back(assist);
+        ctx.polygons.push_back(std::move(assist));
     }
 }
 
@@ -303,7 +345,7 @@ void Hashi::draw(DrawContext &ctx)
             pse[i].shader = "hashi";
             pse[i].texture = "hashi-hat";
             pse[i].subTexture = "hashi-side";
-            ctx.polygons.push_back(pse[i]);
+            ctx.polygons.push_back(std::move(pse[i]));
         }
     }
     else
@@ -320,7 +362,7 @@ void Hashi::draw(DrawContext &ctx)
         ps.shader = "hashi";
         ps.texture = "hashi-hat";
         ps.subTexture = "hashi-side";
-        ctx.polygons.push_back(ps);
+        ctx.polygons.push_back(std::move(ps));
     }
     if (assistRingScale > 0 && assistRingScale <= 1)
     {
@@ -338,7 +380,7 @@ void Hashi::draw(DrawContext &ctx)
         glm_vec3_scale(rightVec, size, rightVec);
         glm_vec3_scale(up, size, rdh);
         mkRectPoints(assist, targetSlot->center, rdh, rightVec);
-        ctx.polygons.push_back(assist);
+        ctx.polygons.push_back(std::move(assist));
     }
 }
 
@@ -351,7 +393,7 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     switch (jStage)
     {
     case BUSY:
-        if (input.keyInfo[keyCode] == 0)
+        if (!verifyPressed(basePosition, *world, input, sm))
         {
             jStage = CLEAR;
         }
@@ -376,7 +418,7 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
                 sm.addJudgeGrade(LT, TAPU);
                 jStage = JUDGED;
             }
-            else if (input.keyInfo[keyCode] == 1)
+            else if (verifyPressed(basePosition, *world, input, sm))
             {
                 // Too early
                 jStage = BUSY;
@@ -384,7 +426,7 @@ void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         break;
     case ACTIVE:
-        if (input.keyInfo[keyCode] == 1)
+        if (verifyPressed(basePosition, *world, input, sm))
         {
             playingHitEffect = true;
             // Let's do this
@@ -434,7 +476,7 @@ void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         if (isOverlapped(hitTime, SHIZUKU_JUDGE_WINDOW, absTime, 0))
         {
 
-            if (input.keyInfo[keyCode] == 1)
+            if (verifyPressed(basePosition, *world, input, sm))
             {
                 // You got it
                 playingHitEffect = true;
@@ -454,6 +496,42 @@ void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     }
 }
 
+void Kyozetsu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
+{
+    if (isFake)
+    {
+        return;
+    }
+    switch (jStage)
+    {
+    case JUDGED:
+        isVisible = false;
+        return;
+    default:
+        // In all other cases, check and judge
+        if (isOverlapped(hitTime, sm.rules.judgeTime.good, absTime, 0))
+        {
+
+            if (verifyPressed(basePosition, *world, input, sm))
+            {
+                // You touched the zone!
+                sm.addJudgeGrade(LT, KZTU);
+                jStage = JUDGED;
+            }
+        }
+        else
+        {
+            if (absTime > hitTime + sm.rules.judgeTime.good)
+            {
+                // OK very well!
+                playingHitEffect = true;
+                sm.addJudgeGrade(PF, SZKU);
+                jStage = JUDGED;
+            }
+        }
+    }
+}
+
 void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
 {
     if (isFake)
@@ -467,7 +545,7 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         isVisible = false;
         return;
     case BUSY:
-        if (input.keyInfo[keyCode] == 0)
+        if (!verifyPressed(basePosition, *world, input, sm))
         {
             jStage = CLEAR;
         }
@@ -480,7 +558,7 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         break;
     case CLEAR:
         // Accepting judge
-        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && input.keyInfo[keyCode] == 1)
+        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && verifyPressed(basePosition, *world, input, sm))
         {
             // Turn to active, keep pressing!
             jStage = ACTIVE;
@@ -493,7 +571,7 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
                 sm.addJudgeGrade(LT, TAPU);
                 jStage = JUDGED;
             }
-            else if (input.keyInfo[keyCode] == 1)
+            else if (verifyPressed(basePosition, *world, input, sm))
             {
                 // Too early
                 jStage = BUSY;
@@ -508,7 +586,7 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
             jStage = JUDGED;
             return;
         }
-        if (input.keyInfo[keyCode] == 0)
+        if (!verifyPressed(basePosition, *world, input, sm))
         {
             if (isOverlapped((hitTime + absLength), sm.rules.judgeTime.almost, absTime, 0))
             {
@@ -588,7 +666,7 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     switch (jStage)
     {
     case BUSY:
-        if (input.keyInfo[keyCode] == 0)
+        if (!verifyPressed(basePosition, *world, input, sm))
         {
             jStage = CLEAR;
         }
@@ -610,7 +688,7 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
                 sm.addJudgeGrade(LT, HOSHI);
                 jStage = JUDGED;
             }
-            else if (input.keyInfo[keyCode] == 1)
+            else if (verifyPressed(basePosition, *world, input, sm))
             {
                 // Too early
                 jStage = BUSY;
@@ -618,7 +696,7 @@ void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         break;
     case ACTIVE:
-        if (input.keyInfo[keyCode] == 1)
+        if (verifyPressed(basePosition, *world, input, sm))
         {
             playingHitEffect = true;
             jStage = JUDGED;
@@ -691,7 +769,7 @@ void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
                 lastSuccJudge = absTime;
                 return;
             }
-            if (input.keyInfo[keyCode] == 1)
+            if (verifyPressed(basePosition, *world, input, sm))
             {
                 playingHitEffect = true;
                 judgedLength += (absTime - lastSuccJudge);

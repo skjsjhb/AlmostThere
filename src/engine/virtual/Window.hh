@@ -7,6 +7,10 @@ extern void *vtGetWindow();
 
 extern void vtStopWindow();
 
-extern void vtWindowLoop();
+// Return value specifies if this window should be closed
+// True: Window should be closed now
+extern bool vtWindowLoop();
+
+extern void vtGetWindowSize(int &x, int &y);
 
 #endif /* ENGINE_VIRTUAL_WINDOW */

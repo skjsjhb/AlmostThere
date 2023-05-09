@@ -38,6 +38,7 @@ class ScoreManager
 public:
     GameRules rules;
 
+    ScoreManager();
     ScoreManager(const GameRules &rulesInit);
 
     double getAccuracy();

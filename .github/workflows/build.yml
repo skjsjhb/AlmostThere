@@ -14,9 +14,9 @@ jobs:
       - uses: actions/setup-python@v1
       - name: Link Assets
         run: |
-          mkdir build && cd build && ln -s ../assets ./assets
+          mkdir build && cd build && ln -s ../assets ./assets && ln -s ../maps ./maps
       - name: Install Deps
-        run: sudo apt install lua5.4 liblua5.4-dev
+        run: sudo apt install lua5.4 liblua5.4-dev libfreetype-dev libspdlog-dev
       - uses: BSFishy/meson-build@v1.0.3
         with:
           action: test

@@ -1,1 +1,1 @@
-src += files(['glad.c'])
+src += files(['gl.c'])

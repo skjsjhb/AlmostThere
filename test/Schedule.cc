@@ -11,10 +11,10 @@ int main()
     int cl = 0;
     auto addCL = [&cl]() -> void
     { cl++; };
-    s.runTaskLater(5, addCL);
-    s.runTaskLater(5, addCL);
-    s.runTaskLater(10, addCL);
-    s.runTaskLater(15, addCL);
+    s.runTaskAt(5, addCL);
+    s.runTaskAt(5, addCL);
+    s.runTaskAt(10, addCL);
+    s.runTaskAt(15, addCL);
     for (int i = 1; i <= 10; i++)
     {
         s.notify(i);

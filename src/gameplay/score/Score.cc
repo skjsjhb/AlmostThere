@@ -24,6 +24,11 @@ ScoreManager::ScoreManager(const GameRules &rulesInit)
     rules = rulesInit; // Copy value
 }
 
+// Placeholder only
+ScoreManager::ScoreManager()
+{
+    rules = {0};
+}
 double ScoreManager::getAccuracy()
 {
     auto ra = sqrt((static_cast<double>(getCurrentScore()) * 100) / getFullScore()) * 11;
