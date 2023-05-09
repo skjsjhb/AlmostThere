@@ -239,7 +239,7 @@ void freeMap(GameMap &m)
 {
     for (auto p : m.objects)
     {
-        free(p);
+        delete p;
     }
 }
 
