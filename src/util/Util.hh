@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <climits>
 
 bool isOverlapped(double p1, double r1, double p2, double r2);
 
