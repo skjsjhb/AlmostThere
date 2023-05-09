@@ -9,7 +9,6 @@ testProgs = [
 # 'Map Play', 
 # 'Audio Test', ; No hardware support
 'Lua Repl',
-'Fast Math Benchmark',
 'Map Load'
 ]
 
