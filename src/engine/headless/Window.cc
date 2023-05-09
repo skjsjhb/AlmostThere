@@ -17,3 +17,7 @@ bool vtWindowLoop()
 {
     return false;
 }
+
+void vtGetWindowSize(int &x, int &y)
+{
+}
