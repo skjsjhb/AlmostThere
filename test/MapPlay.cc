@@ -8,6 +8,8 @@
 #include "gameplay/base/Game.hh"
 #include "lua/LuaSupport.hh"
 #include "lua/LuaExt.hh"
+#include "gameplay/hud/PlayerBox.hh"
+#include "gameplay/hud/Bar.hh"
 #include <cglm/cglm.h>
 
 int main()
@@ -19,11 +21,32 @@ int main()
     initMapLoader();
     initControllerLuaExt();
     Game g;
+
+    DrawContext ctx;
+    Player p = {
+        .playerName = "skjsjhb",
+        .charName = "NEKO",
+        .shield = {
+            .maxHP = 100,
+            .curHP = 50,
+
+        },
+        .health = 100,
+        .maxHealth = 100,
+    };
+    PlayerBox pb(&p);
     g.initGame("example");
     bool running = true;
+
     while (running)
     {
-        g.runOnce();
+        pb.draw(ctx);
+        vtDraw(ctx);
+        vtFinalizeDraw(ctx);
+        vtWindowLoop();
+        ctx.polygons.clear();
+        ctx.typos.clear();
+        // g.runOnce();
     }
     vtGraphicsCleanUp();
     TEND;

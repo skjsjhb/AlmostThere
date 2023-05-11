@@ -1,5 +1,5 @@
-#ifndef GAMEPLAY_CORE_PLAYERSTAT
-#define GAMEPLAY_CORE_PLAYERSTAT
+#ifndef GAMEPLAY_BASE_PLAYER
+#define GAMEPLAY_BASE_PLAYER
 
 #include "gameplay/score/Score.hh"
 
@@ -14,10 +14,11 @@ struct Shield
 };
 
 // Status of a player
-class PlayerStat
+struct Player
 {
+
     unsigned int uid;
-    std::string playerName;
+    std::string playerName, charName;
     ScoreManager score;
     Shield shield;
     unsigned int health, maxHealth;
@@ -25,4 +26,4 @@ class PlayerStat
     unsigned int regenerationRate, magicReplenishRate;
 };
 
-#endif /* GAMEPLAY_CORE_PLAYERSTAT */
+#endif /* GAMEPLAY_BASE_PLAYER */

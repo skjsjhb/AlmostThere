@@ -1,7 +1,7 @@
 #ifndef GAMEPLAY_BASE_GAME
 #define GAMEPLAY_BASE_GAME
 
-#include "PlayerStat.hh"
+#include "gameplay/player/Player.hh"
 #include "gameplay/time/Timer.hh"
 #include "gameplay/objs/Note.hh"
 #include "gameplay/objs/World.hh"
@@ -37,7 +37,7 @@ protected:
     World world; // Virtual world definition
     InputSet input;
     int cPlayerID; // Current player
-    std::vector<PlayerStat> playerStats;
+    std::vector<Player> players;
     Schedule mapSchedule, absSchedule;
     std::set<AbstractNote *> activeNotes, doneNotes;
     std::set<Slot *> activeSlots, doneSlots;

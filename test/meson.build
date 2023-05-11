@@ -6,7 +6,7 @@ testProgs = [
 'Schedule',
 'Create Window',
 # 'Note Pos', ; Waiting for controller ready
-# 'Map Play', 
+ 'Map Play', 
 # 'Audio Test', ; No hardware support
 'Lua Repl',
 'Map Load'

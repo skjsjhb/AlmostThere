@@ -3,6 +3,7 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
+#include <iostream>
 using namespace spdlog;
 
 static GLFWwindow *_internalWindow = NULL;
@@ -28,6 +29,7 @@ void vtInitWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 16);
+
     info("GLFW: " + std::string(glfwGetVersionString()));
     info("GLAD: " + std::string(GLAD_GENERATOR_VERSION));
     info("Creating game window.");
