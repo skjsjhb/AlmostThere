@@ -33,7 +33,10 @@ void Bar::draw(DrawContext &ctx)
     ps.renderPreset = RECT;
     ps.shader = "hud-bar";
     ps.texture = "";
-    ps.valuesVec4["color"] = std::to_array(color);
+    for (int i = 0; i < 4; i++)
+    {
+        ps.args[i] = color[i];
+    }
     auto lx = (revert ? -1 : 1) * len * maxl;
     vec3 bl, br, tl, tr;
     auto bh = BAR_HALF_THICK;

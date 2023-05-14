@@ -41,8 +41,8 @@ int main()
     while (running)
     {
         pb.draw(ctx);
-        vtDraw(ctx);
-        vtFinalizeDraw(ctx);
+        vtProcessMeshes(ctx);
+        vtCompleteDraw(ctx);
         vtWindowLoop();
         ctx.polygons.clear();
         ctx.typos.clear();

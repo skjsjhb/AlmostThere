@@ -243,7 +243,7 @@ void Hoshi::draw(DrawContext &ctx)
         assist.shader = "assist-ring";
         assist.isOpaque = false;
         assist.texture = "space-assist";
-        assist.values["opacity"] = 1 - assistRingScale;
+        assist.args[0] = 1 - assistRingScale;
 
         auto size = ASSIST_RING_SIZE * assistRingScale;
         vec3 rdh;
@@ -371,7 +371,7 @@ void Hashi::draw(DrawContext &ctx)
         assist.shader = "assist-ring";
         assist.texture = "space-assist";
         assist.isOpaque = false;
-        assist.values["opacity"] = 1 - assistRingScale;
+        assist.args[0] = 1 - assistRingScale;
 
         auto size = ASSIST_RING_SIZE * assistRingScale;
         vec3 rdh, rightVec;
@@ -877,7 +877,7 @@ void HitEffect::draw(DrawContext &ctx)
     pg.isOpaque = false;
     pg.shader = "hit-effect";
     pg.texture = "hit-effect";
-    pg.values["alpha"] = opacity;
+    pg.args[0] = opacity;
     vec3 tUp, tRight;
     glm_vec3_copy(up, tUp);
     glm_vec3_normalize(tUp);

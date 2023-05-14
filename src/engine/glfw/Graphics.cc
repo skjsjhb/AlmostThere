@@ -323,8 +323,7 @@ struct Mesh
     RenderPreset preset;
     float distanceToCam;
     unsigned int texture, shader;
-    std::map<std::string, float> *valueRef;
-    std::map<std::string, std::array<float, 4>> *valueVec4Ref;
+    float args[VT_POLYGON_MAX_ARGS];
 };
 
 #ifdef ENABLE_MESH_SORTING
@@ -542,6 +541,14 @@ static std::vector<std::vector<std::pair<float, float>>> PRISM_TEX_COORDS = {
 static std::vector<std::vector<unsigned int>> PRISM_VERTEX = {
     {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
 
+static inline void copyArgs(const float *si, float *di)
+{
+    for (int i = 0; i < VT_POLYGON_MAX_ARGS; ++i)
+    {
+        di[i] = si[i];
+    }
+}
+
 static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(p.shader);
@@ -579,8 +586,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].texture = tx;
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = RECT;
-            ms[i].valueRef = &p.values;
-            ms[i].valueVec4Ref = &p.valuesVec4;
+            copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
 
@@ -613,8 +619,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].texture = tx;
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = OCT;
-            ms[i].valueRef = &p.values;
-            ms[i].valueVec4Ref = &p.valuesVec4;
+            copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
 
@@ -643,8 +648,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_FULL;
-            ms[i].valueRef = &p.values;
-            ms[i].valueVec4Ref = &p.valuesVec4;
+            copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
         break;
@@ -676,8 +680,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_BTM;
-            ms[i].valueRef = &p.values;
-            ms[i].valueVec4Ref = &p.valuesVec4;
+            copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
         break;
@@ -710,8 +713,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_HAT;
-            ms[i].valueRef = &p.values;
-            ms[i].valueVec4Ref = &p.valuesVec4;
+            copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
         break;
@@ -735,8 +737,7 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].texture = stx;
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
             ms[i].preset = PRISM_HAT;
-            ms[i].valueRef = &p.values;
-            ms[i].valueVec4Ref = &p.valuesVec4;
+            copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
         break;
@@ -799,26 +800,14 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
         glUniform1i(glGetUniformLocation(m.shader, "baseTex"), 0);
 
         // Assign extra values
-        for (auto &v : (*m.valueRef))
-        {
-            glUniform1f(glGetUniformLocation(m.shader, v.first.c_str()), v.second);
-        }
-
-        for (auto &v : (*m.valueVec4Ref))
-        {
-            vec4 e;
-            for (int i = 0; i < 4; i++)
-            {
-                e[i] = v.second[i];
-            }
-            glUniform4f(glGetUniformLocation(m.shader, v.first.c_str()), e[0], e[1], e[2], e[3]);
-        }
+        glUniform1fv(glGetUniformLocation(m.shader, "args"), VT_POLYGON_MAX_ARGS, m.args);
 
         if (m.preset == OCT || m.preset == PRISM_FULL || m.preset == PRISM_BTM || m.preset == PRISM_HAT || m.preset == PRISM_SIDE)
         {
             glUniform3f(glGetUniformLocation(m.shader, "aNormal"), m.normal[0], m.normal[1], m.normal[2]);
             glUniform3f(glGetUniformLocation(m.shader, "camDir"), dir[0], dir[1], dir[2]);
         }
+
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex), vertex);
@@ -830,7 +819,7 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
 
 static std::list<std::vector<Mesh>> DRAW_BUFFER_OPAQUE, DRAW_BUFFER_ALPHA;
 
-void vtDraw(DrawContext &ctx)
+void vtProcessMeshes(DrawContext &ctx)
 {
     glGetError(); // Dispose previous
     glClearColor(0, 0, 0, 1);
@@ -840,7 +829,7 @@ void vtDraw(DrawContext &ctx)
     DRAW_BUFFER_ALPHA.push_back(meshes.second);
 };
 
-void vtFinalizeDraw(DrawContext &ctx)
+void vtCompleteDraw(DrawContext &ctx)
 {
     // Meshes
     for (auto &p : DRAW_BUFFER_OPAQUE)

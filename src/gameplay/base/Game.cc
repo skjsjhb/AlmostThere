@@ -266,8 +266,8 @@ void Game::runOnce()
     {
         dCtx.cam = *world.activeCamera;
     }
-    vtDraw(dCtx);
-    vtFinalizeDraw(dCtx);
+    vtProcessMeshes(dCtx);
+    vtCompleteDraw(dCtx);
     vtWindowLoop();
     // TODO: add game logic process here
 }

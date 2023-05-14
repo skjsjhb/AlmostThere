@@ -12,9 +12,11 @@ void Mask::draw(DrawContext &ctx)
     pg.texture = "";
     pg.shader = "mask";
     pg.renderPreset = RECT;
-
-    pg.valuesVec4["color"] = std::to_array(color);
-    pg.values["beginRad"] = beginRad;
+    for (int i = 0; i < 3; ++i)
+    {
+        pg.args[i] = color[i];
+    }
+    pg.args[4] = beginRad;
 
     ctx.polygons.push_back(pg);
 }
