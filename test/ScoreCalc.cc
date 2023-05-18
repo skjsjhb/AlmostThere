@@ -23,8 +23,8 @@ int main()
     WANT(sm.getCurrentScore() == 600);
     sm.addJudgeGrade(AC, HASHI);
     WANT(sm.getCurrentScore() == 900);
-    WANT(sm.getFullScore() == 1200);
-    WANT(sm.getAccuracyText() == "95.26%");
+    WANT(sm.getFullScore() == 800);
+    WANT(sm.getAccuracyText() == "100.00%");
     sm.addJudgeGrade(AT, HOSHI);
     sm.addJudgeGrade(LT, SGKI);
     sm.addJudgeGrade(LT, SUI);

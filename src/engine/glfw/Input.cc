@@ -1,5 +1,6 @@
 #include "engine/virtual/Input.hh"
 #include "engine/virtual/Window.hh"
+#include "engine/virtual/UIHook.hh"
 #include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
 using namespace spdlog;
@@ -28,6 +29,7 @@ static void updateMouseStatus()
         {
             _activeInputSet->touchPoints.insert(std::to_array(mousePos));
         }
+        vtNotifyUIHooks(*_activeInputSet);
     }
 }
 

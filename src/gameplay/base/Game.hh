@@ -1,7 +1,6 @@
 #ifndef GAMEPLAY_BASE_GAME
 #define GAMEPLAY_BASE_GAME
 
-#include "gameplay/player/Player.hh"
 #include "gameplay/time/Timer.hh"
 #include "gameplay/objs/Note.hh"
 #include "gameplay/objs/World.hh"
@@ -13,15 +12,16 @@
 #include <string>
 #include <set>
 
+class Game;
+
+#include "gameplay/player/Player.hh"
+
 enum GameStatus
 {
-    RUNNING,  // Player is playing
-    DOWNED,   // Downed, waiting for recovery
-    PAUSED,   // Paused
-    FAILED,   // Game failed, can choose to quit now
-    FINISHED, // Finished locally, waiting for other players
-    RESULT,   // All players have finished
-    DONE,     // Game finished, leaving loop
+    RUNNING, // Player is playing
+    PAUSED,  // Paused, either resting, syncing data, or playing animation
+    RESULT,  // Result screen
+    DONE,    // Leaving
 };
 
 class Game
@@ -30,13 +30,11 @@ public:
     void runMainLoop(); // Start the whole main loop, return when game completed
     void runOnce();     // Run the loop once, suitable for external calls
     void initGame(const std::string &mapId);
-
-protected:
-    Timer mapTimer, absTimer; // One is for map playing, one is for global animations
+    Timer mapTimer, absTimer;
     GameStatus status = RUNNING;
-    World world; // Virtual world definition
+    World world;
     InputSet input;
-    int cPlayerID; // Current player
+    int cPlayerID;
     std::vector<Player> players;
     Schedule mapSchedule, absSchedule;
     std::set<AbstractNote *> activeNotes, doneNotes;
@@ -47,7 +45,7 @@ protected:
 
     GameMap map;
     ScoreManager score;
-    // std::list<UIComponent> uiComponents;
+    DrawContext drawContext;
 };
 
 #endif /* GAMEPLAY_BASE_GAME */

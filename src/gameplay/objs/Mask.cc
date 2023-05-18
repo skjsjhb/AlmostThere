@@ -2,7 +2,7 @@
 
 void Mask::draw(DrawContext &ctx)
 {
-    PolygonShape pg;
+    Polygon pg;
     pg.isOpaque = false;
     vec3 lt = {-1, 1, 0}, rt = {1, 1, 0}, lb = {-1, -1, 0}, rb = {1, -1, 0};
     pg.points.push_back(std::to_array(lt));

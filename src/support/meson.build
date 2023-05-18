@@ -1,1 +1,1 @@
-src += files(['Resource.cc'])
+src += files(['Resource.cc', 'Locale.cc'])

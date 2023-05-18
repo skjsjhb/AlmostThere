@@ -1,6 +1,10 @@
 #include "Util.hh"
 #include <cstring>
 #include <cmath>
+#include <algorithm>
+#include <functional>
+#include <cctype>
+#include <locale>
 
 bool isOverlapped(double p1, double r1, double p2, double r2)
 {
@@ -30,4 +34,16 @@ std::vector<std::string> splitStr(const std::string &src, const std::string &del
     }
     res.push_back(src.substr(pos_start));
     return res;
+}
+
+void trimStr(std::string &s)
+{
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                    [](unsigned char c) -> bool
+                                    { return !std::isspace(c); }));
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](unsigned char c) -> bool
+                         { return !std::isspace(c); })
+                .base(),
+            s.end());
 }

@@ -1,1 +1,1 @@
-src += files(['Bar.cc', 'PlayerBox.cc'])
+src += files(['Bar.cc', 'PlayerBox.cc', 'Interact.cc'])

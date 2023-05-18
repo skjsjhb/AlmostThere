@@ -76,7 +76,7 @@ void AbstractNote::draw(DrawContext &ctx)
     }
 }
 
-static void mkRectPoints(PolygonShape &pg, vec3 center, vec3 upLen, vec3 rightLen)
+static void mkRectPoints(Polygon &pg, vec3 center, vec3 upLen, vec3 rightLen)
 {
     vec3 lt, rt, lb, rb, t;
     glm_vec3_add(center, rightLen, t);
@@ -104,7 +104,7 @@ static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractN
     glm_vec3_scale(right, FLAT_NOTE_SIZE, dw);
     glm_vec3_scale(obj->up, FLAT_NOTE_SIZE, dh);
 
-    PolygonShape pg;
+    Polygon pg;
     mkRectPoints(pg, obj->basePosition, dh, dw);
     pg.renderPreset = RECT;
     pg.shader = "rect";
@@ -164,7 +164,7 @@ void Puresu::draw(DrawContext &ctx)
     {
         return;
     }
-    PolygonShape head, tail, body;
+    Polygon head, tail, body;
     vec3 right, upLen, rightLen, ctr, centerMove, bCenter, tCenter;
 
     glm_vec3_cross(up, normal, right);
@@ -224,7 +224,7 @@ void Hoshi::draw(DrawContext &ctx)
     glm_vec3_sub(basePosition, rightVec, points[2]);
     glm_vec3_add(basePosition, normVec, points[0]);
     glm_vec3_sub(basePosition, normVec, points[1]);
-    PolygonShape ps;
+    Polygon ps;
     ps.renderPreset = OCT;
     ps.shader = "hoshi";
     ps.texture = "hoshi";
@@ -238,7 +238,7 @@ void Hoshi::draw(DrawContext &ctx)
     // TODO: obtain space assist time from chart
     if (assistRingScale > 0 && assistRingScale <= 1)
     {
-        PolygonShape assist;
+        Polygon assist;
         assist.renderPreset = RECT;
         assist.shader = "assist-ring";
         assist.isOpaque = false;
@@ -272,7 +272,7 @@ void Hashi::draw(DrawContext &ctx)
     glm_vec3_normalize(right);
     glm_vec3_scale(right, HASHI_NOTE_SIZE, right);
 
-    PolygonShape ps;
+    Polygon ps;
     for (int i = 0; i < 6; i++)
     {
         glm_vec3_add(basePosition, right, btmPoints[i]);
@@ -294,7 +294,7 @@ void Hashi::draw(DrawContext &ctx)
         int pieces = (int)(xlen / HASHI_CUT_THRESHOLD);
         float pcf = xlen / pieces;
         vec3 bufferPointsDown[6], bufferPointsUp[6];
-        PolygonShape pse[pieces];
+        Polygon pse[pieces];
         // Make the bottom one
         glm_vec3_scale(upLength, pcf, upLength);
         for (int i = 0; i < 6; i++)
@@ -366,7 +366,7 @@ void Hashi::draw(DrawContext &ctx)
     }
     if (assistRingScale > 0 && assistRingScale <= 1)
     {
-        PolygonShape assist;
+        Polygon assist;
         assist.renderPreset = RECT;
         assist.shader = "assist-ring";
         assist.texture = "space-assist";
@@ -872,7 +872,7 @@ void HitEffect::tick(double absTime)
 
 void HitEffect::draw(DrawContext &ctx)
 {
-    PolygonShape pg;
+    Polygon pg;
     pg.renderPreset = RECT;
     pg.isOpaque = false;
     pg.shader = "hit-effect";

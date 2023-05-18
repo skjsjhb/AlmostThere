@@ -11,10 +11,11 @@ unsigned int JudgeSummary::getTotalScore(const JudgeValue &va)
 
 unsigned int JudgeSummary::getFullScore(const JudgeValue &va)
 {
-    return va.perfect * getNotesCount();
+    // AT is of full score, PF has extra bonus.
+    return va.almost * getNoteCount();
 }
 
-unsigned int JudgeSummary::getNotesCount()
+unsigned int JudgeSummary::getNoteCount()
 {
     return notesCount[PF] + notesCount[AT] + notesCount[AC] + notesCount[MD] + notesCount[TC] + notesCount[LT];
 }
@@ -31,8 +32,8 @@ ScoreManager::ScoreManager()
 }
 double ScoreManager::getAccuracy()
 {
-    auto ra = sqrt((static_cast<double>(getCurrentScore()) * 100) / getFullScore()) * 11;
-    return ra > 100 ? 100 : ra;
+    auto ra = std::sqrt((static_cast<double>(getCurrentScore()) * 100) / getFullScore()) * 11;
+    return std::min(ra, 100.0);
 }
 
 std::string ScoreManager::getAccuracyText()
@@ -42,16 +43,26 @@ std::string ScoreManager::getAccuracyText()
     return ss.str() + '%';
 }
 
+unsigned int ScoreManager::getNoteCount()
+{
+    return nFlatJudges.getNoteCount() + nSpaceJudges.getNoteCount();
+}
+
 unsigned int ScoreManager::getCurrentScore()
 {
     return nFlatJudges.getTotalScore(rules.judgeValue) +
-           rules.judgeValue.spaceNotesAmplifier * nSpaceJudges.getTotalScore(rules.judgeValue);
+           rules.judgeValue.spaceNotesAmplifier * nSpaceJudges.getTotalScore(rules.judgeValue) + bonus;
 }
 
 unsigned int ScoreManager::getFullScore()
 {
     return nFlatJudges.getFullScore(rules.judgeValue) +
-           rules.judgeValue.spaceNotesAmplifier * nSpaceJudges.getFullScore(rules.judgeValue);
+           rules.judgeValue.spaceNotesAmplifier * nSpaceJudges.getFullScore(rules.judgeValue) + bonus;
+}
+
+void ScoreManager::addBonusScore(unsigned int a)
+{
+    bonus += a;
 }
 
 void ScoreManager::addJudgeGrade(JudgeGrade gd, NoteType xt)

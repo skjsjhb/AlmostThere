@@ -1,15 +1,15 @@
 #include "Bar.hh"
 #include "HUDDef.hh"
 
-#define BAR_HALF_THICK 0.015
+#define BAR_HALF_THICK 10
 
-Bar::Bar(BarDirection dirIn, vec2 posIn, double maxLengthIn, vec4 colorIn, bool revertDir)
+Bar::Bar(BarDirection dirIn, vec2 posIn, int maxLengthIn, int widthIn, bool revertDir)
 {
     dir = dirIn;
     glm_vec2_copy(posIn, pos);
-    glm_vec4_copy(colorIn, color);
     maxl = maxLengthIn;
     revert = revertDir;
+    th = widthIn;
 }
 
 void Bar::setLength(double l)
@@ -29,46 +29,43 @@ void Bar::flip()
 
 void Bar::draw(DrawContext &ctx)
 {
-    PolygonShape ps;
-    ps.renderPreset = RECT;
-    ps.shader = "hud-bar";
-    ps.texture = "";
+    Shape s;
+    s.shader = "hud-bar";
+    s.texture = "";
     for (int i = 0; i < 4; i++)
     {
-        ps.args[i] = color[i];
+        s.args[i] = color[i];
     }
     auto lx = (revert ? -1 : 1) * len * maxl;
     vec3 bl, br, tl, tr;
-    auto bh = BAR_HALF_THICK;
     switch (dir)
     {
     case VERT:
     {
-        bh = bh / HUD_WH_ASPECT;
-        bl[0] = tl[0] = pos[0] - bh;
-        br[0] = tr[0] = pos[0] + bh;
+        bl[0] = tl[0] = pos[0] - th;
+        br[0] = tr[0] = pos[0] + th;
         bl[1] = br[1] = pos[1];
-        tl[1] = pos[1] + lx + 2 * BAR_HALF_THICK / HUD_WH_ASPECT * vFlip * sharpEnd;
-        tr[1] = pos[1] + lx + 2 * BAR_HALF_THICK / HUD_WH_ASPECT * (!vFlip) * sharpEnd; // Make a sharp end
+        tl[1] = pos[1] + lx + 2 * th * vFlip * sharpEnd;
+        tr[1] = pos[1] + lx + 2 * th * (!vFlip) * sharpEnd; // Make a sharp end
     }
     break;
     case HORZ:
     {
         bl[0] = tl[0] = pos[0];
-        tr[0] = pos[0] + lx + 2 * BAR_HALF_THICK * vFlip * sharpEnd;
-        br[0] = pos[0] + lx + 2 * BAR_HALF_THICK * (!vFlip) * sharpEnd;
-        bl[1] = br[1] = pos[1] - bh;
-        tl[1] = tr[1] = pos[1] + bh;
+        tr[0] = pos[0] + lx + 2 * th * vFlip * sharpEnd;
+        br[0] = pos[0] + lx + 2 * th * (!vFlip) * sharpEnd;
+        bl[1] = br[1] = pos[1] - th;
+        tl[1] = tr[1] = pos[1] + th;
     }
     break;
     default:
         return;
     }
     tl[2] = bl[2] = tr[2] = br[2] = 0;
-    ps.points.push_back(std::to_array(tl));
-    ps.points.push_back(std::to_array(bl));
-    ps.points.push_back(std::to_array(tr));
-    ps.points.push_back(std::to_array(br));
+    glm_vec2_copy(tl, s.points[0]);
+    glm_vec2_copy(bl, s.points[1]);
+    glm_vec2_copy(tr, s.points[2]);
+    glm_vec2_copy(br, s.points[3]);
 
-    ctx.polygons.push_back(ps);
+    ctx.shapes.push_back(s);
 }

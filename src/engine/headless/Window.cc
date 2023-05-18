@@ -20,4 +20,17 @@ bool vtWindowLoop()
 
 void vtGetWindowSize(int &x, int &y)
 {
+    x = 1600;
+    y = 900;
+}
+
+void vtGetCoord(int sx, int sy, int &rx, int &ry)
+{
+    rx = sx;
+    ry = sy;
+}
+
+double vtGetScaleFactor()
+{
+    return 1;
 }

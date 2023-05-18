@@ -26,7 +26,7 @@ public:
 
 protected:
     std::map<JudgeGrade, unsigned int> notesCount;
-    unsigned int getNotesCount();
+    unsigned int getNoteCount();
     void addGrade(JudgeGrade grade);
 };
 
@@ -34,15 +34,17 @@ class ScoreManager
 {
     unsigned int combo, maxCombo;
     JudgeSummary nFlatJudges, nSpaceJudges;
+    unsigned int bonus;
 
 public:
     GameRules rules;
 
     ScoreManager();
     ScoreManager(const GameRules &rulesInit);
-
+    void addBonusScore(unsigned int amount);
     double getAccuracy();
     std::string getAccuracyText();
+    unsigned int getNoteCount();
     unsigned int getFullScore();
     unsigned int getCurrentScore();
     void addJudgeGrade(JudgeGrade grade, NoteType);

@@ -14,7 +14,7 @@ void Slot::draw(DrawContext &ctx)
     {
         return;
     }
-    PolygonShape p;
+    Polygon p;
     p.renderPreset = RECT;
     p.shader = "rect";
     p.texture = slotTexName[variant];

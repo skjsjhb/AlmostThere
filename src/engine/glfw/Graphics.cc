@@ -5,7 +5,6 @@
 #include <climits>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-
 #include <cglm/cglm.h>
 #include <string>
 #include <fstream>
@@ -17,14 +16,15 @@
 #include "spdlog/spdlog.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
 using namespace spdlog;
 
-#define GRAPH_UI_ORTHO_NEAR_Z 0.1
-#define GRAPH_UI_ORTHO_FAR_Z 2.0
+#define VT_ORTHO_NZ 0.1
+#define VT_ORTHO_FZ 2.0
 
 // #define ENABLE_MESH_SORTING
 #ifdef ENABLE_MESH_SORTING
-#warning "The blend sorting system has known flaws and vulnerabilities. It will also reduce FPS significantly."
+#warning "The blending system has known flaws and vulnerabilities. It will also reduce FPS significantly."
 #endif
 
 static std::map<std::string, GLuint> texturesCtl;
@@ -320,10 +320,10 @@ struct Mesh
     vec3 vert[3];
     vec2 texCoord[3];
     vec3 normal;
-    RenderPreset preset;
+    bool orthoProj = false;
     float distanceToCam;
     unsigned int texture, shader;
-    float args[VT_POLYGON_MAX_ARGS];
+    float args[VT_SD_ARGS];
 };
 
 #ifdef ENABLE_MESH_SORTING
@@ -390,12 +390,15 @@ static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
     return 0;
 #endif
 }
+
+// UI projection matrix
 static mat4 uiProj;
 
 void vtSetBufferSize(int w, int h)
 {
-    glm_ortho(0, w, 0, h, GRAPH_UI_ORTHO_NEAR_Z, GRAPH_UI_ORTHO_FAR_Z, uiProj);
+    glm_ortho(0, w, 0, h, VT_ORTHO_NZ, VT_ORTHO_FZ, uiProj);
 }
+
 static void drawTypography(Typography &t)
 {
     auto sd = loadShader("text");
@@ -406,9 +409,12 @@ static void drawTypography(Typography &t)
     glUniformMatrix4fv(glGetUniformLocation(sd, "proj"), 1, GL_FALSE, (float *)uiProj);
     glBindVertexArray(textVAO);
 
-    auto x = t.pos[0], y = t.pos[1];
-    float xoffset = 0, yoffset = 0;
+    // Coord Correction
+    int x, y;
+    vtGetCoord(t.pos[0], t.pos[1], x, y);
 
+    float xoffset = 0, yoffset = 0;
+    auto sz = t.size * vtGetScaleFactor(); // Scale text
     // Calc offset
     for (auto c : t.text)
     {
@@ -418,8 +424,8 @@ static void drawTypography(Typography &t)
             continue;
         }
         Glyph &g = *gptr;
-        float h = g.size[1] * t.size;
-        xoffset += (g.advance >> 6) * t.size;
+        float h = g.size[1] * sz;
+        xoffset += (g.advance >> 6) * sz;
         yoffset = h > yoffset ? h : yoffset;
     }
     if (t.xAlign == RIGHT)
@@ -448,12 +454,12 @@ static void drawTypography(Typography &t)
         }
         Glyph &g = *gptr;
 
-        float w = g.size[0] * t.size;
-        float h = g.size[1] * t.size;
+        float w = g.size[0] * sz;
+        float h = g.size[1] * sz;
 
-        float xpos = x + g.bearing[0] * t.size;
-        float ypos = y - (g.size[1] - g.bearing[1]) * t.size;
-        xoffset += (g.advance >> 6) * t.size;
+        float xpos = x + g.bearing[0] * sz;
+        float ypos = y - (g.size[1] - g.bearing[1]) * sz;
+        xoffset += (g.advance >> 6) * sz;
         yoffset = h > yoffset ? h : yoffset;
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},
@@ -469,14 +475,14 @@ static void drawTypography(Typography &t)
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-        x += (g.advance >> 6) * t.size;
+        x += (g.advance >> 6) * sz;
     }
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void pickPoints(Mesh &ms, const PolygonShape &p, const std::vector<unsigned int> &ptOrder)
+static void pickPoints(Mesh &ms, const Polygon &p, const std::vector<unsigned int> &ptOrder)
 {
     for (int i = 0; i < 3; i++)
     {
@@ -491,6 +497,24 @@ static void pickPoints(Mesh &ms, const PolygonShape &p, const std::vector<unsign
     glm_vec3_sub(ms.vert[0], ms.vert[1], b);
     glm_vec3_cross(a, b, ms.normal);
     glm_vec3_normalize(ms.normal);
+}
+
+// 2D version of 'pickPoints'. Comparing to it, this one does not calculate normal, which makes it faster
+static void pickShapePoints(Mesh &ms, const Shape &p, const std::vector<unsigned int> &ptOrder)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        unsigned curInd = ptOrder[i];
+
+        // Apply coord correction
+        int rx, ry;
+        vtGetCoord(p.points[curInd][0], p.points[curInd][1], rx, ry);
+        ms.vert[i][0] = rx;
+        ms.vert[i][1] = ry;
+        ms.vert[i][2] = 0;
+    }
+    vec3 cNormal = {0, 0, 1};
+    glm_vec3_copy(cNormal, ms.normal);
 }
 
 static void pickTex(Mesh &ms, const std::vector<std::pair<float, float>> &st)
@@ -543,13 +567,13 @@ static std::vector<std::vector<unsigned int>> PRISM_VERTEX = {
 
 static inline void copyArgs(const float *si, float *di)
 {
-    for (int i = 0; i < VT_POLYGON_MAX_ARGS; ++i)
+    for (int i = 0; i < VT_SD_ARGS; ++i)
     {
         di[i] = si[i];
     }
 }
 
-static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
+static void procPolygonMesh(Polygon &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(p.shader);
     unsigned int tx = 0;
@@ -585,7 +609,6 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].shader = sd;
             ms[i].texture = tx;
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            ms[i].preset = RECT;
             copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
@@ -618,7 +641,6 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].shader = sd;
             ms[i].texture = tx;
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            ms[i].preset = OCT;
             copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
@@ -647,7 +669,6 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             }
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            ms[i].preset = PRISM_FULL;
             copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
@@ -679,7 +700,6 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             }
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            ms[i].preset = PRISM_BTM;
             copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
@@ -712,7 +732,6 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             }
 
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            ms[i].preset = PRISM_HAT;
             copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
@@ -736,7 +755,6 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
             ms[i].shader = sd;
             ms[i].texture = stx;
             ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            ms[i].preset = PRISM_HAT;
             copyArgs(p.args, ms[i].args);
             meshes.push_back(ms[i]);
         }
@@ -745,6 +763,36 @@ static void processMeshes(PolygonShape &p, vec3 camPos, vec3 camDir, std::vector
     default:
         warn("Unknown mesh preset: " + std::to_string(p.renderPreset) + ", skipped.");
         break;
+    }
+}
+
+static void procShapeMesh(Shape &s, mat4 p, std::vector<Mesh> &meshes)
+{
+    auto sd = loadShader(s.shader);
+    auto tx = 0;
+    if (s.texture.size() > 0)
+    {
+        tx = loadTexture(s.texture, false);
+    }
+    if (sd == INT_MAX || tx == INT_MAX)
+    {
+        warn("Skipped mesh process due to previous errors. Check log output for details.");
+        return;
+    }
+    Mesh ms[2];
+    pickShapePoints(ms[0], s, {0, 1, 2});
+    pickShapePoints(ms[1], s, {2, 1, 3});
+    pickTex(ms[0], {{0, 1}, {0, 0}, {1, 1}});
+    pickTex(ms[1], {{1, 1}, {0, 0}, {1, 0}});
+
+    for (int i : {0, 1})
+    {
+        ms[i].shader = sd;
+        ms[i].texture = tx;
+        ms[i].distanceToCam = 0;
+        ms[i].orthoProj = true;
+        copyArgs(s.args, ms[i].args);
+        meshes.push_back(ms[i]);
     }
 }
 
@@ -758,13 +806,18 @@ static std::pair<std::vector<Mesh>, std::vector<Mesh>> makeMeshes(DrawContext &c
     for (auto &p : ctx.polygons)
     {
         // Make sure transparent objects draw last
-        processMeshes(p, camPos, camDir, p.isOpaque ? meshOpaque : meshTrans);
+        procPolygonMesh(p, camPos, camDir, p.isOpaque ? meshOpaque : meshTrans);
     }
 
 #ifdef ENABLE_MESH_SORTING
     std::sort(meshTrans.begin(), meshTrans.end(), [](const Mesh &m1, const Mesh &m2) -> int
               { return m1.distanceToCam > m2.distanceToCam; });
 #endif
+    // Insert ui shapes after sorting
+    for (auto &s : ctx.shapes)
+    {
+        procShapeMesh(s, uiProj, meshTrans);
+    }
     return std::pair(meshOpaque, meshTrans);
 }
 
@@ -792,21 +845,24 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
         }
 
         glUseProgram(m.shader);
-        glUniformMatrix4fv(glGetUniformLocation(m.shader, "view"), 1, GL_FALSE, (float *)view);
-        glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, (float *)proj);
+        if (m.orthoProj)
+        {
+            // Ortho projection
+            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, (float *)uiProj);
+        }
+        else
+        {
+            // Perspective projection
+            glUniformMatrix4fv(glGetUniformLocation(m.shader, "view"), 1, GL_FALSE, (float *)view);
+            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, (float *)proj);
+        }
         glUniform1f(glGetUniformLocation(m.shader, "time"), vtGetTime());
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m.texture);
         glUniform1i(glGetUniformLocation(m.shader, "baseTex"), 0);
 
         // Assign extra values
-        glUniform1fv(glGetUniformLocation(m.shader, "args"), VT_POLYGON_MAX_ARGS, m.args);
-
-        if (m.preset == OCT || m.preset == PRISM_FULL || m.preset == PRISM_BTM || m.preset == PRISM_HAT || m.preset == PRISM_SIDE)
-        {
-            glUniform3f(glGetUniformLocation(m.shader, "aNormal"), m.normal[0], m.normal[1], m.normal[2]);
-            glUniform3f(glGetUniformLocation(m.shader, "camDir"), dir[0], dir[1], dir[2]);
-        }
+        glUniform1fv(glGetUniformLocation(m.shader, "args"), VT_SD_ARGS, m.args);
 
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -831,6 +887,7 @@ void vtProcessMeshes(DrawContext &ctx)
 
 void vtCompleteDraw(DrawContext &ctx)
 {
+
     // Meshes
     for (auto &p : DRAW_BUFFER_OPAQUE)
     {
@@ -840,14 +897,14 @@ void vtCompleteDraw(DrawContext &ctx)
     {
         completeDraw(p, ctx);
     }
-    DRAW_BUFFER_OPAQUE.clear();
-    DRAW_BUFFER_ALPHA.clear();
-
     // Typography
     for (auto &t : ctx.typos)
     {
         drawTypography(t);
     }
+    DRAW_BUFFER_OPAQUE.clear();
+    DRAW_BUFFER_ALPHA.clear();
+
     auto err = glGetError();
     if (err != GL_NO_ERROR)
     {

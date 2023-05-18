@@ -14,7 +14,7 @@ class Bar
 {
 public:
     Bar() = default;
-    Bar(BarDirection dirIn, vec2 pos, double maxLength, vec4 color, bool revertDir = false);
+    Bar(BarDirection dirIn, vec2 pos, int maxLength, int width, bool revertDir = false);
     void setLength(double len); // Set a len value 0-1
     void setColor(vec4 c);
     void draw(DrawContext &ctx);
@@ -28,7 +28,7 @@ protected:
     vec2 pos;
     vec4 color;
     bool vFlip = false;
-    double maxl;
+    int maxl, th; // Max length and thickness
     double len = 0;
 };
 

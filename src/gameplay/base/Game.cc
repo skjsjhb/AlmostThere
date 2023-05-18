@@ -168,7 +168,6 @@ void Game::initGame(const std::string &mapId)
 
 void Game::runOnce()
 {
-    DrawContext dCtx;
     auto mapTimeNow = mapTimer.getTime();
 
     // Process timers
@@ -256,19 +255,22 @@ void Game::runOnce()
     // Draw objects
     for (auto &s : activeSlots)
     {
-        s->draw(dCtx);
+        s->draw(drawContext);
     }
     for (auto &n : activeNotes)
     {
-        n->draw(dCtx);
+        n->draw(drawContext);
     }
     if (world.activeCamera != nullptr)
     {
-        dCtx.cam = *world.activeCamera;
+        drawContext.cam = *world.activeCamera;
     }
-    vtProcessMeshes(dCtx);
-    vtCompleteDraw(dCtx);
+    vtProcessMeshes(drawContext);
+    vtCompleteDraw(drawContext);
     vtWindowLoop();
+    drawContext.polygons.clear();
+    drawContext.shapes.clear();
+    drawContext.typos.clear();
     // TODO: add game logic process here
 }
 
