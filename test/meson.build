@@ -5,14 +5,12 @@ testProgs = [
 'Check Util',
 'Schedule',
 'Create Window',
-'Map Play', 
-# 'Audio Test', ; No hardware support
 'Lua Repl',
 'Map Load',
 ]
 
 if backend != 'headless'
-  testProgs += 'UI Hook Trigger'
+  testProgs += ['UI Hook Trigger', 'Map Play']
 endif
 
 
