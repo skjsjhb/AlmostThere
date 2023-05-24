@@ -4,7 +4,6 @@
 #include "gameplay/time/Timer.hh"
 #include "gameplay/objs/Note.hh"
 #include "gameplay/view/View.hh"
-#include "gameplay/event/Schedule.hh"
 #include "engine/virtual/Graphics.hh"
 #include "gameplay/map/MapDef.hh"
 #include "gameplay/map/MapLoad.hh"
@@ -81,7 +80,6 @@ public:
      * @brief The id of the current active player.
      */
     int pid;
-    // Schedule mapSchedule, absSchedule;
     std::vector<std::shared_ptr<Player>> players;
     GeneratedObjects objects;
     GameMap map;

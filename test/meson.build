@@ -3,7 +3,6 @@ testProgs = [
 'Score Calc',
 'Timing',
 'Check Util',
-'Schedule',
 'Create Window',
 'Lua Repl',
 'Map Load',

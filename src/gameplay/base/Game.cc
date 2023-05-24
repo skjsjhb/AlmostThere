@@ -150,11 +150,6 @@ void Game::runOnce()
 {
     auto mapTimeNow = mapTimer.getTime();
 
-    // Process timers
-    // TODO: reconstruct schedule
-    // mapSchedule.notify(mapTimeNow);
-    // absSchedule.notify(absTimer.getTime());
-
     // Handle events
     input.pollInputEvents();
 
