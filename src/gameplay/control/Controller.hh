@@ -102,6 +102,9 @@ public:
      */
     void setRel(std::weak_ptr<ObjController> cr) { rel = cr; };
 
+    // Virtual destructor
+    virtual ~ObjController() = default;
+
 protected:
     /**
      * @brief The status of the target.

@@ -1,8 +1,9 @@
 #ifndef GAMEPLAY_HUD_PLAYERBOX
 #define GAMEPLAY_HUD_PLAYERBOX
 
+#include "gameplay/hud/Bar.hh"
+
 class Player;
-class Bar;
 struct DrawContext;
 
 class PlayerBox

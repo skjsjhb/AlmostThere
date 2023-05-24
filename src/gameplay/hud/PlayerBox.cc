@@ -3,7 +3,6 @@
 #include "HUDDef.hh"
 #include "engine/virtual/Window.hh"
 #include "gameplay/player/Player.hh"
-#include "gameplay/hud/Bar.hh"
 #include "engine/virtual/Graphics.hh"
 #include <cglm/cglm.h>
 #include <locale>
