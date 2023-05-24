@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <set>
+#include <memory>
 #include <map>
 #include "gameplay/objs/NoteDef.hh"
 
@@ -31,20 +32,24 @@ enum MapObjectType
     CAMERA,
 };
 
-class MapObject;
-
 class MapObject
 {
 public:
     std::string id;
     // std::set<std::string> classNames; -- Currently unused
     MapObjectType type;
-    int tickScript; // Compiled version
-    MapObject *relTarget = nullptr;
+
+    /**
+     * @brief The compilation id of the tick script.
+     *
+     * For effeiciency, scripts are loaded and compiled in advance, this id reference
+     * to the compiled script.
+     */
+    int tickScript;
+    std::weak_ptr<MapObject> relTarget;
     std::string relTargetName;
-    int player;              // Belongs to player
-    double genTime, hitTime; // In seconds, compilation should be done during creating
-    void *nativeObj;         // Bound generated native object. Currently it's of type 'TickObject*'
+    int player;
+    double genTime, endTime;
     virtual ~MapObject() = default;
 };
 
@@ -62,18 +67,29 @@ public:
     bool isFake;
 };
 
+// Dummy impl
 class CameraObject : public MapObject
 {
-public:
-    double fov;
 };
 
 struct GameMap
 {
     bool verified = false;
-    MapMeta meta;                     // Map length
-    std::vector<MapObject *> objects; // Objects (non-unique ref)
-    std::map<std::string, MapObject *> namedObjects;
+    MapMeta meta;
+
+    /**
+     * @brief Stores all map objects.
+     *
+     * This vector holds the ownership of these objects. Others can only access.
+     */
+    std::vector<std::shared_ptr<MapObject>> objects;
+
+    /**
+     * @brief Stores map of named objects.
+     *
+     * This map stores the correspondence of name and its object.
+     */
+    std::map<std::string, std::weak_ptr<MapObject>> namedObjects;
 };
 
 #endif /* GAMEPLAY_MAP_MAPDEF */

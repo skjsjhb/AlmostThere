@@ -1,4 +1,4 @@
-#include "World.hh"
+#include "Camera.hh"
 
 #include "util/Util.hh"
 #include "engine/virtual/Window.hh"
@@ -24,14 +24,18 @@ void Camera::setState(vec3 pos_, vec3 direction_, vec3 up_, double fov_, double 
 
 void Camera::tick(double absTime)
 {
-    controller->tick(absTime);
-    vec3 p, d, u;
-    glm_vec3_copy(controller->currentStatus.pos, p);
-    glm_vec3_copy(controller->currentStatus.up, u);
-    glm_vec3_copy(controller->currentStatus.normal, d);
+    TickObject::tick(absTime);
+    auto stat = controller->getState();
     int wx, wy;
     vtGetWindowSize(wx, wy);
-    setState(p, d, u, fov, wx / (double)wy); // Keep other aspects
+    setState(stat.pos, stat.normal, stat.up, fov, wx / (double)wy);
+}
+
+std::shared_ptr<Camera> Camera::createCamera(std::weak_ptr<CameraObject> o)
+{
+    auto pt = std::make_shared<Camera>();
+    pt->controller = std::make_shared<ObjController>(*o.lock());
+    return pt;
 }
 
 void Camera::getViewMatrix(mat4 viewIn)
@@ -62,27 +66,4 @@ void Camera::getPosition(vec3 posIn)
 void Camera::getDir(vec3 dirIn)
 {
     glm_vec3_copy(direction, dirIn);
-}
-
-void World::castMouseRay(const vec2 coord, vec3 rayIn)
-{
-    vec4 ndc;
-    ndc[0] = (2.0f * coord[0]) / screenSize[0] - 1.0f;
-    ndc[1] = 1 - (2.0f * coord[1]) / screenSize[1];
-    ndc[2] = -1;
-    ndc[3] = 1;
-
-    mat4 invProj, invView;
-    activeCamera->getProjectionMatrixInv(invProj);
-    activeCamera->getViewMatrixInv(invView);
-
-    vec4 eyeRay;
-    glm_mat4_mulv(invProj, ndc, eyeRay);
-    eyeRay[2] = -1;
-    eyeRay[3] = 0;
-    vec4 fRay;
-    glm_mat4_mulv(invView, eyeRay, fRay);
-
-    glm_vec3_copy(fRay, rayIn);
-    glm_normalize(rayIn);
 }

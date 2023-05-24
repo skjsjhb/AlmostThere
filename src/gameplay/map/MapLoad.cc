@@ -26,17 +26,17 @@ using namespace spdlog;
         1                \
     }
 
-static MapObject *activeObjectBuffer = nullptr;
+static std::shared_ptr<MapObject> activeObjectBuffer = std::make_shared<MapObject>();
 
-static bool hasCircularRef(const MapObject *om)
+static bool hasCircularRef(const std::weak_ptr<MapObject> &om)
 {
-    std::set<MapObject *> paths;
-    MapObject *currentRel = om->relTarget;
-    while (currentRel != nullptr)
+    std::set<std::weak_ptr<MapObject>, std::owner_less<std::weak_ptr<MapObject>>> paths;
+    auto cref = om;
+    while (!cref.expired())
     {
-        paths.insert(currentRel);
-        currentRel = currentRel->relTarget;
-        if (paths.contains(currentRel))
+        paths.insert(cref);
+        cref = cref.lock()->relTarget;
+        if (paths.contains(cref))
         {
             return true; // Circular
         }
@@ -65,10 +65,9 @@ static int objectRegistry(lua_State *l)
     if (type == TYPE_CAMERA)
     {
         // Create camera
-        CameraObject *c = new CameraObject;
-        *c = CameraObject();
+        auto c = std::make_shared<CameraObject>();
         c->genTime = genTime;
-        c->hitTime = endTime;
+        c->endTime = endTime;
         c->player = -1;
         c->id = id;
         c->type = CAMERA;
@@ -78,9 +77,9 @@ static int objectRegistry(lua_State *l)
     else if (type >= NOTE_SLOT_TYPE_SPLIT)
     {
         // Create slot
-        SlotObject *m = new SlotObject;
+        auto m = std::make_shared<SlotObject>();
         m->genTime = genTime;
-        m->hitTime = endTime;
+        m->endTime = endTime;
         m->player = player;
         m->id = id;
         m->type = SLOT;
@@ -91,10 +90,10 @@ static int objectRegistry(lua_State *l)
     else
     {
         // Create note
-        NoteObject *n = new NoteObject;
+        auto n = std::make_shared<NoteObject>();
         n->length = length;
         n->genTime = genTime;
-        n->hitTime = endTime;
+        n->endTime = endTime;
         n->player = player;
         n->id = id;
         n->type = NOTE;
@@ -141,7 +140,7 @@ GameMap loadMap(const std::string &mapId)
     MapMeta mt;
     luaRun(metaSec); // Execute meta script
 
-    auto mapVersion = luaGetNumber("MapVersion");
+    auto mapVersion = luaGetInt("MapVersion");
     std::set<int> supportVs(SUPPORT_VERSIONS);
 
     if (!supportVs.contains(mapVersion))
@@ -191,7 +190,6 @@ GameMap loadMap(const std::string &mapId)
         if (pm->tickScript == LUA_NOREF)
         {
             warn("Invalid object ticking script detected. Removed.");
-            free(pm);
             continue;
         }
         if (pm->id != "")
@@ -222,25 +220,17 @@ GameMap loadMap(const std::string &mapId)
     // Check for circulars
     for (auto &o : m.objects)
     {
-        if (o->relTarget != nullptr)
+        if (!o->relTarget.expired())
         {
             if (hasCircularRef(o))
             {
                 warn("Circular reference detected and blocked for object '" + o->id + "'. Check your map.");
-                o->relTarget = nullptr;
+                o->relTarget.reset();
             }
         }
     }
     m.verified = verifyMap(m);
     return m;
-}
-
-void freeMap(GameMap &m)
-{
-    for (auto p : m.objects)
-    {
-        delete p;
-    }
 }
 
 void initMapLoader()

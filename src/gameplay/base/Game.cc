@@ -4,12 +4,14 @@
 #include "engine/virtual/Input.hh"
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
+#include "gameplay/view/View.hh"
 #include "lua/LuaSupport.hh"
 #include "spdlog/spdlog.h"
+#include <set>
 using namespace spdlog;
 
-static GameMap *activeMap = nullptr;
-static World *activeWorld = nullptr;
+static View *activeView = nullptr;
+static Game *activeGame = nullptr;
 
 static GameRules createDefaultGameRules()
 {
@@ -37,57 +39,19 @@ static GameRules createDefaultGameRules()
     return gr;
 }
 
+// Active camera interface
 static int useCam(lua_State *l)
 {
     auto cid = lua_tostring(l, -1);
-    if (activeMap != nullptr && activeWorld != nullptr && activeMap->namedObjects.contains(cid))
+    if (activeGame != nullptr && activeGame->objects.namedObjects.contains(cid))
     {
-        auto obj = activeMap->namedObjects[cid];
-        if (obj->type == CAMERA)
+        auto obj = std::dynamic_pointer_cast<Camera>(activeGame->objects.namedObjects[cid].lock());
+        if (obj)
         {
-            activeWorld->activeCamera = (Camera *)obj->nativeObj;
+            activeView->camera = obj;
         }
     }
     return 1;
-}
-
-static AbstractNote *createNote(NoteObject *obj, World *wd, ScoreManager *sm)
-{
-    AbstractNote *a;
-    switch (obj->noteType)
-    {
-    case TAPU:
-        a = new Tapu;
-        break;
-    case SZKU:
-        a = new Shizuku;
-        break;
-    case HOSHI:
-        a = new Hoshi;
-        break;
-    case PRSU:
-        a = new Puresu;
-        ((Puresu *)a)->absLength = obj->length;
-        break;
-    case HASHI:
-        a = new Hashi;
-        ((Hashi *)a)->absLength = obj->length;
-        break;
-    case KZTU:
-    case AKU:
-    case SGKI:
-    case TSAR:
-    default:
-        warn("Creating note with missing type: " + std::to_string(obj->noteType));
-        break;
-    }
-    a->hitTime = obj->hitTime;
-    // TODO: impl fake notes
-    a->controller = new ObjController(obj);
-    a->world = wd;
-    a->score = sm;
-    obj->nativeObj = a;
-    return a;
 }
 
 void Game::initGame(const std::string &mapId)
@@ -106,59 +70,68 @@ void Game::initGame(const std::string &mapId)
     }
     unsigned int counter = 0;
 
+    std::set<std::pair<std::string, std::string>> linkRelation;
+
     // Generate objects
     for (auto &o : map.objects)
     {
+        if (o->relTargetName.size() > 0 && o->id.size() > 0)
+        {
+            linkRelation.insert({o->id, o->relTargetName});
+        }
         ++counter;
+        std::shared_ptr<TickObject> tck;
         switch (o->type)
         {
         case NOTE:
-            pendingNotes.push_back(createNote((NoteObject *)o, &world, &score));
+            tck = Note::createNote(std::dynamic_pointer_cast<NoteObject>(o), *this);
             break;
         case SLOT:
-        {
-            auto s = new Slot;
-            s->controller = new ObjController(o);
-            s->variant = ((SlotObject *)o)->slotType;
-            pendingSlots.push_back(s);
-            o->nativeObj = s;
-        }
-        break;
+            tck = Slot::createSlot(std::dynamic_pointer_cast<SlotObject>(o));
+            break;
         case CAMERA:
-        {
-            auto cam = new Camera;
-            cam->controller = new ObjController(o);
-            cameras.insert(cam);
-            o->nativeObj = cam;
-        }
-        break;
+            tck = Camera::createCamera(std::dynamic_pointer_cast<CameraObject>(o));
+            break;
         default:
             --counter;
             warn("Unrecognized object type detected: " + std::to_string(o->type));
             break;
         }
-    }
-
-    // Link controllers
-    for (auto &o : map.objects)
-    {
-        if (o->relTarget != nullptr && o->nativeObj != nullptr)
+        if (tck)
         {
-            ((TickObject *)o->nativeObj)->controller->setDep(((TickObject *)o->relTarget->nativeObj)->controller);
+            objects.bufferedObjects.push_back(tck);
+            if (o->id.size() > 0)
+            {
+                objects.namedObjects[o->id] = tck;
+            }
         }
     }
+
+    for (auto &r : linkRelation)
+    {
+        auto base = objects.namedObjects[r.first];
+        auto target = objects.namedObjects[r.second];
+        if (!base.expired() && !target.expired())
+        {
+            base.lock()->getController().lock()->setRel(target.lock()->getController());
+        }
+    }
+
     // Sort objects
-    pendingNotes.sort();
-    pendingSlots.sort();
+    objects.bufferedObjects.sort([](const std::shared_ptr<TickObject> &a, const std::shared_ptr<TickObject> &b) -> bool
+                                 { return a->getTickTime() < b->getTickTime(); });
     info("Map generation complete. " + std::to_string(counter) + " objects generated.");
 
     // Init gameplay
-    activeMap = &map;
-    activeWorld = &world;
+
+    // Bind globals for `useCam`
+    activeView = &view;
+    activeGame = this;
+
     int w, h;
     vtGetWindowSize(w, h);
-    world.screenSize[0] = w;
-    world.screenSize[1] = h;
+    view.screenSize[0] = w;
+    view.screenSize[1] = h;
     input.setupInputListeners();
     mapTimer = Timer(vtGetTime);
     absTimer = Timer(vtGetTime);
@@ -166,67 +139,47 @@ void Game::initGame(const std::string &mapId)
     return;
 }
 
+void Game::addPlayer(const Account &account, CharID selectedChar)
+{
+    auto pid = players.size() + 1;
+    auto xp = Player::createPlayer(selectedChar, account.getUserName(), account.getUID(), pid, account.getAccountType() == AC_REMOTE);
+    players.push_back(xp);
+}
+
 void Game::runOnce()
 {
     auto mapTimeNow = mapTimer.getTime();
 
     // Process timers
-    mapSchedule.notify(mapTimeNow);
-    absSchedule.notify(absTimer.getTime());
+    // TODO: reconstruct schedule
+    // mapSchedule.notify(mapTimeNow);
+    // absSchedule.notify(absTimer.getTime());
 
     // Handle events
     input.pollInputEvents();
 
     // Load and unload objects
-    // Cameras are always loaded, so they won't be ticked
-    for (auto it = pendingNotes.begin(); it != pendingNotes.end();) // Do not it++
+    for (auto it = objects.bufferedObjects.begin(); it != objects.bufferedObjects.end();)
     {
         auto n = *it;
-        if (n->controller->shouldLoad(mapTimeNow))
+        if (n->shouldTick(mapTimeNow))
         {
-            activeNotes.insert(n);
-            it = pendingNotes.erase(it);
+            objects.activeObjects.insert(n);
+            it = objects.bufferedObjects.erase(it);
+            continue;
         }
-        else
-        {
-            break; // Notes are sorted
-        }
-    }
-    for (auto it = pendingSlots.begin(); it != pendingSlots.end();)
-    {
-        auto n = *it;
-        if (n->controller->shouldLoad(mapTimeNow))
-        {
-            activeSlots.insert(n);
-            it = pendingSlots.erase(it);
-        }
-        else
-        {
-            break;
-        }
+        // If an object is not loaded, the followings won't either.
+        break;
     }
 
-    for (auto it = activeNotes.begin(); it != activeNotes.end();)
+    for (auto it = objects.activeObjects.begin(); it != objects.activeObjects.end();)
     {
         auto n = *it;
-        if (n->controller->shouldUnload(mapTimeNow))
+        // If an object shouldn't be ticked, it has gone out of scope.
+        if (!n->shouldTick(mapTimeNow))
         {
-            it = activeNotes.erase(it);
-            doneNotes.insert(n);
-        }
-        else
-        {
-            ++it;
-        }
-    }
-
-    for (auto it = activeSlots.begin(); it != activeSlots.end();)
-    {
-        auto n = *it;
-        if (n->controller->shouldUnload(mapTimeNow))
-        {
-            it = activeSlots.erase(it);
-            doneSlots.insert(n);
+            it = objects.activeObjects.erase(it);
+            // It might be necessary to collect them in the future, but so far not.
         }
         else
         {
@@ -235,43 +188,31 @@ void Game::runOnce()
     }
 
     // Tick objects
-    // Slot first
-    for (auto &s : activeSlots)
+    for (auto &s : objects.activeObjects)
     {
+        // Judgement of notes have been integrated into tick method, no need to run them again.
         s->tick(mapTimeNow);
-    }
-    // Notes
-    for (auto &n : activeNotes)
-    {
-        n->performJudge(mapTimeNow, input, score);
-        n->tick(mapTimeNow);
-    }
-    // Cameras
-    for (auto &c : cameras)
-    {
-        c->tick(mapTimeNow);
     }
 
     // Draw objects
-    for (auto &s : activeSlots)
+    for (auto &s : objects.activeObjects)
     {
         s->draw(drawContext);
     }
-    for (auto &n : activeNotes)
+
+    if (!view.camera.expired())
     {
-        n->draw(drawContext);
+        drawContext.cam = view.camera.lock();
     }
-    if (world.activeCamera != nullptr)
-    {
-        drawContext.cam = *world.activeCamera;
-    }
+
     vtProcessMeshes(drawContext);
     vtCompleteDraw(drawContext);
     vtWindowLoop();
+
+    // Context cleanup and reuse
     drawContext.polygons.clear();
     drawContext.shapes.clear();
     drawContext.typos.clear();
-    // TODO: add game logic process here
 }
 
 void Game::runMainLoop()

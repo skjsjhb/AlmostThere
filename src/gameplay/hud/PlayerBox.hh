@@ -1,20 +1,19 @@
 #ifndef GAMEPLAY_HUD_PLAYERBOX
 #define GAMEPLAY_HUD_PLAYERBOX
 
-#include "gameplay/player/Player.hh"
-#include "gameplay/hud/Bar.hh"
-#include "engine/virtual/Graphics.hh"
+class Player;
+class Bar;
+struct DrawContext;
 
 class PlayerBox
 {
 public:
-    PlayerBox(Player *p);
-    PlayerBox() = default;
+    PlayerBox(Player &p);
     void draw(DrawContext &ctx);
 
 protected:
     double marginLeft, marginTop, width, height;
-    Player *playerPtr;
+    Player &player;
     Bar shieldBar, hpBar;
 };
 

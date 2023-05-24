@@ -6,30 +6,30 @@
 using namespace spdlog;
 
 unsigned int
-Player::getUID()
+Player::getUID() const
 {
     return uid;
 }
 
 unsigned int
-Player::getPID()
+Player::getPID() const
 {
     return pid;
 }
 
 std::string
-Player::getPlayerName()
+Player::getPlayerName() const
 {
     return playerName;
 }
 
 std::string
-Player::getCharName()
+Player::getCharName() const
 {
     return charName;
 }
 
-std::string Player::getSkillName(SkillType st)
+std::string Player::getSkillName(SkillType st) const
 {
     switch (st)
     {
@@ -43,17 +43,17 @@ std::string Player::getSkillName(SkillType st)
 }
 
 PlayerStat
-Player::getPlayerStat()
+Player::getPlayerStat() const
 {
     return stat;
 }
 
-double Player::getHealthRate()
+double Player::getHealthRate() const
 {
     return health / (double)maxHealth;
 }
 
-double Player::getShieldRate()
+double Player::getShieldRate() const
 {
     return shield / (double)maxShield;
 }
@@ -117,7 +117,7 @@ void Player::chargeFinal(unsigned int amount)
     }
 }
 
-double Player::getSkillStat(SkillType st)
+double Player::getSkillStat(SkillType st) const
 {
     switch (st)
     {
@@ -196,7 +196,7 @@ void Player::activateSkill(SkillType st)
     return;
 }
 
-Player *Player::createPlayer(CharID ch, const std::string &n, unsigned int u, unsigned int p, bool d)
+std::shared_ptr<Player> Player::createPlayer(CharID ch, const std::string &n, unsigned int u, unsigned int p, bool d)
 {
     if (d)
     {
@@ -206,15 +206,15 @@ Player *Player::createPlayer(CharID ch, const std::string &n, unsigned int u, un
     {
         info("Creating player '" + n + "' with type " + std::to_string(ch) + " and uid " + std::to_string(u));
     }
-    Player *px;
+    std::shared_ptr<Player> px;
     switch (ch)
     {
     case NEKO:
-        px = new NekoChar;
+        px = std::make_shared<NekoChar>();
         break;
     case DEFAULT:
     default:
-        px = new DefaultChar;
+        px = std::make_shared<DefaultChar>();
         break;
     }
     px->playerName = n;
@@ -224,7 +224,7 @@ Player *Player::createPlayer(CharID ch, const std::string &n, unsigned int u, un
     return px;
 }
 
-PlayerAssets Player::getAssets()
+PlayerAssets Player::getAssets() const
 {
     return {};
 }

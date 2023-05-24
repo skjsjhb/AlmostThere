@@ -1,7 +1,7 @@
 #include "Locale.hh"
 
 #include "Resource.hh"
-#include <map>
+#include <unordered_map>
 #include <fstream>
 #include <sstream>
 #include "spdlog/spdlog.h"
@@ -9,7 +9,7 @@
 
 using namespace spdlog;
 
-static std::map<std::string, std::string> lcMap;
+static std::unordered_map<std::string, std::string> lcMap;
 
 void setLocale(const std::string &name)
 {

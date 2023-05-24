@@ -4,10 +4,10 @@
 #include <cglm/cglm.h>
 #include <vector>
 #include <array>
-#include "gameplay/objs/World.hh"
 #include <map>
 #include <string>
 #include <list>
+#include <memory>
 
 #define VT_SD_ARGS 8
 
@@ -57,9 +57,11 @@ struct Shape
     float args[VT_SD_ARGS] = {0};
 };
 
+class Camera;
+
 struct DrawContext
 {
-    Camera cam;
+    std::weak_ptr<Camera> cam;
     std::vector<Polygon> polygons;
     std::list<Typography> typos;
     std::list<Shape> shapes;

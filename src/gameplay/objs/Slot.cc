@@ -10,21 +10,22 @@ static std::vector<std::string> slotTexName = {"circle", "eureka", "line"};
 
 void Slot::draw(DrawContext &ctx)
 {
-    if (!isVisible)
+    if (!isActive)
     {
         return;
     }
+    auto stat = controller->getState();
     Polygon p;
     p.renderPreset = RECT;
     p.shader = "rect";
     p.texture = slotTexName[variant];
     vec3 lt, lb, rt, rb, right, ctr;
     vec3 dw, dh, t;
-    glm_vec3_cross(up, normal, right);
+    glm_vec3_cross(stat.up, stat.normal, right);
     glm_normalize(right);
     glm_vec3_scale(right, SLOT_SIZE, dw);
-    glm_vec3_scale(up, variant == CIRCLE ? SLOT_SIZE : SLOT_SIZE / 2, dh);
-    glm_vec3_sub(center, dh, ctr);
+    glm_vec3_scale(stat.up, variant == CIRCLE ? SLOT_SIZE : SLOT_SIZE / 2, dh);
+    glm_vec3_sub(stat.pos, dh, ctr);
 
     glm_vec3_add(ctr, dw, t);
     glm_vec3_add(t, dh, rt);
@@ -45,10 +46,11 @@ void Slot::draw(DrawContext &ctx)
     ctx.polygons.push_back(p);
 }
 
-void Slot::tick(double absTime)
+std::shared_ptr<Slot> Slot::createSlot(std::weak_ptr<SlotObject> o)
 {
-    controller->tick(absTime);
-    glm_vec3_copy(controller->currentStatus.pos, center);
-    glm_vec3_copy(controller->currentStatus.up, up);
-    glm_vec3_copy(controller->currentStatus.normal, normal);
+    auto st = std::make_shared<Slot>();
+    auto opt = o.lock();
+    st->controller = std::make_shared<ObjController>(*opt);
+    st->variant = opt->slotType;
+    return st;
 }

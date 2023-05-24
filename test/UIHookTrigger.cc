@@ -4,6 +4,7 @@
 #include "engine/virtual/Input.hh"
 #include "engine/virtual/UIHook.hh"
 #include "engine/virtual/Graphics.hh"
+#include "gameplay/view/View.hh"
 
 int main()
 {
@@ -13,7 +14,7 @@ int main()
     bool running = true;
     HookSt s = {
         .xbegin = 800, .xend = 1600, .ybegin = 450, .yend = 900, .xt = [&running]() -> void
-        { printf("Clicked!\n"); running = false; }};
+        { running = false; }};
     WANT(vtAddUIHook(s) > 0);
     Shape sx = {
         .shader = "hud-bar",
@@ -35,6 +36,8 @@ int main()
     std::array ar = {970.0f, 530.0f};
     ips.touchPoints.insert(ar);
     DrawContext ctx;
+    auto xpt = std::make_shared<Camera>();
+    ctx.cam = xpt;
     while (running)
     {
         ctx.shapes.push_back(sx);

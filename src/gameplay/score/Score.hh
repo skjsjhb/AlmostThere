@@ -16,6 +16,9 @@ enum JudgeGrade
     LT
 };
 
+/**
+ * @deprecated Use ScoreRecord instead.
+ */
 class JudgeSummary
 {
     friend class ScoreManager;
@@ -32,9 +35,9 @@ protected:
 
 class ScoreManager
 {
-    unsigned int combo, maxCombo;
+    unsigned int combo = 0, maxCombo = 0;
     JudgeSummary nFlatJudges, nSpaceJudges;
-    unsigned int bonus;
+    unsigned int bonus = 0;
 
 public:
     GameRules rules;

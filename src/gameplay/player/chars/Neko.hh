@@ -14,7 +14,7 @@ public:
     NekoChar();
     virtual void damage(unsigned int amount, bool real = false) override;
     virtual void tick(Game &g) override;
-    virtual PlayerAssets getAssets() override;
+    virtual PlayerAssets getAssets() const override;
 
 protected:
     unsigned int lastTickScore;

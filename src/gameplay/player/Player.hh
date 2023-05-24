@@ -8,6 +8,7 @@ class Player;
 #include "./chars/CharList.hh"
 #include "gameplay/base/Game.hh"
 #include <string>
+#include <memory>
 
 enum SkillType
 {
@@ -33,17 +34,17 @@ class Player
 public:
     virtual ~Player() = default;
 
-    unsigned int getUID();
-    unsigned int getPID();
+    unsigned int getUID() const;
+    unsigned int getPID() const;
 
-    std::string getPlayerName();
-    std::string getCharName();
-    std::string getSkillName(SkillType st);
+    std::string getPlayerName() const;
+    std::string getCharName() const;
+    std::string getSkillName(SkillType st) const;
 
-    PlayerStat getPlayerStat();
+    PlayerStat getPlayerStat() const;
 
-    double getHealthRate();
-    double getShieldRate();
+    double getHealthRate() const;
+    double getShieldRate() const;
 
     // Try to damage the player
     virtual void damage(unsigned int amount, bool real = false);
@@ -65,7 +66,7 @@ public:
      * @return A number represents the status. -1 for disabled, 2 for active (some
      * long-lasting finals), 0-1 for cooldown status.
      */
-    virtual double getSkillStat(SkillType st);
+    virtual double getSkillStat(SkillType st) const;
 
     // Get score
     virtual ScoreManager &getScoreManager();
@@ -78,11 +79,24 @@ public:
     // Mark a skill as activated. It will be activated formally on the next tick.
     virtual void activateSkill(SkillType st);
 
-    // Generate a player instance. The object is created using `new`.
-    static Player *createPlayer(CharID ch, const std::string &playerName, unsigned int uid, unsigned int pid, bool isDummy);
+    /**
+     * @brief Generate a player instance.
+     *
+     * @note The pointer returned is allocated using `new` and the caller is fully
+     * responsible for freeing the memory. The class `Player` has already defined a
+     * virtual destructor, therefore, a simple `delete` will do the trick.
+     *
+     * @param ch The id of the character.
+     * @param playerName The name of the player.
+     * @param uid The user id of the account.
+     * @param pid The player's position index.
+     * @param isDummy Whether this player is not controller by user, but a copy of a remote teammate.
+     * @return A pointer to the newly created player instance.
+     */
+    static std::shared_ptr<Player> createPlayer(CharID ch, const std::string &playerName, unsigned int uid, unsigned int pid, bool isDummy);
 
     // Gets skill name
-    virtual PlayerAssets getAssets();
+    virtual PlayerAssets getAssets() const;
 
 protected:
     unsigned int health, maxHealth;

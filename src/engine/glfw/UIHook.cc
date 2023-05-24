@@ -3,9 +3,9 @@
 #include "engine/virtual/Window.hh"
 #include "util/Util.hh"
 
-#include <map>
+#include <unordered_map>
 
-static std::map<unsigned int, HookSt> uiHooksCtl;
+static std::unordered_map<unsigned int, HookSt> uiHooksCtl;
 
 static unsigned int chid = 1;
 

@@ -5,13 +5,15 @@ testProgs = [
 'Check Util',
 'Schedule',
 'Create Window',
-# 'Note Pos', ; Waiting for controller ready
-# 'Map Play', 
+'Map Play', 
 # 'Audio Test', ; No hardware support
 'Lua Repl',
 'Map Load',
-'UI Hook Trigger'
 ]
+
+if backend != 'headless'
+  testProgs += 'UI Hook Trigger'
+endif
 
 
 foreach p : testProgs

@@ -16,6 +16,8 @@ enum NoteType
 
 };
 
+#define NOTE_TYPE_SIZE 10
+
 enum NoteElementType
 {
     FIRE,

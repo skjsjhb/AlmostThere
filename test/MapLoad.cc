@@ -13,9 +13,8 @@ int main()
     WANT(m.objects.size() == 1);
     WANT(m.objects[0]->id == "test");
     WANT(m.objects[0]->genTime == 0);
-    WANT(m.objects[0]->hitTime == 15);
+    WANT(m.objects[0]->endTime == 15);
     WANT(m.objects[0]->player == 0);
     WANT(m.objects[0]->type == SLOT);
-    WANT(((SlotObject *)m.objects[0])->slotType == EUREKA);
     TEND;
 }

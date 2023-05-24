@@ -1,3 +1,12 @@
+/**
+ * @brief Note object tick/render proxy module.
+ *
+ * This module is a wrapper of an obj controller and some misc state, with additional judgement
+ * and render method implemented.
+ *
+ * @author skjsjhb
+ */
+
 #ifndef GAMEPLAY_OBJS_NOTE
 #define GAMEPLAY_OBJS_NOTE
 
@@ -6,9 +15,9 @@
 #include "gameplay/control/Controller.hh"
 #include "Slot.hh"
 #include "NoteDef.hh"
-#include "gameplay/score/Score.hh"
 #include "engine/virtual/Graphics.hh"
 #include "gameplay/input/InputSet.hh"
+#include "gameplay/score/Score.hh"
 
 enum JudgeStage
 {
@@ -18,115 +27,120 @@ enum JudgeStage
     JUDGED, // Judge finished, either missed or completed
 };
 
-class HitEffect : public TickObject
-{
-public:
-    double startTime;
-    bool isVisible = true;
-    void tick(double absTime) override;
-    void draw(DrawContext &ctx);
-    HitEffect(vec3 pos, vec3 up, vec3 normal);
-
-protected:
-    vec3 pos, up, normal;
-    double size = 0, initDirection, opacity = 1;
-};
+class Game;
 
 // Represents a loaded note
-class AbstractNote : public TickObject
+class Note : public TickObject
 {
 public:
-    virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm){}; // Perform judgement
-    virtual void draw(DrawContext &ctx);                                            // Draw using current status
-    void tick(double absTime) override;
-    void bindSlot(Slot *slot);
+    virtual void tick(double absTime) override;
+    Note(NoteType tp, Game &g) : typ(tp), game(g){};
+    static std::shared_ptr<Note> createNote(std::weak_ptr<NoteObject> obj, Game &g);
 
-    // Judgement helper
-    JudgeStage jStage = BUSY;
+protected:
+    /**
+     * @brief Reserved judge method for compatibility with existing structure.
+     * @param absTime Current time.
+     * @param input Input buffer.
+     * @param sm Score manager, for rules retreiving.
+     */
+    virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm) = 0;
+    NoteType typ;
+    JudgeStage judgeStage = BUSY;
     // Fake notes are not judged but will be ticked
     bool isFake = false;
-    // Since the time it's loaded it will remain visible
-    bool isVisible = true;
-    NoteElementType element;
-    // When will the note hit the slot
-    // Used to control the position
-    // This is the only position method that doesn't use animation
-    double hitTime;
-    vec3 basePosition, normal, up;
-    // For assist-ring displaying
-    Slot *targetSlot = nullptr;
-    // Linked world
-    World *world = nullptr;
-    // Linked score manager
-    // TODO: replace existing score manager with built-in
-    ScoreManager *score = nullptr;
+    bool isActive = true;
+
+    // Reserved
+    // NoteElementType element;
+
+    // Game reference
+    Game &game;
+};
+
+/**
+ * @brief A singleton note interface which implements singleton note judging.
+ *
+ * This class implements snigleton note judge algorithm and can be directly inherited to use
+ * the defined `performJudge` method.
+ */
+class SingletonNote : public Note
+{
+public:
+    // Inherited constructor
+    using Note::Note;
 
 protected:
-    // Hit effect
-    bool playingHitEffect = false;
-    double lastGenTime = 0; // Last hit effect played
-    std::set<HitEffect *> hitEffects;
+    /**
+     * @brief Perform the judgement of the note.
+     *
+     * This function judges the note according to its state and input buffer. If a judge
+     * completed, a score might be pushed into the score record set.
+     *
+     * @note This function is marked as non-virtual and therefore should not be overriden.
+     * This is worked as intended.
+     * @param absTime Current time.
+     * @param input The input buffer set.
+     * @param sm The score record container to push score in.
+     */
+    virtual void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
 };
 
-class Tapu : public AbstractNote
+class Tapu : public SingletonNote
 {
 public:
-    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void draw(DrawContext &ctx) override;
+    Tapu(Game &g) : SingletonNote(TAPU, g){};
 };
 
-class Shizuku : public AbstractNote
+class Shizuku : public Note
 {
 public:
-    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void draw(DrawContext &ctx) override;
-};
-
-class Puresu : public AbstractNote
-{
-public:
-    double length;    // Length (in seconds) of this puresu, will be adjusted during judgement
-    double absLength; // Original length, read-only
-
-    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
-    void draw(DrawContext &ctx) override;
-    void tick(double absTime) override;
+    Shizuku(Game &g) : Note(SZKU, g){};
 
 protected:
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
+};
+
+class Puresu : public Note
+{
+public:
+    void draw(DrawContext &ctx) override;
+    Puresu(Game &g) : Note(PRSU, g) {}
+
+protected:
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     double lastSuccJudge = -1; // Timestamp of the last successful judgement.
 };
 
-class Kyozetsu : public AbstractNote
+class Kyozetsu : public Note
 {
 public:
-    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void draw(DrawContext &ctx) override;
-};
-
-class Hoshi : public AbstractNote
-{
-public:
-    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
-    void draw(DrawContext &ctx) override;
-    void tick(double absTime) override;
+    Kyozetsu(Game &g) : Note(KZTU, g){};
 
 protected:
-    double assistRingScale;
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
 };
 
-class Hashi : public AbstractNote
+class Hoshi : public SingletonNote
 {
 public:
-    double length;
-    double absLength;
-    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     void draw(DrawContext &ctx) override;
-    void tick(double absTime) override;
+    Hoshi(Game &g) : SingletonNote(HOSHI, g){};
+};
+
+class Hashi : public Note
+{
+public:
+    void draw(DrawContext &ctx) override;
+    Hashi(Game &g) : Note(HASHI, g){};
 
 protected:
-    double assistRingScale;
+    void performJudge(double absTime, InputSet &input, ScoreManager &sm) override;
     double lastSuccJudge = -1;
-    double judgedLength;
+    double judgedLength = 0;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTE */

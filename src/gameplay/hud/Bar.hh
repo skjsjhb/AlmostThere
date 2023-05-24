@@ -2,7 +2,8 @@
 #define GAMEPLAY_HUD_BAR
 
 #include <cglm/cglm.h>
-#include "engine/virtual/Graphics.hh"
+
+struct DrawContext;
 
 enum BarDirection
 {

@@ -4,7 +4,7 @@
 #include <cglm/cglm.h>
 #include <list>
 #include <set>
-#include <map>
+#include <unordered_map>
 #include <any>
 #include <typeinfo>
 #include <vector>
@@ -20,22 +20,14 @@
 #define IDF_OBJID "OBJID"
 #define IDF_ALPHA "ALPHA"
 
-#define MAX_DELAY_UNLOAD_AFTER_HIT 0.5
-
-// Calculates dep order
-void ObjController::analyzeDepChain(std::list<ObjController *> origin)
+ObjState ObjController::getState() const
 {
-    origin.sort([](const ObjController *a, const ObjController *b) -> int
-                {
-                    if (b->dep == a)
-                    {
-                        return 1;
-                    }
-                    else if (a->dep == b)
-                    {
-                        return -1;
-                    }
-                    return 0; });
+    return currentState;
+}
+
+const ObjMinimalRef &ObjController::getReference() const
+{
+    return objRef;
 }
 
 enum InVarType
@@ -47,7 +39,7 @@ enum InVarType
     TABLE // Out only
 };
 
-static std::map<std::string, std::pair<InVarType, std::any>> inValuePool, outValuePool;
+static std::unordered_map<std::string, std::pair<InVarType, std::any>> inValuePool, outValuePool;
 
 static int incImpl(lua_State *l)
 {
@@ -164,9 +156,52 @@ static void relVec(vec3 org, vec3 base, vec3 er, vec3 eu, vec3 en, PositionMetho
 
 void ObjController::tick(double absTime)
 {
+    if (lastTickTime == absTime)
+    {
+        // Up to date
+        return;
+    }
+
+    if (!rel.expired())
+    {
+        // Tick deps first
+        rel.lock()->tick(absTime);
+    }
+    // Sync time flag
+    lastTickTime = absTime;
+
+    // Calculate the length value first
+    // Note: length value is calculated by the system and cannot be modified by the script.
+    // This is worked as intended.
+    if (objRef.length != 0)
+    {
+        auto unloadTime = objRef.endTime + objRef.length;
+        if (absTime < unloadTime && absTime > objRef.endTime)
+        {
+            currentState.len = (absTime - objRef.endTime) / objRef.length * objRef.length;
+        }
+        else
+        {
+            currentState.len = objRef.length;
+        }
+    }
+    else
+    {
+        currentState.len = 0;
+    }
+
     // Calculate related variable
-    double pct = (absTime - obj->genTime) / (obj->hitTime - obj->genTime);
-    double time = obj->hitTime - obj->genTime;
+    double time = objRef.endTime - objRef.genTime;
+    double pct;
+    if (time == 0)
+    {
+        pct = 1;
+    }
+    else
+    {
+        pct = (absTime - objRef.genTime) / time;
+    }
+
     if (pct > 1)
         pct = 1;
     if (pct < 0)
@@ -175,14 +210,15 @@ void ObjController::tick(double absTime)
         time = 0;
 
     // Setup variables
-    inValuePool.clear();
-    outValuePool.clear();
     inValuePool[IDF_PCT] = std::pair(NUMBER, std::any(pct));
     inValuePool[IDF_TIME] = std::pair(NUMBER, std::any(time));
-    inValuePool[IDF_OBJID] = std::pair(STRING, std::any(obj->id));
+    inValuePool[IDF_OBJID] = std::pair(STRING, std::any(objRef.id));
 
     // Eval script
-    luaRunCompiledCode(obj->tickScript);
+    luaRunCompiledCode(objRef.tickScript);
+
+    // Clean input
+    inValuePool.clear();
 
     if (outValuePool.size() == 0)
     {
@@ -202,16 +238,17 @@ void ObjController::tick(double absTime)
     {
         mode[i] = (int)tMode[i];
     }
-    currentStatus.alpha = readNumber(IDF_ALPHA, 1);
-    currentStatus.len = readNumber(IDF_LEN, 1);
+    currentState.alpha = readNumber(IDF_ALPHA, 1);
+    currentState.len = readNumber(IDF_LEN, 1);
 
-    if (obj->relTarget != nullptr)
+    if (!rel.expired())
     {
         float *tPos, *tUp, *tNorm;
         vec3 tRight;
-        tUp = dep->currentStatus.up;
-        tNorm = dep->currentStatus.normal;
-        tPos = dep->currentStatus.pos;
+        auto dep = rel.lock();
+        tUp = dep->currentState.up;
+        tNorm = dep->currentState.normal;
+        tPos = dep->currentState.pos;
         glm_vec3_cross(tUp, tNorm, tRight);
         glm_vec3_normalize(tRight);
 
@@ -221,29 +258,25 @@ void ObjController::tick(double absTime)
         relVec(iNorm, tPos, tRight, tUp, tNorm, (PositionMethod)mode[2]);
     }
 
-    glm_vec3_copy(iPos, currentStatus.pos);
-    glm_vec3_copy(iUp, currentStatus.up);
-    glm_vec3_copy(iNorm, currentStatus.normal);
+    glm_vec3_copy(iPos, currentState.pos);
+    glm_vec3_copy(iUp, currentState.up);
+    glm_vec3_copy(iNorm, currentState.normal);
+
+    // Cleanup output
+    outValuePool.clear();
 }
 
-bool ObjController::shouldLoad(double absTime)
+ObjMinimalRef::ObjMinimalRef(const MapObject &m)
 {
-    return absTime >= obj->genTime;
-}
-
-bool ObjController::shouldUnload(double absTime)
-{
-    return absTime >= obj->hitTime + MAX_DELAY_UNLOAD_AFTER_HIT;
-}
-
-void ObjController::setDep(ObjController *n)
-{
-    dep = n;
-}
-
-ObjController::ObjController(MapObject *ns)
-{
-    obj = ns;
+    id = m.id;
+    tickScript = m.tickScript;
+    player = m.player;
+    genTime = m.genTime;
+    endTime = m.endTime;
+    if (m.type == NOTE)
+    {
+        length = dynamic_cast<NoteObject &>(const_cast<MapObject &>(m)).length;
+    }
 }
 
 void initControllerLuaExt()

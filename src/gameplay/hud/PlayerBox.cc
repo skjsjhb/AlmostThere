@@ -1,6 +1,10 @@
 #include "PlayerBox.hh"
+
 #include "HUDDef.hh"
 #include "engine/virtual/Window.hh"
+#include "gameplay/player/Player.hh"
+#include "gameplay/hud/Bar.hh"
+#include "engine/virtual/Graphics.hh"
 #include <cglm/cglm.h>
 #include <locale>
 #include <codecvt>
@@ -40,9 +44,9 @@
         0.8, 0.8, 0.8, 1 \
     }
 
-PlayerBox::PlayerBox(Player *p)
+PlayerBox::PlayerBox(Player &p) : player(p)
 {
-    int uc = p->getPID() - 1;
+    int uc = p.getPID() - 1;
     float mgt = PB_DIV_TOP + uc * (PB_DIV_TOP + PB_DIV_H);
     vec2 hpPos = {PB_DIV_LEFT + PB_HP_LEFT, mgt + PB_HP_TOP};
     vec2 shPos = {PB_DIV_LEFT + PB_SH_LEFT, mgt + PB_SH_TOP};
@@ -51,7 +55,6 @@ PlayerBox::PlayerBox(Player *p)
     shieldBar = Bar(HORZ, shPos, PB_BAR_L, PB_BAR_HW);
     hpBar.setColor(hc);
     shieldBar.setColor(sc);
-    playerPtr = p;
 }
 
 void PlayerBox::draw(DrawContext &ctx)
@@ -60,7 +63,7 @@ void PlayerBox::draw(DrawContext &ctx)
     vtGetWindowSize(w, h);
 
     // Draw box
-    int uc = playerPtr->getPID() - 1;
+    int uc = player.getPID() - 1;
     float mgt = PB_DIV_TOP + uc * (PB_DIV_TOP + PB_DIV_H);
     Shape s;
     s.points[0][0] = PB_DIV_LEFT;
@@ -73,7 +76,7 @@ void PlayerBox::draw(DrawContext &ctx)
     s.points[3][0] = PB_DIV_LEFT + PB_DIV_W;
     s.points[3][1] = mgt + PB_DIV_H;
     s.shader = "opaque-tex";
-    s.texture = "hud/pb-" + std::to_string(playerPtr->getPID());
+    s.texture = "hud/pb-" + std::to_string(player.getPID());
 
     // Draw names
     Typography ctp;
@@ -81,7 +84,7 @@ void PlayerBox::draw(DrawContext &ctx)
     ctp.pos[1] = mgt + PB_N_TOP;
     ctp.yAlign = CENTER;
     ctp.xAlign = CENTER;
-    auto cname = playerPtr->getCharName();
+    auto cname = player.getCharName();
     ctp.text = std::wstring(cname.begin(), cname.end());
 
     vec4 cColor = PB_CN_C;
@@ -92,8 +95,8 @@ void PlayerBox::draw(DrawContext &ctx)
     ctx.typos.push_back(ctp);
 
     // Draw bar
-    hpBar.setLength(playerPtr->getHealthRate());
-    shieldBar.setLength(playerPtr->getShieldRate());
+    hpBar.setLength(player.getHealthRate());
+    shieldBar.setLength(player.getShieldRate());
 
     hpBar.draw(ctx);
     shieldBar.draw(ctx);

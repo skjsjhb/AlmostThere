@@ -1,7 +1,11 @@
 #include "Note.hh"
 #include "util/Util.hh"
-
+#include "gameplay/view/View.hh"
+#include "gameplay/base/Game.hh"
 #include <array>
+#include "spdlog/spdlog.h"
+
+using namespace spdlog;
 
 #define BASE_FALL_SPEED 10.0
 #define FLAT_NOTE_SIZE 1.0
@@ -16,66 +20,48 @@
 #define NOTE_FLOAT_THRESHOLD 0.01
 #define SHIZUKU_JUDGE_WINDOW 0.01
 
-void AbstractNote::tick(double absTime)
+void Note::tick(double absTime)
 {
-    // Only blocks self-tick. Hit effect still needs to be played.
-    // TODO: dereference hit effect from note
-    if (isVisible)
-    {
-        controller->tick(absTime);
-        glm_vec3_copy(controller->currentStatus.pos, basePosition);
-        glm_vec3_copy(controller->currentStatus.up, up);
-        glm_vec3_copy(controller->currentStatus.normal, normal);
-    }
-    // Generating hit effect
-    if (playingHitEffect)
-    {
-        playingHitEffect = false; // Will be set to true in the next tick
-        if (absTime - lastGenTime >= HIT_EFFECT_GEN_INTERVAL)
-        {
-            HitEffect *he = new HitEffect(basePosition, up, normal);
-            he->isVisible = true;
-            he->startTime = absTime;
-            hitEffects.insert(he);
-            lastGenTime = absTime;
-        }
-    }
-    else
-    {
-        lastGenTime = 0;
-    }
-
-    // Ticking
-    for (auto ht = hitEffects.begin(); ht != hitEffects.end();)
-    {
-        auto &h = *ht;
-        h->tick(absTime);
-        if (!h->isVisible)
-        {
-            ht = hitEffects.erase(ht);
-            delete h;
-        }
-        else
-        {
-            ++ht;
-        }
-    }
+    TickObject::tick(absTime);
+    performJudge(absTime, game.input, game.score);
 }
 
-void AbstractNote::bindSlot(Slot *s)
+std::shared_ptr<Note> Note::createNote(std::weak_ptr<NoteObject> obj, Game &g)
 {
-    glm_vec3_copy(s->up, up);
-    glm_vec3_copy(s->normal, normal);
-}
-
-void AbstractNote::draw(DrawContext &ctx)
-{
-    for (auto &h : hitEffects)
+    std::shared_ptr<Note> a;
+    auto xobj = obj.lock();
+    switch (xobj->noteType)
     {
-        h->draw(ctx);
+    case TAPU:
+        a = std::make_shared<Tapu>(g);
+        break;
+    case SZKU:
+        a = std::make_shared<Shizuku>(g);
+        break;
+    case HOSHI:
+        a = std::make_shared<Hoshi>(g);
+        break;
+    case PRSU:
+        a = std::make_shared<Puresu>(g);
+        break;
+    case HASHI:
+        a = std::make_shared<Hashi>(g);
+        break;
+    case KZTU:
+        a = std::make_shared<Kyozetsu>(g);
+        break;
+    case AKU:
+    case SGKI:
+    case TSAR:
+    default:
+        warn("Creating note with missing type: " + std::to_string(xobj->noteType));
+        break;
     }
+    a->controller = std::make_shared<ObjController>(*xobj);
+    return a;
 }
 
+// Insert corners of a rectangle into specified polygon
 static void mkRectPoints(Polygon &pg, vec3 center, vec3 upLen, vec3 rightLen)
 {
     vec3 lt, rt, lb, rb, t;
@@ -91,21 +77,18 @@ static void mkRectPoints(Polygon &pg, vec3 center, vec3 upLen, vec3 rightLen)
     pg.points.push_back(std::to_array(rb));
 }
 
-static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractNote *obj)
+// Paint a rectangle with texture
+static void drawRect(DrawContext &ctx, const std::string sdName, vec3 pos, vec3 up, vec3 norm)
 {
-    if (!obj->isVisible)
-    {
-        return;
-    }
     vec3 right;
     vec3 dw, dh;
-    glm_vec3_cross(obj->up, obj->normal, right);
+    glm_vec3_cross(up, norm, right);
     glm_vec3_normalize(right);
     glm_vec3_scale(right, FLAT_NOTE_SIZE, dw);
-    glm_vec3_scale(obj->up, FLAT_NOTE_SIZE, dh);
+    glm_vec3_scale(up, FLAT_NOTE_SIZE, dh);
 
     Polygon pg;
-    mkRectPoints(pg, obj->basePosition, dh, dw);
+    mkRectPoints(pg, pos, dh, dw);
     pg.renderPreset = RECT;
     pg.shader = "rect";
     pg.texture = sdName;
@@ -113,30 +96,25 @@ static void commonRectDraw(DrawContext &ctx, const std::string sdName, AbstractN
 }
 
 // Check if this position is 'pressed' through mouse ray casting
-static bool verifyPressed(vec3 pos, World &w, const InputSet &inputs, ScoreManager &sm)
+// TODO: deprecated ScoreManager
+static bool verifyPressed(vec3 pos, Game &g)
 {
-    if (w.activeCamera == nullptr)
+    if (g.view.camera.expired())
     {
         return false;
     }
     vec3 cPos, dir;
-    w.activeCamera->getPosition(cPos);
+    g.view.camera.lock()->getPosition(cPos);
     glm_vec3_sub(pos, cPos, dir);
     glm_vec3_normalize(dir);
-    for (auto &i : inputs.touchPoints)
+    for (auto &i : g.input.touchPoints)
     {
         vec3 ray;
         vec2 pos = {i[0], i[1]};
-        w.castMouseRay(pos, ray);
+        castMouseRay(g.view, pos, ray);
         glm_vec3_normalize(ray);
-        for (int i = 0; i < 3; i++)
-        {
-        }
         double ang = glm_vec3_dot(ray, dir);
-        for (int i = 0; i < 3; i++)
-        {
-        }
-        if (ang >= (1 - sm.rules.inputOptn.judgeRayAngle))
+        if (ang >= (1 - g.score.rules.inputOptn.judgeRayAngle))
         {
             return true;
         }
@@ -146,47 +124,54 @@ static bool verifyPressed(vec3 pos, World &w, const InputSet &inputs, ScoreManag
 
 void Tapu::draw(DrawContext &ctx)
 {
-    AbstractNote::draw(ctx);
-    commonRectDraw(ctx, "tapu", this);
+    if (!isActive)
+    {
+        return;
+    }
+    auto stat = controller->getState();
+    drawRect(ctx, "tapu", stat.pos, stat.up, stat.normal);
 }
 
 void Shizuku::draw(DrawContext &ctx)
 {
-    AbstractNote::draw(ctx);
-    commonRectDraw(ctx, "shizuku", this);
+    if (!isActive)
+    {
+        return;
+    }
+    auto stat = controller->getState();
+    drawRect(ctx, "shizuku", stat.pos, stat.up, stat.normal);
 }
 
 void Puresu::draw(DrawContext &ctx)
 {
-    AbstractNote::draw(ctx);
-    // TODO: paint three pos
-    if (!isVisible || length <= 0)
+    auto stat = controller->getState();
+    if (!isActive || stat.len <= 0)
     {
         return;
     }
     Polygon head, tail, body;
     vec3 right, upLen, rightLen, ctr, centerMove, bCenter, tCenter;
 
-    glm_vec3_cross(up, normal, right);
+    glm_vec3_cross(stat.up, stat.normal, right);
     glm_vec3_normalize(right);
     glm_vec3_scale(right, FLAT_NOTE_SIZE, rightLen);
-    glm_vec3_scale(up, FLAT_NOTE_SIZE / 2, upLen);
-    glm_vec3_sub(basePosition, upLen, ctr);
+    glm_vec3_scale(stat.up, FLAT_NOTE_SIZE / 2, upLen);
+    glm_vec3_sub(stat.pos, upLen, ctr);
     mkRectPoints(head, ctr, upLen, rightLen);
     head.renderPreset = RECT;
     head.shader = "rect";
     head.texture = "puresu-head";
 
-    glm_vec3_scale(up, length * BASE_FALL_SPEED, upLen);
+    glm_vec3_scale(stat.up, stat.len * BASE_FALL_SPEED, upLen);
     glm_vec3_scale(upLen, 0.5, centerMove);
-    glm_vec3_add(basePosition, centerMove, bCenter);
+    glm_vec3_add(stat.pos, centerMove, bCenter);
     mkRectPoints(body, bCenter, centerMove, rightLen);
     body.renderPreset = RECT;
     body.shader = "rect";
     body.texture = "puresu-body";
 
     glm_vec3_add(bCenter, centerMove, tCenter);
-    glm_vec3_scale(up, FLAT_NOTE_SIZE / 2, upLen);
+    glm_vec3_scale(stat.up, FLAT_NOTE_SIZE / 2, upLen);
     glm_vec3_add(tCenter, upLen, tCenter);
     mkRectPoints(tail, tCenter, upLen, rightLen);
     tail.renderPreset = RECT;
@@ -200,30 +185,35 @@ void Puresu::draw(DrawContext &ctx)
 
 void Kyozetsu::draw(DrawContext &ctx)
 {
-    AbstractNote::draw(ctx);
-    commonRectDraw(ctx, "kyozetsu", this);
+    if (!isActive)
+    {
+        return;
+    }
+    auto stat = controller->getState();
+    drawRect(ctx, "kyozetsu", stat.pos, stat.up, stat.normal);
 }
 
 void Hoshi::draw(DrawContext &ctx)
 {
-    AbstractNote::draw(ctx);
-    if (!isVisible)
+    if (!isActive)
     {
         return;
     }
     vec3 rightVec, upVec, normVec;
     vec3 points[6]; // NS, LR, FB
-    glm_cross(up, normal, rightVec);
+    auto stat = controller->getState();
+    glm_cross(stat.up, stat.normal, rightVec);
     glm_vec3_normalize(rightVec);
     glm_vec3_scale(rightVec, HOSHI_NOTE_SIZE, rightVec);
-    glm_vec3_scale(up, HOSHI_NOTE_SIZE, upVec);
-    glm_vec3_scale(normal, HOSHI_NOTE_SIZE, normVec);
-    glm_vec3_add(basePosition, rightVec, points[3]);
-    glm_vec3_add(basePosition, upVec, points[5]);
-    glm_vec3_sub(basePosition, upVec, points[4]);
-    glm_vec3_sub(basePosition, rightVec, points[2]);
-    glm_vec3_add(basePosition, normVec, points[0]);
-    glm_vec3_sub(basePosition, normVec, points[1]);
+    glm_vec3_scale(stat.up, HOSHI_NOTE_SIZE, upVec);
+    glm_vec3_scale(stat.normal, HOSHI_NOTE_SIZE, normVec);
+    glm_vec3_add(stat.pos, rightVec, points[3]);
+    glm_vec3_add(stat.pos, upVec, points[5]);
+    glm_vec3_sub(stat.pos, upVec, points[4]);
+    glm_vec3_sub(stat.pos, rightVec, points[2]);
+    glm_vec3_add(stat.pos, normVec, points[0]);
+    glm_vec3_sub(stat.pos, normVec, points[1]);
+
     Polygon ps;
     ps.renderPreset = OCT;
     ps.shader = "hoshi";
@@ -233,231 +223,52 @@ void Hoshi::draw(DrawContext &ctx)
         ps.points.push_back(std::to_array(points[i]));
     }
     ctx.polygons.push_back(std::move(ps));
-
-    // Draw the assist ring
-    // TODO: obtain space assist time from chart
-    if (assistRingScale > 0 && assistRingScale <= 1)
-    {
-        Polygon assist;
-        assist.renderPreset = RECT;
-        assist.shader = "assist-ring";
-        assist.isOpaque = false;
-        assist.texture = "space-assist";
-        assist.args[0] = 1 - assistRingScale;
-
-        auto size = ASSIST_RING_SIZE * assistRingScale;
-        vec3 rdh;
-        glm_vec3_normalize(rightVec);
-        glm_vec3_scale(rightVec, size, rightVec);
-        glm_vec3_scale(up, size, rdh);
-        mkRectPoints(assist, targetSlot->center, rdh, rightVec);
-        ctx.polygons.push_back(std::move(assist));
-    }
 }
 
 void Hashi::draw(DrawContext &ctx)
 {
-    AbstractNote::draw(ctx);
-    if (!isVisible)
-    {
-        return;
-    }
-    if (length <= 0)
+    auto stat = controller->getState();
+    if (!isActive || stat.len <= 0)
     {
         return;
     }
     vec3 right;
     vec3 btmPoints[6], headPoints[6]; // CCW start from right
-    glm_vec3_cross(up, normal, right);
+
+    glm_vec3_cross(stat.up, stat.normal, right);
     glm_vec3_normalize(right);
     glm_vec3_scale(right, HASHI_NOTE_SIZE, right);
 
     Polygon ps;
     for (int i = 0; i < 6; i++)
     {
-        glm_vec3_add(basePosition, right, btmPoints[i]);
+        glm_vec3_add(stat.pos, right, btmPoints[i]);
         ps.points.push_back(std::to_array(btmPoints[i]));
         if (i != 5)
         {
-            glm_vec3_rotate(right, glm_rad(60.0), normal);
+            glm_vec3_rotate(right, glm_rad(60.0), stat.normal);
         }
     }
 
-    auto xlen = length * BASE_FALL_SPEED;
     vec3 upLength;
-    glm_vec3_copy(normal, upLength);
+    glm_vec3_copy(stat.normal, upLength);
     glm_vec3_normalize(upLength);
 
-    // Long Hashi notes require cutting, or render will not be correct
-    if (xlen > 2 * HASHI_CUT_THRESHOLD)
+    // In the past, long Hashi notes requires cutting in order to render them correctly.
+    // Now Hashi are opaque and there is no need to calculate this anymore.
+    glm_vec3_scale(upLength, stat.len * BASE_FALL_SPEED, upLength);
+    for (int i = 0; i < 6; i++)
     {
-        int pieces = (int)(xlen / HASHI_CUT_THRESHOLD);
-        float pcf = xlen / pieces;
-        vec3 bufferPointsDown[6], bufferPointsUp[6];
-        Polygon pse[pieces];
-        // Make the bottom one
-        glm_vec3_scale(upLength, pcf, upLength);
-        for (int i = 0; i < 6; i++)
-        {
-            pse[0].points.push_back(std::to_array(btmPoints[i]));
-        }
-        for (int i = 0; i < 6; i++)
-        {
-            glm_vec3_add(btmPoints[i], upLength, bufferPointsDown[i]);
-            pse[0].points.push_back(std::to_array(bufferPointsDown[i]));
-        }
-        pse[0].renderPreset = PRISM_BTM;
-
-        // Make middle ones
-        for (int i = 1; i < pieces - 1; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                pse[i].points.push_back(std::to_array(bufferPointsDown[j]));
-            }
-            for (int j = 0; j < 6; j++)
-            {
-                glm_vec3_add(bufferPointsDown[j], upLength, bufferPointsUp[j]);
-                pse[i].points.push_back(std::to_array(bufferPointsUp[j]));
-                glm_vec3_copy(bufferPointsUp[j], bufferPointsDown[j]);
-            }
-            pse[i].renderPreset = PRISM_SIDE;
-        }
-
-        // Make the top one
-        for (int j = 0; j < 6; j++)
-        {
-            pse[pieces - 1].points.push_back(std::to_array(bufferPointsDown[j]));
-        }
-        // Correct mistakes
-        glm_vec3_normalize(upLength);
-        glm_vec3_scale(upLength, xlen, upLength);
-        for (int i = 0; i < 6; i++)
-        {
-            glm_vec3_add(btmPoints[i], upLength, headPoints[i]);
-            pse[pieces - 1].points.push_back(std::to_array(headPoints[i]));
-        }
-        pse[pieces - 1].renderPreset = PRISM_HAT;
-
-        // Push all
-        for (int i = 0; i < pieces; i++)
-        {
-            pse[i].shader = "hashi";
-            pse[i].texture = "hashi-hat";
-            pse[i].subTexture = "hashi-side";
-            ctx.polygons.push_back(std::move(pse[i]));
-        }
+        // Get corresponding point on the head face
+        glm_vec3_add(btmPoints[i], upLength, headPoints[i]);
+        ps.points.push_back(std::to_array(headPoints[i]));
     }
-    else
-    {
-        // Use PRISM-FULL to draw
-        glm_vec3_scale(upLength, xlen, upLength);
-        for (int i = 0; i < 6; i++)
-        {
-            glm_vec3_add(btmPoints[i], upLength, headPoints[i]);
-            ps.points.push_back(std::to_array(headPoints[i]));
-        }
 
-        ps.renderPreset = PRISM_FULL;
-        ps.shader = "hashi";
-        ps.texture = "hashi-hat";
-        ps.subTexture = "hashi-side";
-        ctx.polygons.push_back(std::move(ps));
-    }
-    if (assistRingScale > 0 && assistRingScale <= 1)
-    {
-        Polygon assist;
-        assist.renderPreset = RECT;
-        assist.shader = "assist-ring";
-        assist.texture = "space-assist";
-        assist.isOpaque = false;
-        assist.args[0] = 1 - assistRingScale;
-
-        auto size = ASSIST_RING_SIZE * assistRingScale;
-        vec3 rdh, rightVec;
-        glm_vec3_cross(up, normal, rightVec);
-        glm_vec3_normalize(rightVec);
-        glm_vec3_scale(rightVec, size, rightVec);
-        glm_vec3_scale(up, size, rdh);
-        mkRectPoints(assist, targetSlot->center, rdh, rightVec);
-        ctx.polygons.push_back(std::move(assist));
-    }
-}
-
-void Tapu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
-{
-    if (isFake)
-    {
-        return;
-    }
-    switch (jStage)
-    {
-    case BUSY:
-        if (!verifyPressed(basePosition, *world, input, sm))
-        {
-            jStage = CLEAR;
-        }
-        if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && absTime > hitTime)
-        {
-            // Lost
-            sm.addJudgeGrade(LT, TAPU);
-            jStage = JUDGED;
-        }
-        break;
-    case CLEAR:
-        // Accepting judge
-        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
-        {
-            jStage = ACTIVE;
-        }
-        else
-        {
-            if (absTime > hitTime)
-            {
-                // Lost
-                sm.addJudgeGrade(LT, TAPU);
-                jStage = JUDGED;
-            }
-            else if (verifyPressed(basePosition, *world, input, sm))
-            {
-                // Too early
-                jStage = BUSY;
-            }
-        }
-        break;
-    case ACTIVE:
-        if (verifyPressed(basePosition, *world, input, sm))
-        {
-            playingHitEffect = true;
-            // Let's do this
-            jStage = JUDGED;
-            if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
-            {
-                sm.addJudgeGrade(PF, TAPU);
-            }
-            else if (isOverlapped(hitTime, sm.rules.judgeTime.almost, absTime, 0))
-            {
-                sm.addJudgeGrade(AT, TAPU);
-            }
-            else if (isOverlapped(hitTime, sm.rules.judgeTime.good, absTime, 0))
-            {
-                sm.addJudgeGrade(AC, TAPU);
-            }
-            else
-            {
-                sm.addJudgeGrade(TC, TAPU);
-            }
-        }
-        else if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
-        {
-            jStage = CLEAR; // Ready to lost
-        }
-        break;
-    case JUDGED:
-    default:
-        isVisible = false;
-        return;
-    }
+    ps.renderPreset = PRISM_FULL;
+    ps.shader = "hashi";
+    ps.texture = "hashi-hat";
+    ps.subTexture = "hashi-side";
+    ctx.polygons.push_back(std::move(ps));
 }
 
 void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
@@ -466,31 +277,34 @@ void Shizuku::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     {
         return;
     }
-    switch (jStage)
+
+    auto stat = controller->getState();
+    auto &ref = controller->getReference();
+
+    switch (judgeStage)
     {
     case JUDGED:
-        isVisible = false;
+        isActive = false;
         return;
     default:
         // In all other cases, check and judge
-        if (isOverlapped(hitTime, SHIZUKU_JUDGE_WINDOW, absTime, 0))
+        if (isOverlapped(ref.endTime, SHIZUKU_JUDGE_WINDOW, absTime, 0))
         {
 
-            if (verifyPressed(basePosition, *world, input, sm))
+            if (verifyPressed(stat.pos, game))
             {
                 // You got it
-                playingHitEffect = true;
                 sm.addJudgeGrade(PF, SZKU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
             }
         }
         else
         {
-            if (absTime > hitTime)
+            if (absTime > ref.endTime)
             {
                 // You failed!
                 sm.addJudgeGrade(LT, SZKU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
             }
         }
     }
@@ -502,31 +316,34 @@ void Kyozetsu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     {
         return;
     }
-    switch (jStage)
+
+    auto stat = controller->getState();
+    auto &ref = controller->getReference();
+
+    switch (judgeStage)
     {
     case JUDGED:
-        isVisible = false;
+        isActive = false;
         return;
     default:
         // In all other cases, check and judge
-        if (isOverlapped(hitTime, sm.rules.judgeTime.good, absTime, 0))
+        if (isOverlapped(ref.endTime, sm.rules.judgeTime.good, absTime, 0))
         {
 
-            if (verifyPressed(basePosition, *world, input, sm))
+            if (verifyPressed(stat.pos, game))
             {
                 // You touched the zone!
                 sm.addJudgeGrade(LT, KZTU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
             }
         }
         else
         {
-            if (absTime > hitTime + sm.rules.judgeTime.good)
+            if (absTime > ref.endTime + sm.rules.judgeTime.good)
             {
                 // OK very well!
-                playingHitEffect = true;
                 sm.addJudgeGrade(PF, SZKU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
             }
         }
     }
@@ -538,74 +355,81 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     {
         return;
     }
-    switch (jStage)
+
+    auto range = sm.rules.judgeTime.range;
+    auto almost = sm.rules.judgeTime.almost;
+    auto good = sm.rules.judgeTime.good;
+
+    auto stat = controller->getState();
+    auto &ref = controller->getReference();
+
+    switch (judgeStage)
     {
     case JUDGED:
     default:
-        isVisible = false;
+        isActive = false;
         return;
     case BUSY:
-        if (!verifyPressed(basePosition, *world, input, sm))
+        if (!verifyPressed(stat.pos, game))
         {
-            jStage = CLEAR;
+            judgeStage = CLEAR;
         }
-        if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && absTime > hitTime)
+        if (!isOverlapped(ref.endTime, range, absTime, 0) && absTime > ref.endTime)
         {
             // Lost
             sm.addJudgeGrade(LT, TAPU);
-            jStage = JUDGED;
+            judgeStage = JUDGED;
         }
         break;
     case CLEAR:
         // Accepting judge
-        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && verifyPressed(basePosition, *world, input, sm))
+        if (isOverlapped(ref.endTime, range, absTime, 0) && verifyPressed(stat.pos, game))
         {
             // Turn to active, keep pressing!
-            jStage = ACTIVE;
+            judgeStage = ACTIVE;
         }
         else
         {
-            if (absTime > hitTime && !isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
+            if (absTime > ref.endTime && !isOverlapped(ref.endTime, range, absTime, 0))
             {
                 // Lost
                 sm.addJudgeGrade(LT, TAPU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
             }
-            else if (verifyPressed(basePosition, *world, input, sm))
+            else if (verifyPressed(stat.pos, game))
             {
                 // Too early
-                jStage = BUSY;
+                judgeStage = BUSY;
             }
         }
         break;
     case ACTIVE:
-        if (absTime >= hitTime + absLength)
+        if (absTime >= ref.endTime + ref.length)
         {
             // Well done!
             sm.addJudgeGrade(PF, PRSU);
-            jStage = JUDGED;
+            judgeStage = JUDGED;
             return;
         }
-        if (!verifyPressed(basePosition, *world, input, sm))
+        if (!verifyPressed(stat.pos, game))
         {
-            if (isOverlapped((hitTime + absLength), sm.rules.judgeTime.almost, absTime, 0))
+            if (isOverlapped((ref.endTime + ref.length), almost, absTime, 0))
             {
                 // AT
                 sm.addJudgeGrade(AT, PRSU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
                 return;
             }
-            else if (isOverlapped((hitTime + absLength), sm.rules.judgeTime.good, absTime, 0))
+            else if (isOverlapped((ref.endTime + ref.length), good, absTime, 0))
             {
                 sm.addJudgeGrade(AC, PRSU);
-                jStage = JUDGED;
+                judgeStage = JUDGED;
                 return;
             }
             // Do not refresh time
         }
         else
         {
-            playingHitEffect = true; // Keep the animation playing
             lastSuccJudge = absTime; // Refresh time
         }
         if (lastSuccJudge == -1)
@@ -614,7 +438,7 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
         }
         if (lastSuccJudge != -1 && absTime - lastSuccJudge > sm.rules.judgeTime.allowBreak)
         {
-            if (lastSuccJudge - hitTime > 0.5 * absTime)
+            if (lastSuccJudge - ref.endTime > 0.5 * ref.length)
             {
                 sm.addJudgeGrade(MD, PRSU);
             }
@@ -623,131 +447,11 @@ void Puresu::performJudge(double absTime, InputSet &input, ScoreManager &sm)
                 // At least you've got to ACTIVE
                 sm.addJudgeGrade(TC, PRSU);
             }
-            jStage = JUDGED;
+            judgeStage = JUDGED;
         }
 
         break;
     }
-}
-
-void Puresu::tick(double absTime)
-{
-    if (!isVisible)
-    {
-        length = 0;
-        return;
-    }
-    AbstractNote::tick(absTime);
-    if (absTime >= hitTime)
-    {
-        if (absTime <= hitTime + absLength)
-        {
-            glm_vec3_copy(targetSlot->center, basePosition);
-            length = absLength - (absTime - hitTime);
-        }
-        else
-        {
-            length = 0;
-        }
-    }
-    else
-    {
-        length = absLength;
-    }
-}
-
-void Hoshi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
-{
-    // Almost the same as Tapu
-    if (isFake)
-    {
-        return;
-    }
-    switch (jStage)
-    {
-    case BUSY:
-        if (!verifyPressed(basePosition, *world, input, sm))
-        {
-            jStage = CLEAR;
-        }
-        if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0) && absTime > hitTime)
-        {
-            sm.addJudgeGrade(LT, HOSHI);
-            jStage = JUDGED;
-        }
-        break;
-    case CLEAR:
-        if (isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
-        {
-            jStage = ACTIVE;
-        }
-        else
-        {
-            if (absTime > hitTime)
-            {
-                sm.addJudgeGrade(LT, HOSHI);
-                jStage = JUDGED;
-            }
-            else if (verifyPressed(basePosition, *world, input, sm))
-            {
-                // Too early
-                jStage = BUSY;
-            }
-        }
-        break;
-    case ACTIVE:
-        if (verifyPressed(basePosition, *world, input, sm))
-        {
-            playingHitEffect = true;
-            jStage = JUDGED;
-            if (isOverlapped(hitTime, sm.rules.judgeTime.perfect, absTime, 0))
-            {
-                sm.addJudgeGrade(PF, HOSHI);
-            }
-            else if (isOverlapped(hitTime, sm.rules.judgeTime.almost, absTime, 0))
-            {
-                sm.addJudgeGrade(AT, HOSHI);
-            }
-            else if (isOverlapped(hitTime, sm.rules.judgeTime.good, absTime, 0))
-            {
-                sm.addJudgeGrade(AC, HOSHI);
-            }
-            else
-            {
-                sm.addJudgeGrade(TC, HOSHI);
-            }
-        }
-        else if (!isOverlapped(hitTime, sm.rules.judgeTime.range, absTime, 0))
-        {
-            jStage = CLEAR;
-        }
-        break;
-    case JUDGED:
-    default:
-        isVisible = false;
-        return;
-    }
-}
-
-void Hoshi::tick(double absTime)
-{
-    if (!isVisible)
-    {
-        return;
-    }
-    auto det = hitTime - absTime;
-    if (det > 0 && det < ASSIST_RING_TIME)
-    {
-        assistRingScale = det / ASSIST_RING_TIME + 0.1; // Minor adjustment
-    }
-    else
-    {
-        assistRingScale = -1;
-    }
-    auto len = det * BASE_FALL_SPEED;
-    vec3 shift;
-    glm_vec3_scale(normal, len, shift);
-    glm_vec3_add(targetSlot->center, shift, basePosition);
 }
 
 void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
@@ -756,32 +460,35 @@ void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     {
         return;
     }
-    switch (jStage)
+
+    auto stat = controller->getState();
+    auto &ref = controller->getReference();
+    switch (judgeStage)
     {
     case JUDGED:
-        isVisible = false;
+        isActive = false;
         return;
     default:
-        if (absTime > hitTime && absTime < hitTime + absLength)
+        if (absTime > ref.endTime && absTime < ref.endTime + ref.length)
         {
             if (lastSuccJudge == -1)
             {
                 lastSuccJudge = absTime;
                 return;
             }
-            if (verifyPressed(basePosition, *world, input, sm))
+            if (verifyPressed(stat.pos, game))
             {
-                playingHitEffect = true;
                 judgedLength += (absTime - lastSuccJudge);
             }
             lastSuccJudge = absTime;
         }
-        else if (absTime > hitTime + absLength)
+        else if (absTime > ref.endTime + ref.length)
         {
-            jStage = JUDGED;
-            auto comRate = judgedLength / absLength;
+            judgeStage = JUDGED;
+            auto comRate = judgedLength / ref.length;
             if (comRate > 0.95)
             {
+                // TODO: PF specialization
                 sm.addJudgeGrade(PF, HASHI);
             }
             else if (comRate > 0.85)
@@ -808,84 +515,99 @@ void Hashi::performJudge(double absTime, InputSet &input, ScoreManager &sm)
     }
 }
 
-void Hashi::tick(double absTime)
+void SingletonNote::performJudge(double absTime, InputSet &input, ScoreManager &sm)
 {
-    if (!isVisible)
+    if (isFake)
     {
+        // Fake notes are not judged
         return;
     }
-    auto det = hitTime - absTime;
-    if (det > 0 && det < ASSIST_RING_TIME)
+    auto range = sm.rules.judgeTime.range;
+    auto perfect = sm.rules.judgeTime.perfect;
+    auto almost = sm.rules.judgeTime.almost;
+    auto good = sm.rules.judgeTime.good;
+
+    auto stat = controller->getState();
+    auto &ref = controller->getReference();
+
+    switch (judgeStage)
     {
-        assistRingScale = det / ASSIST_RING_TIME + 0.2; // Minor adjustment
-    }
-    else
-    {
-        assistRingScale = -1;
-    }
-    auto len = det * BASE_FALL_SPEED;
-    vec3 shift;
-    glm_vec3_scale(normal, len, shift);
-    glm_vec3_add(targetSlot->center, shift, basePosition);
-    if (absTime >= hitTime)
-    {
-        if (absTime <= hitTime + absLength)
+    case BUSY:
+        // We want the player to actually 'tap' the note, so it must be released first.
+
+        // If it's already released, change its status.
+        if (!verifyPressed(stat.pos, game))
         {
-            glm_vec3_copy(targetSlot->center, basePosition);
-            length = absLength - (absTime - hitTime);
+            judgeStage = CLEAR;
+        }
+        // If it's too late...
+        if (absTime > ref.endTime + range)
+        {
+            sm.addJudgeGrade(LT, typ);
+            judgeStage = JUDGED;
+        }
+        break;
+    case CLEAR:
+        // The note position is cleared, but the note is not in its judge window yet.
+        // If it went into its window and can be judged, activate it.
+        if (isOverlapped(ref.endTime, range, absTime, 0))
+        {
+            judgeStage = ACTIVE;
         }
         else
         {
-            length = 0;
+            // If it's already too late...
+            if (absTime > ref.endTime + range)
+            {
+                sm.addJudgeGrade(LT, typ);
+                judgeStage = JUDGED;
+            }
+            // If the position is pressed again, but still too early, then reset it to BUSY.
+            else if (verifyPressed(stat.pos, game))
+            {
+                // Too early
+                judgeStage = BUSY;
+            }
         }
-    }
-    else
-    {
-        length = absLength;
-    }
-}
+        break;
+    case ACTIVE:
+        // Now! Now! Press it and earn score!
+        if (verifyPressed(stat.pos, game))
+        {
+            judgeStage = JUDGED;
 
-HitEffect::HitEffect(vec3 p, vec3 u, vec3 n)
-{
-    initDirection = rand() % 4;
-    glm_vec3_copy(p, pos);
-    glm_vec3_copy(u, up);
-    glm_vec3_copy(n, normal);
-}
-
-void HitEffect::tick(double absTime)
-{
-    if (!isVisible)
-    {
+            if (isOverlapped(ref.endTime, perfect, absTime, 0))
+            {
+                // TODO: enable PF for Tactical characters only
+                sm.addJudgeGrade(PF, typ);
+            }
+            else if (isOverlapped(ref.endTime, almost, absTime, 0))
+            {
+                // AT
+                sm.addJudgeGrade(AT, typ);
+            }
+            else if (isOverlapped(ref.endTime, good, absTime, 0))
+            {
+                // AC
+                sm.addJudgeGrade(AC, typ);
+            }
+            else
+            {
+                // Still in range, okay, at least you didn't miss it.
+                sm.addJudgeGrade(TC, typ);
+            }
+        }
+        else if (!isOverlapped(ref.endTime, range, absTime, 0))
+        {
+            // If this has turned to ACTIVE then the condition actually means it's already too late.
+            // Ready to lost
+            judgeStage = CLEAR;
+        }
+        break;
+    case JUDGED:
+    default:
+        // End judge mission.
+        isActive = false;
         return;
     }
-    double dur = absTime - startTime;
-    if (dur > HIT_EFFECT_LIFETIME)
-    {
-        isVisible = false;
-        return;
-    }
-    auto pct = dur / HIT_EFFECT_LIFETIME;
-    size = 2.8 * std::log10(1 + 1.275 * pct) * HIT_EFFECT_SIZE;
-    opacity = -4 * std ::pow(pct - 0.5, 3) + 0.5;
-}
-
-void HitEffect::draw(DrawContext &ctx)
-{
-    Polygon pg;
-    pg.renderPreset = RECT;
-    pg.isOpaque = false;
-    pg.shader = "hit-effect";
-    pg.texture = "hit-effect";
-    pg.args[0] = opacity;
-    vec3 tUp, tRight;
-    glm_vec3_copy(up, tUp);
-    glm_vec3_normalize(tUp);
-    glm_vec3_rotate(tUp, glm_rad(initDirection * 90), normal);
-    glm_vec3_cross(tUp, normal, tRight);
-    glm_vec3_normalize(tRight);
-    glm_vec3_scale(tUp, size, tUp);
-    glm_vec3_scale(tRight, size, tRight);
-    mkRectPoints(pg, pos, tUp, tRight);
-    ctx.polygons.push_back(pg);
 }

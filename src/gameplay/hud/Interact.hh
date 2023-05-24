@@ -1,10 +1,11 @@
 #ifndef GAMEPLAY_HUD_INTERACT
 #define GAMEPLAY_HUD_INTERACT
 
-#include "engine/virtual/Graphics.hh"
 #include "gameplay/player/Player.hh"
 #include "engine/virtual/UIHook.hh"
 #include <string>
+
+struct DrawContext;
 
 class SkillBtn
 {

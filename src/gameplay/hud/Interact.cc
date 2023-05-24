@@ -1,5 +1,7 @@
 #include "Interact.hh"
+
 #include "engine/virtual/UIHook.hh"
+#include "engine/virtual/Graphics.hh"
 
 #define INT_FINAL_BTM 150
 #define INT_FINAL_RIGHT 145

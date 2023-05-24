@@ -4,6 +4,8 @@
 #include "TickObject.hh"
 #include "engine/virtual/Graphics.hh"
 #include "gameplay/control/Controller.hh"
+#include "gameplay/map/MapDef.hh"
+#include <memory>
 #include <cglm/cglm.h>
 #include <set>
 
@@ -11,14 +13,11 @@
 class Slot : public TickObject
 {
 public:
-    vec3 center; // Position vector of center point
-    vec3 normal; // Normal vector
-    vec3 up;     // Up direction
     SlotVariant variant;
-    void tick(double absTime) override;
     void draw(DrawContext &ctx);
+    bool isActive = true;
 
-    bool isVisible = true;
+    static std::shared_ptr<Slot> createSlot(std::weak_ptr<SlotObject> o);
 };
 
 #endif /* GAMEPLAY_OBJS_SLOT */

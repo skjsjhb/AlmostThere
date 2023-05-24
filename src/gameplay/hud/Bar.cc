@@ -1,5 +1,7 @@
 #include "Bar.hh"
+
 #include "HUDDef.hh"
+#include "engine/virtual/Graphics.hh"
 
 #define BAR_HALF_THICK 10
 

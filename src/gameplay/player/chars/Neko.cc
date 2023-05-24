@@ -128,7 +128,7 @@ void NekoChar::tick(Game &g)
     }
 }
 
-PlayerAssets NekoChar::getAssets()
+PlayerAssets NekoChar::getAssets() const
 {
     return {.auxTex = "chars/neko/a", .finalTex = "chars/neko/final"};
 }

@@ -1,6 +1,7 @@
 #include "engine/virtual/Graphics.hh"
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
+#include "gameplay/view/Camera.hh"
 #include "support/Resource.hh"
 #include <climits>
 #include <glad/gl.h>
@@ -12,7 +13,9 @@
 #include <stb_image.h>
 #include <algorithm>
 #include <map>
+#include <unordered_map>
 #include <list>
+#include <memory>
 #include "spdlog/spdlog.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -27,8 +30,8 @@ using namespace spdlog;
 #warning "The blending system has known flaws and vulnerabilities. It will also reduce FPS significantly."
 #endif
 
-static std::map<std::string, GLuint> texturesCtl;
-static std::map<std::string, GLuint> shadersCtl;
+static std::unordered_map<std::string, GLuint> texturesCtl;
+static std::unordered_map<std::string, GLuint> shadersCtl;
 
 struct Glyph
 {
@@ -40,19 +43,29 @@ struct Glyph
 
 static std::vector<std::string> faces = {"en.ttf", "zh.otf", "jp.ttf"};
 static std::vector<FT_Face> alterFaces;
-static std::map<wchar_t, Glyph> glyphBuf;
+static std::unordered_map<wchar_t, Glyph> glyphBuf;
 static std::set<wchar_t> missingChar;
 static FT_Library ftlib;
 
-static Glyph *loadCharGlyph(wchar_t c)
+/**
+ * @brief Loads the glyph of specified character.
+ *
+ * This function will try to load the character in a pre-defined font faces chain. If one
+ * failed it will try the next one. If none is available, it will quit. Otherwise, a glyph is
+ * inserted into the glyph buffer.
+ *
+ * @param c The character to load glyph for.
+ * @return Whether the glyph is successfully loaded.
+ */
+static bool loadCharGlyph(wchar_t c)
 {
     if (missingChar.contains(c))
     {
-        return nullptr;
+        return false;
     }
     if (glyphBuf.contains(c))
     {
-        return &glyphBuf[c];
+        return true;
     }
     else
     {
@@ -94,7 +107,7 @@ static Glyph *loadCharGlyph(wchar_t c)
             gp.bearing[1] = f->glyph->bitmap_top;
             gp.advance = f->glyph->advance.x;
             glyphBuf[c] = gp;
-            return &glyphBuf[c];
+            return true;
         }
         if (!loaded)
         {
@@ -102,7 +115,7 @@ static Glyph *loadCharGlyph(wchar_t c)
             missingChar.insert(c);
         }
     }
-    return nullptr;
+    return false;
 }
 
 static void loadFont()
@@ -415,19 +428,23 @@ static void drawTypography(Typography &t)
 
     float xoffset = 0, yoffset = 0;
     auto sz = t.size * vtGetScaleFactor(); // Scale text
+    std::list<Glyph *> useGlyphs;
     // Calc offset
     for (auto c : t.text)
     {
-        auto gptr = loadCharGlyph(c);
-        if (gptr == nullptr)
+        if (!loadCharGlyph(c))
         {
             continue;
         }
-        Glyph &g = *gptr;
+        auto &g = glyphBuf[c];
+        useGlyphs.push_back(&g);
+
+        // Calculate bounding box
         float h = g.size[1] * sz;
         xoffset += (g.advance >> 6) * sz;
         yoffset = h > yoffset ? h : yoffset;
     }
+
     if (t.xAlign == RIGHT)
     {
         x -= xoffset;
@@ -445,22 +462,15 @@ static void drawTypography(Typography &t)
     {
         y -= yoffset / 2.0;
     }
-    for (auto c : t.text)
+    for (auto gp : useGlyphs)
     {
-        auto gptr = loadCharGlyph(c);
-        if (gptr == nullptr)
-        {
-            continue;
-        }
-        Glyph &g = *gptr;
-
+        Glyph &g = *gp;
         float w = g.size[0] * sz;
         float h = g.size[1] * sz;
-
-        float xpos = x + g.bearing[0] * sz;
-        float ypos = y - (g.size[1] - g.bearing[1]) * sz;
         xoffset += (g.advance >> 6) * sz;
         yoffset = h > yoffset ? h : yoffset;
+        float xpos = x + g.bearing[0] * sz;
+        float ypos = y - (g.size[1] - g.bearing[1]) * sz;
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},
             {xpos, ypos, 0.0f, 1.0f},
@@ -474,10 +484,8 @@ static void drawTypography(Typography &t)
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
         x += (g.advance >> 6) * sz;
     }
-
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
@@ -800,8 +808,9 @@ static std::pair<std::vector<Mesh>, std::vector<Mesh>> makeMeshes(DrawContext &c
 {
     std::vector<Mesh> meshOpaque, meshTrans;
     vec3 camPos, camDir;
-    ctx.cam.getPosition(camPos);
-    ctx.cam.getDir(camDir);
+    auto gcam = ctx.cam.lock();
+    gcam->getPosition(camPos);
+    gcam->getDir(camDir);
 
     for (auto &p : ctx.polygons)
     {
@@ -825,9 +834,10 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
 {
     mat4 proj, view;
     vec3 dir;
-    ctx.cam.getDir(dir);
-    ctx.cam.getProjectionMatrix(proj);
-    ctx.cam.getViewMatrix(view);
+    auto gcam = ctx.cam.lock();
+    gcam->getDir(dir);
+    gcam->getProjectionMatrix(proj);
+    gcam->getViewMatrix(view);
     for (auto &m : meshes)
     {
         float vertex[15] = {0};
@@ -880,6 +890,11 @@ void vtProcessMeshes(DrawContext &ctx)
     glGetError(); // Dispose previous
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (ctx.cam.expired())
+    {
+        warn("Camera not set in this draw context. Skipped draw request.");
+        return;
+    }
     auto meshes = makeMeshes(ctx);
     DRAW_BUFFER_OPAQUE.push_back(meshes.first);
     DRAW_BUFFER_ALPHA.push_back(meshes.second);
