@@ -4,9 +4,34 @@
 #include <string>
 #include <miniaudio.h>
 #include "spdlog/spdlog.h"
+#include <memory>
+#include "support/Resource.hh"
+
 using namespace spdlog;
 
 static ma_engine engine;
+
+unsigned int iid = 1;
+
+struct AudioObject
+{
+    ma_sound buffer; // Audio data buffer
+};
+
+std::map<unsigned int, std::unique_ptr<AudioObject>> audioObjectsIndex;
+
+unsigned int
+vtLoadAudio(const std::string &fname)
+{
+    auto aObj = std::make_unique<AudioObject>();
+    if (ma_sound_init_from_file(&engine, fname.c_str(), MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_ASYNC, NULL, NULL, &aObj->buffer) != MA_SUCCESS)
+    {
+        warn("Could not load audio from: " + fname);
+        return 0;
+    }
+    audioObjectsIndex[iid] = std::move(aObj);
+    return iid++;
+}
 
 void vtInitAudio()
 {
@@ -17,15 +42,56 @@ void vtInitAudio()
     }
 }
 
-bool vtPlaySound(const std::string &wName)
+void vtUnloadAudio(unsigned int sid)
 {
-    std::string fpt = "assets/audio/" + wName + ".wav";
-    auto r = ma_engine_play_sound(&engine, fpt.c_str(), NULL);
-    return r == MA_SUCCESS;
+    if (audioObjectsIndex.contains(sid))
+    {
+        ma_sound_uninit(&audioObjectsIndex[sid]->buffer);
+        audioObjectsIndex.erase(sid);
+    }
+}
+
+void vtPlayAudio(unsigned int sid)
+{
+    if (audioObjectsIndex.contains(sid))
+    {
+        if (ma_sound_start(&audioObjectsIndex[sid]->buffer) != MA_SUCCESS)
+        {
+            warn("Could not play audio buffer: " + std::to_string(sid));
+        }
+    }
+    else
+    {
+        warn("Playing non-existing audio buffer: " + std::to_string(sid));
+    }
 }
 
 void vtCloseAudio()
 {
     info("Closing audio library.");
     ma_engine_uninit(&engine);
+}
+
+void vtPauseAudio(unsigned int sid)
+{
+    if (audioObjectsIndex.contains(sid))
+    {
+        ma_sound_stop(&audioObjectsIndex[sid]->buffer);
+    }
+    else
+    {
+        warn("Pausing non-existing audio buffer: " + std::to_string(sid));
+    }
+}
+
+void vtResetAudio(unsigned int sid)
+{
+    if (audioObjectsIndex.contains(sid))
+    {
+        ma_sound_seek_to_pcm_frame(&audioObjectsIndex[sid]->buffer, 0);
+    }
+    else
+    {
+        warn("Resetting non-existing audio buffer: " + std::to_string(sid));
+    }
 }

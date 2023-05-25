@@ -1,11 +1,11 @@
 #ifndef GAMEPLAY_HUD_INTERACT
 #define GAMEPLAY_HUD_INTERACT
 
-#include "gameplay/player/Player.hh"
 #include "engine/virtual/UIHook.hh"
 #include <string>
 
 struct DrawContext;
+class Player;
 
 class SkillBtn
 {
@@ -28,15 +28,23 @@ protected:
 class Interact
 {
 public:
-    Interact(Player *p);
-    Interact() = default;
+    // Constructor
+    Interact(Player &p);
+
+    // Delete copy constructor
+    Interact(const Interact &) = delete;
+
+    // Delete copy assignment constructor
+    Interact &operator=(const Interact &) = delete;
+
+    // Destructor
     ~Interact();
     void tick(double absTime);
     void draw(DrawContext &ctx);
 
 protected:
     SkillBtn auxBtn, finalBtn;
-    Player *player;
+    Player &player;
 };
 
 #endif /* GAMEPLAY_HUD_INTERACT */

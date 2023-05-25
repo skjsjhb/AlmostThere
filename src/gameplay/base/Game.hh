@@ -2,19 +2,21 @@
 #define GAMEPLAY_BASE_GAME
 
 #include "gameplay/time/Timer.hh"
-#include "gameplay/objs/Note.hh"
 #include "gameplay/view/View.hh"
-#include "engine/virtual/Graphics.hh"
 #include "gameplay/map/MapDef.hh"
-#include "gameplay/map/MapLoad.hh"
-#include "user/Account.hh"
+#include "engine/virtual/Graphics.hh"
+#include "engine/virtual/Audio.hh"
+#include "gameplay/input/InputSet.hh"
+#include "gameplay/score/Score.hh"
+#include "gameplay/player/chars/CharList.hh"
 #include <vector>
 #include <string>
 #include <unordered_set>
 #include <map>
-#include <unordered_map>
 #include <list>
-#include "gameplay/player/Player.hh"
+
+class Player;
+class Account;
 
 enum GameStatus
 {
@@ -48,6 +50,12 @@ struct GeneratedObjects
 
     // This buffer is not used yet
     // std::set<std::shared_ptr<TickObject>> unloadedObjects;
+};
+
+struct AudioStat
+{
+    unsigned int bgmBuf = 0;
+    bool bgmPlaying = false;
 };
 
 class Game
@@ -85,6 +93,7 @@ public:
     GameMap map;
     ScoreManager score;
     DrawContext drawContext;
+    AudioStat audio;
 };
 
 #endif /* GAMEPLAY_BASE_GAME */

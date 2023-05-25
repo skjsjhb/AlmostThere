@@ -4,6 +4,8 @@
 #include "gameplay/objs/TickObject.hh"
 #include <cglm/cglm.h>
 
+class CameraObject;
+
 class Camera : public TickObject
 {
 public:

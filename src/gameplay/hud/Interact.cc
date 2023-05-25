@@ -2,6 +2,7 @@
 
 #include "engine/virtual/UIHook.hh"
 #include "engine/virtual/Graphics.hh"
+#include "gameplay/player/Player.hh"
 
 #define INT_FINAL_BTM 150
 #define INT_FINAL_RIGHT 145
@@ -55,9 +56,9 @@ void SkillBtn::dehook()
     }
 }
 
-Interact::Interact(Player *p)
+Interact::Interact(Player &p) : player(p)
 {
-    auto pst = p->getAssets();
+    auto pst = p.getAssets();
 
     auxBtn.posx = 1600 - INT_AUX_RIGHT;
     auxBtn.posy = INT_AUX_BTM;
@@ -73,9 +74,9 @@ Interact::Interact(Player *p)
 
     player = p;
     auxBtn.hook([this]() -> void
-                { this->player->activateSkill(SK_AUX); });
+                { this->player.activateSkill(SK_AUX); });
     finalBtn.hook([this]() -> void
-                  { this->player->activateSkill(SK_FINAL); });
+                  { this->player.activateSkill(SK_FINAL); });
 };
 
 Interact::~Interact()
@@ -109,13 +110,13 @@ static std::string getSkillProc(double pct)
 
 void Interact::tick(double absTime)
 {
-    auto auxProc = player->getSkillStat(SK_AUX);
+    auto auxProc = player.getSkillStat(SK_AUX);
     auxBtn.stat = auxProc;
-    auxBtn.text = player->getSkillName(SK_AUX) + " " + getSkillProc(auxProc);
+    auxBtn.text = player.getSkillName(SK_AUX) + " " + getSkillProc(auxProc);
 
-    auto finalProc = player->getSkillStat(SK_FINAL);
+    auto finalProc = player.getSkillStat(SK_FINAL);
     finalBtn.stat = finalProc;
-    finalBtn.text = player->getSkillName(SK_FINAL) + " " + getSkillProc(finalProc);
+    finalBtn.text = player.getSkillName(SK_FINAL) + " " + getSkillProc(finalProc);
 
     auxBtn.blinkScale = finalBtn.blinkScale = absTime;
 }

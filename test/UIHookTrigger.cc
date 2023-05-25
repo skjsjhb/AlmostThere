@@ -42,7 +42,6 @@ int main()
     {
         ctx.shapes.push_back(sx);
         ctx.typos.push_back(tp);
-        // ips.pollInputEvents();
         vtNotifyUIHooks(ips); // Should not be called. Only for testing!
         WANT(running == false);
         vtProcessMeshes(ctx);

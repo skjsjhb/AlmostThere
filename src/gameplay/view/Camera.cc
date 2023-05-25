@@ -1,6 +1,7 @@
 #include "Camera.hh"
 
 #include "util/Util.hh"
+#include "gameplay/map/MapDef.hh"
 #include "engine/virtual/Window.hh"
 
 #define PERSPECTIVE_NEAR 1.0f

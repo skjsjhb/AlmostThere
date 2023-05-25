@@ -10,13 +10,12 @@
 #ifndef GAMEPLAY_CONTROL_CONTROLLER
 #define GAMEPLAY_CONTROL_CONTROLLER
 
-#include <vector>
 #include <cglm/cglm.h>
 #include <map>
-#include "gameplay/map/MapDef.hh"
 #include <string>
 #include <memory>
-#include <list>
+
+class MapObject;
 
 /**
  * @brief A minimal reference kept by a controller.
@@ -28,10 +27,10 @@ class ObjMinimalRef
 {
 public:
     std::string id;
-    int tickScript;
-    int player;
-    double genTime, endTime;
-    double length; // The real length (in seconds), for duration notes only.
+    int tickScript = -1;
+    int player = 0;
+    double genTime = 0, endTime = 0;
+    double length = 0; // The real length (in seconds), for duration notes only.
     ObjMinimalRef(const MapObject &m);
 };
 

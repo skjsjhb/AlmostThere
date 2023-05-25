@@ -2,6 +2,7 @@
 
 #include "lua/LuaSupport.hh"
 #include "support/Resource.hh"
+#include "gameplay/objs/NoteDef.hh"
 #include "util/Util.hh"
 #include <fstream>
 #include <sstream>

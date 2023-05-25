@@ -12,6 +12,8 @@ static int wx = 1920, wy = 1080;
 // In dev env we use a 1920x1080 window to develop, so we need an extra scale.
 #define IMPL_DEV_EXT_SCALE 1600.0 / 1920.0
 
+#define ENABLE_FPS_COUNT
+
 static double scaleFactor = 1920.0 / 1600.0;
 
 static void adjustFramebuffer(GLFWwindow *window, int x, int y)
@@ -50,7 +52,7 @@ void vtInitWindow()
     info("Welcome to VT engine GLFW backend.");
     info("Initializing libraries.");
     glfwInit();
-    // TODO: change according to settings
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -66,6 +68,7 @@ void vtInitWindow()
         exit(1);
     }
     glfwMakeContextCurrent(_internalWindow);
+    glfwSwapInterval(0);
     auto ver = gladLoadGL(glfwGetProcAddress);
     if (!ver)
     {
@@ -100,8 +103,23 @@ void vtStopWindow()
     glfwTerminate();
 }
 
+#ifdef ENABLE_FPS_COUNT
+static double lastTime = 0;
+static unsigned int frames = 0;
+#define FPS_COUNT_PERIOD 30
+#endif
+
 bool vtWindowLoop()
 {
+    ++frames;
+    auto currentTime = glfwGetTime();
+    if (currentTime - lastTime >= FPS_COUNT_PERIOD)
+    {
+        auto fps = int(frames / (currentTime - lastTime));
+        info("FPS: " + std::to_string(fps));
+        lastTime = currentTime;
+        frames = 0;
+    }
     glfwPollEvents();
     glfwSwapBuffers(_internalWindow);
     return glfwWindowShouldClose(_internalWindow);

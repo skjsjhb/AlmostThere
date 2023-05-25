@@ -18,6 +18,7 @@
 #include <memory>
 #include "spdlog/spdlog.h"
 #include <ft2build.h>
+#include <set>
 #include FT_FREETYPE_H
 
 using namespace spdlog;

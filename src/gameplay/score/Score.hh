@@ -41,7 +41,6 @@ class ScoreManager
 
 public:
     GameRules rules;
-
     ScoreManager();
     ScoreManager(const GameRules &rulesInit);
     void addBonusScore(unsigned int amount);

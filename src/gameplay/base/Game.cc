@@ -1,12 +1,17 @@
 #include "Game.hh"
 
 #include "gameplay/objs/Slot.hh"
+#include "gameplay/objs/Note.hh"
+#include "gameplay/map/MapLoad.hh"
 #include "engine/virtual/Input.hh"
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
-#include "gameplay/view/View.hh"
+#include "engine/virtual/Graphics.hh"
+#include "gameplay/player/Player.hh"
+#include "user/Account.hh"
 #include "lua/LuaSupport.hh"
 #include "spdlog/spdlog.h"
+#include "support/Resource.hh"
 #include <set>
 using namespace spdlog;
 
@@ -69,6 +74,11 @@ void Game::initGame(const std::string &mapId)
         return;
     }
     unsigned int counter = 0;
+    audio.bgmBuf = vtLoadAudio(getMapResource(mapId, map.meta.song));
+    if (audio.bgmBuf == 0)
+    {
+        warn("Missing bgm audio buffer, bgm won't be played.");
+    }
 
     std::set<std::pair<std::string, std::string>> linkRelation;
 
@@ -148,6 +158,15 @@ void Game::addPlayer(const Account &account, CharID selectedChar)
 
 void Game::runOnce()
 {
+    if (status == RUNNING && !audio.bgmPlaying && audio.bgmBuf != 0)
+    {
+        vtPlayAudio(audio.bgmBuf);
+    }
+    else if (audio.bgmPlaying && audio.bgmBuf != 0)
+    {
+        vtPauseAudio(audio.bgmBuf);
+    }
+
     auto mapTimeNow = mapTimer.getTime();
 
     // Handle events

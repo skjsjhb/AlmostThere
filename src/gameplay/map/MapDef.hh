@@ -2,9 +2,7 @@
 #define GAMEPLAY_MAP_MAPDEF
 
 #include <string>
-#include <list>
 #include <vector>
-#include <set>
 #include <memory>
 #include <map>
 #include "gameplay/objs/NoteDef.hh"
@@ -36,7 +34,6 @@ class MapObject
 {
 public:
     std::string id;
-    // std::set<std::string> classNames; -- Currently unused
     MapObjectType type;
 
     /**

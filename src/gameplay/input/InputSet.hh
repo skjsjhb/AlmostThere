@@ -7,6 +7,9 @@
 #include <map>
 #include <array>
 
+/**
+ * @deprecated Use input buffer built-in in the engine spec.
+ */
 class InputSet
 {
 public:

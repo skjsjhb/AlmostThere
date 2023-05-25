@@ -1,5 +1,6 @@
 #include "Controller.hh"
 
+#include "gameplay/map/MapDef.hh"
 #include "lua/LuaSupport.hh"
 #include <cglm/cglm.h>
 #include <list>
@@ -7,7 +8,6 @@
 #include <unordered_map>
 #include <any>
 #include <typeinfo>
-#include <vector>
 
 #define IDF_RELMODE "RELMODE"
 #define IDF_POS "POS"
@@ -15,7 +15,6 @@
 #define IDF_NORMAL "NORMAL"
 #define IDF_PCT "PCT"
 #define IDF_TIME "TIME"
-#define IDF_LEN "LEN"
 #define IDF_FOV "FOV"
 #define IDF_OBJID "OBJID"
 #define IDF_ALPHA "ALPHA"
@@ -176,13 +175,17 @@ void ObjController::tick(double absTime)
     if (objRef.length != 0)
     {
         auto unloadTime = objRef.endTime + objRef.length;
-        if (absTime < unloadTime && absTime > objRef.endTime)
+        if (absTime <= objRef.endTime)
         {
-            currentState.len = (absTime - objRef.endTime) / objRef.length * objRef.length;
+            currentState.len = objRef.length;
+        }
+        else if (absTime < unloadTime && absTime > objRef.endTime)
+        {
+            currentState.len = objRef.length - (absTime - objRef.endTime);
         }
         else
         {
-            currentState.len = objRef.length;
+            currentState.len = 0;
         }
     }
     else
@@ -239,7 +242,6 @@ void ObjController::tick(double absTime)
         mode[i] = (int)tMode[i];
     }
     currentState.alpha = readNumber(IDF_ALPHA, 1);
-    currentState.len = readNumber(IDF_LEN, 1);
 
     if (!rel.expired())
     {
