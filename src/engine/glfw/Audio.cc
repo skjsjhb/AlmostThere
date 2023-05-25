@@ -68,6 +68,12 @@ void vtPlayAudio(unsigned int sid)
 
 void vtCloseAudio()
 {
+    info("Cleaning audio buffers.");
+    for (auto &p : audioObjectsIndex)
+    {
+        ma_sound_uninit(&p.second->buffer);
+    }
+    audioObjectsIndex.clear();
     info("Closing audio library.");
     ma_engine_uninit(&engine);
 }

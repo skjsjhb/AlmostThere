@@ -22,7 +22,6 @@ enum GameStatus
 {
     RUNNING, // Player is playing
     PAUSED,  // Paused, either resting, syncing data, or playing animation
-    RESULT,  // Result screen
     DONE,    // Leaving
 };
 

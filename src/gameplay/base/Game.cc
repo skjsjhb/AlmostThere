@@ -73,14 +73,19 @@ void Game::initGame(const std::string &mapId)
         error("Failed to verify map '" + mapId + "'. Is this map corrupted?");
         return;
     }
-    unsigned int counter = 0;
-    audio.bgmBuf = vtLoadAudio(getMapResource(mapId, map.meta.song));
-    if (audio.bgmBuf == 0)
+
+    if (map.meta.song.size() > 0)
     {
-        warn("Missing bgm audio buffer, bgm won't be played.");
+        audio.bgmBuf = vtLoadAudio(getMapResource(mapId, map.meta.song));
+        if (audio.bgmBuf == 0)
+        {
+            warn("Missing bgm audio buffer, bgm won't be played.");
+        }
     }
 
     std::set<std::pair<std::string, std::string>> linkRelation;
+
+    unsigned int counter = 0;
 
     // Generate objects
     for (auto &o : map.objects)
@@ -169,6 +174,12 @@ void Game::runOnce()
 
     auto mapTimeNow = mapTimer.getTime();
 
+    if (mapTimeNow > map.meta.duration)
+    {
+        status = DONE;
+        return;
+    }
+
     // Handle events
     input.pollInputEvents();
 
@@ -221,12 +232,14 @@ void Game::runOnce()
 
     vtProcessMeshes(drawContext);
     vtCompleteDraw(drawContext);
-    vtWindowLoop();
 
     // Context cleanup and reuse
     drawContext.polygons.clear();
     drawContext.shapes.clear();
     drawContext.typos.clear();
+
+    // Close signals are ignored during gameplay
+    vtWindowLoop();
 }
 
 void Game::runMainLoop()

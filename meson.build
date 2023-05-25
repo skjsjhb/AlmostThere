@@ -31,3 +31,5 @@ if backend != 'nothing'
 else
   message('Shared libraries and tests are not available when backend library specified as \'nothing\'.')
 endif
+
+atgame = executable('at', files(['src/boot/Main.cc']), dependencies: deps, include_directories: incdir, link_with: atlib)

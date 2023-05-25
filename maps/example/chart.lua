@@ -1,4 +1,5 @@
 MapVersion = 1
+Duration = 15
 -- Song = "youraudio.flac"
 use("at")
 use("atm")

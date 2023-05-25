@@ -3,6 +3,7 @@
 #include "engine/virtual/Window.hh"
 #include "gameplay/view/Camera.hh"
 #include "support/Resource.hh"
+#include "util/Util.hh"
 #include <climits>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
@@ -25,6 +26,8 @@ using namespace spdlog;
 
 #define VT_ORTHO_NZ 0.1
 #define VT_ORTHO_FZ 2.0
+
+#define VT_SHADER_DELM "// ---"
 
 // #define ENABLE_MESH_SORTING
 #ifdef ENABLE_MESH_SORTING
@@ -164,26 +167,27 @@ loadShader(const std::string &name)
     GLuint vsh, fsh, prog;
     vsh = glCreateShader(GL_VERTEX_SHADER);
     fsh = glCreateShader(GL_FRAGMENT_SHADER);
-    std::ifstream vs(getAppResource("shaders/" + name + ".vsh"));
-    std::ifstream fs(getAppResource("shaders/" + name + ".fsh"));
-    if (vs.fail() || fs.fail())
+    std::ifstream cbf(getAppResource("shaders/" + name));
+    if (cbf.fail())
     {
         error("Could not find shader files. Loading shader '" + name + "'");
         return INT_MAX;
     }
-    std::stringstream vsc, fsc;
-    vsc << vs.rdbuf();
-    vs.close();
-    fsc << fs.rdbuf();
-    fs.close();
+
+    std::stringstream ssrc;
+    ssrc << cbf.rdbuf();
+    auto cbsrc = splitStr(ssrc.str(), VT_SHADER_DELM, 2);
+    if (cbsrc.size() < 2)
+    {
+        warn("Missing either head or body of shader '" + name + "', compilation might fail.");
+    }
     std::string vsrc, fsrc;
-    vsrc = vsc.str();
-    fsrc = fsc.str();
+    vsrc = cbsrc[0];
+    fsrc = cbsrc[1];
     const char *vscrc = vsrc.c_str();
     const char *fscrc = fsrc.c_str();
     glShaderSource(vsh, 1, &vscrc, NULL);
     glShaderSource(fsh, 1, &fscrc, NULL);
-
     glCompileShader(vsh);
     glCompileShader(fsh);
     int success;
@@ -315,6 +319,7 @@ void vtGraphicsCleanUp()
     info("Deleting graphics buffers.");
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
+    info("Cleaning up shader and texture cache.");
     for (auto &p : shadersCtl)
     {
         glDeleteProgram(p.second);
@@ -323,6 +328,8 @@ void vtGraphicsCleanUp()
     {
         glDeleteTextures(1, &t.second);
     }
+    shadersCtl.clear();
+    texturesCtl.clear();
     info("Cleaning up fonts.");
     glDeleteBuffers(1, &textVBO);
     glDeleteVertexArrays(1, &textVAO);
