@@ -156,6 +156,7 @@ GameMap loadMap(const std::string &mapId)
     mt.mapper = luaGetStr("Chart");
     mt.diff = luaGetStr("DiffName");
     mt.song = luaGetStr("Song");
+    mt.bgimg = luaGetStr("Background");
     mt.duration = luaGetNumber("Duration");
 
     m.meta = mt;

@@ -1,6 +1,7 @@
 MapVersion = 1
 Duration = 15
 -- Song = "youraudio.flac"
+-- Background = "test.png"
 use("at")
 use("atm")
 -----

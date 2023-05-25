@@ -12,3 +12,5 @@ void vtCompleteDraw(DrawContext &ctx) {}
 void vtGraphicsInit() {}
 
 void vtGraphicsCleanUp() {}
+
+void vtSetBackground(const std::string &img) {}

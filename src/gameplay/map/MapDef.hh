@@ -9,7 +9,7 @@
 
 struct MapMeta
 {
-    std::string name, id, author, mapper, diff, song;
+    std::string name, id, author, mapper, diff, song, bgimg;
     double duration;
 };
 

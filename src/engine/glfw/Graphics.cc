@@ -51,6 +51,8 @@ static std::unordered_map<wchar_t, Glyph> glyphBuf;
 static std::set<wchar_t> missingChar;
 static FT_Library ftlib;
 
+static unsigned int bgTex = 0;
+
 /**
  * @brief Loads the glyph of specified character.
  *
@@ -241,9 +243,8 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
     int width, height, nrChannels;
-    auto pt = getAppResource("textures/" + name + ".png");
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load(pt.c_str(), &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(name.c_str(), &width, &height, &nrChannels, 0);
     if (data == NULL)
     {
         error("Could not load texture '" + name + "'. Is this file missing, or is stb_image corrupted?");
@@ -279,7 +280,10 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
     return tex;
 }
 
-static GLuint vbo, vao, textVBO, textVAO;
+static GLuint vbo, vao, textVBO, textVAO, bgVBO, bgVAO;
+
+float bgDrawVert[6][4] = {
+    {-1, 1, 0, 1}, {-1, -1, 0, 0}, {1, 1, 1, 1}, {1, 1, 1, 1}, {-1, -1, 0, 0}, {1, -1, 1, 0}};
 
 void vtGraphicsInit()
 {
@@ -307,6 +311,21 @@ void vtGraphicsInit()
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, NULL, GL_DYNAMIC_DRAW);
     glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
     glEnableVertexAttribArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    info("Initializing background buffers.");
+
+    glGenVertexArrays(1, &bgVAO);
+    glGenBuffers(1, &bgVBO);
+
+    glBindVertexArray(bgVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 24, bgDrawVert, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+    glEnableVertexAttribArray(1);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
@@ -418,6 +437,36 @@ static mat4 uiProj;
 void vtSetBufferSize(int w, int h)
 {
     glm_ortho(0, w, 0, h, VT_ORTHO_NZ, VT_ORTHO_FZ, uiProj);
+}
+
+void vtSetBackground(const std::string &img)
+{
+    if (img.size() == 0)
+    {
+        bgTex = 0;
+        return;
+    }
+    // Update texture
+    bgTex = loadTexture(img, false);
+}
+
+static void drawBg()
+{
+    if (bgTex == 0)
+    {
+        return;
+    }
+
+    auto sd = loadShader("bg");
+    glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
+    glBindVertexArray(bgVAO);
+    glUseProgram(sd);
+    glActiveTexture(GL_TEXTURE2); // Texture 2 for bg
+    glBindTexture(GL_TEXTURE_2D, bgTex);
+    glUniform1i(glGetUniformLocation(sd, "img"), 2);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
 }
 
 static void drawTypography(Typography &t)
@@ -595,7 +644,7 @@ static void procPolygonMesh(Polygon &p, vec3 camPos, vec3 camDir, std::vector<Me
     unsigned int tx = 0;
     if (p.texture.size() > 0)
     {
-        tx = loadTexture(p.texture, true);
+        tx = loadTexture(getAppResource("textures/" + p.texture + ".png"), true);
     }
     if (sd == INT_MAX || tx == INT_MAX)
     {
@@ -788,7 +837,7 @@ static void procShapeMesh(Shape &s, mat4 p, std::vector<Mesh> &meshes)
     auto tx = 0;
     if (s.texture.size() > 0)
     {
-        tx = loadTexture(s.texture, false);
+        tx = loadTexture(getAppResource("textures/" + s.texture + ".png"), false);
     }
     if (sd == INT_MAX || tx == INT_MAX)
     {
@@ -898,6 +947,7 @@ void vtProcessMeshes(DrawContext &ctx)
     glGetError(); // Dispose previous
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    drawBg();
     if (ctx.cam.expired())
     {
         warn("Camera not set in this draw context. Skipped draw request.");

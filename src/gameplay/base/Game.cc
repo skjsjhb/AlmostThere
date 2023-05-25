@@ -151,6 +151,16 @@ void Game::initGame(const std::string &mapId)
     mapTimer = Timer(vtGetTime);
     absTimer = Timer(vtGetTime);
     score.rules = createDefaultGameRules();
+
+    // Set background
+    if (map.meta.bgimg.size() > 0)
+    {
+        vtSetBackground(getMapResource(mapId, map.meta.bgimg));
+    }
+    else
+    {
+        vtSetBackground("");
+    }
     return;
 }
 

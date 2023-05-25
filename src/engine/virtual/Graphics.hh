@@ -79,4 +79,6 @@ extern int vtGetGraphicsError();
 
 extern void vtSetBufferSize(int w, int h);
 
+extern void vtSetBackground(const std::string &img);
+
 #endif /* ENGINE_VIRTUAL_GRAPHICS */
