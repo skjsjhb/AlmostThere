@@ -1,16 +1,15 @@
 testProgs = [
-'Audio Test',
 'Mouse Ray Casting',
-'Score Calc',
 'Timing',
 'Check Util',
 'Create Window',
 'Lua Repl',
 'Map Load',
+'Note Tools Test'
 ]
 
 if backend != 'headless'
-  testProgs += ['UI Hook Trigger', 'Map Play']
+  testProgs += ['UI Hook Trigger']
 endif
 
 

@@ -10,10 +10,10 @@
 #ifndef GAMEPLAY_CONTROL_CONTROLLER
 #define GAMEPLAY_CONTROL_CONTROLLER
 
-#include <cglm/cglm.h>
 #include <map>
 #include <string>
 #include <memory>
+#include <glm/glm.hpp>
 
 class MapObject;
 
@@ -42,7 +42,7 @@ public:
  */
 struct ObjState
 {
-    vec3 pos = {0, 0, 0}, up = {0, 0, 0}, normal = {0, 0, 0};
+    glm::vec3 pos = {0, 0, 0}, up = {0, 0, 0}, normal = {0, 0, 0};
     double len = 0, alpha = 1;
 };
 

@@ -26,12 +26,12 @@ bool isWithin(int v1, int v2, int v)
 }
 
 // To prevent possible status desync, we use the same input buffer
-void vtNotifyUIHooks(const InputSet &isp)
+void vtNotifyUIHooks(const InputBuffer &ibuf)
 {
     for (auto &hp : uiHooksCtl)
     {
         bool cli = true;
-        for (auto &p : isp.touchPoints)
+        for (auto &p : ibuf.touchPoints)
         {
             int sx, sy;
             vtDeCoord(p[0], p[1], sx, sy);

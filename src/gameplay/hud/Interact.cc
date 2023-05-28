@@ -63,13 +63,13 @@ Interact::Interact(Player &p) : player(p)
     auxBtn.posx = 1600 - INT_AUX_RIGHT;
     auxBtn.posy = INT_AUX_BTM;
     auxBtn.size = INT_AUX_SIZE;
-    auxBtn.shader = "skill-btn";
+    auxBtn.shader = "ui/skill-btn";
     auxBtn.texture = pst.auxTex;
 
     finalBtn.posx = 1600 - INT_FINAL_RIGHT;
     finalBtn.posy = INT_FINAL_BTM;
     finalBtn.size = INT_FINAL_SIZE;
-    finalBtn.shader = "skill-btn";
+    finalBtn.shader = "ui/skill-btn";
     finalBtn.texture = pst.finalTex;
 
     player = p;

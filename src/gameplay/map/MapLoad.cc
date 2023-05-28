@@ -20,7 +20,8 @@ using namespace spdlog;
 #define OBJ_SEC_DELM "----\n"
 #define OBJ_HEAD_BODY_DELM "---\n"
 
-#define NOTE_SLOT_TYPE_SPLIT 10
+// The first number index of the slot
+#define NOTE_SLOT_TYPE_SPLIT 8
 #define TYPE_CAMERA -1
 #define SUPPORT_VERSIONS \
     {                    \

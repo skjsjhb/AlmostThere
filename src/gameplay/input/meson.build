@@ -1,1 +1,0 @@
-src += files(['InputSet.cc'])

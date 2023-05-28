@@ -3,14 +3,14 @@
 
 #include <memory>
 #include "Camera.hh"
-#include <cglm/cglm.h>
+#include <glm/glm.hpp>
 
 struct View
 {
     std::weak_ptr<Camera> camera;
-    vec2 screenSize;
+    glm::vec2 screenSize;
 };
 
-void castMouseRay(View &v, const vec2 coord, vec3 rayIn);
+glm::vec3 castMouseRay(View &v, const glm::vec2 &coord);
 
 #endif /* GAMEPLAY_VIEW_VIEW */

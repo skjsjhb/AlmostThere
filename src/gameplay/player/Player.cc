@@ -149,11 +149,6 @@ double Player::getSkillStat(SkillType st) const
     return -1;
 }
 
-ScoreManager &Player::getScoreManager()
-{
-    return score;
-}
-
 void Player::tick(Game &g)
 {
     nowTime = g.mapTimer.getTime();

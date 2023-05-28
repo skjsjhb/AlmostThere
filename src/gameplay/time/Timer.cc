@@ -14,20 +14,13 @@ Timer::Timer(NativeTimerFunc f)
 
 double Timer::getTime()
 {
-    if (_nativeGetTime != nullptr)
+    if (paused)
     {
-        if (paused)
-        {
-            return timeBeforePause - baseTimeOffset;
-        }
-        else
-        {
-            return _nativeGetTime() - baseTimeOffset;
-        }
+        return timeBeforePause - baseTimeOffset;
     }
     else
     {
-        return 0;
+        return innerTime - baseTimeOffset;
     }
 }
 
@@ -37,6 +30,14 @@ void Timer::pause()
     {
         timeBeforePause = _nativeGetTime();
         paused = true;
+    }
+}
+
+void Timer::update()
+{
+    if (_nativeGetTime != nullptr)
+    {
+        innerTime = _nativeGetTime();
     }
 }
 

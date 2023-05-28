@@ -3,7 +3,8 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <map>
-#include <cglm/cglm.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include "LuaSupport.hh"
 
 static double sinValue[361], cosValue[361];
@@ -48,7 +49,7 @@ static int rawRotate(lua_State *l)
 
     if (lua_istable(l, -2) && lua_istable(l, -3) & lua_isnumber(l, -1))
     {
-        vec3 cpTarget, cpAxis;
+        glm::vec3 cpTarget, cpAxis;
         float rad;
 
         for (int i = 0; i < 3; i++)
@@ -67,7 +68,7 @@ static int rawRotate(lua_State *l)
             lua_remove(l, -1);
         }
         rad = lua_tonumber(l, -1);
-        glm_vec3_rotate(cpTarget, rad, cpAxis);
+        cpTarget = glm::rotate(cpTarget, rad, cpAxis);
         for (int i = 0; i < 3; i++)
         {
             lua_pushnumber(l, i + 1);

@@ -1,1 +1,1 @@
-src += files(['Score.cc'])
+src += files(['ScoreRecord.cc', 'ScoreValue.cc'])

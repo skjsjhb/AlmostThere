@@ -4,9 +4,9 @@
 #include "engine/virtual/Window.hh"
 #include "gameplay/player/Player.hh"
 #include "engine/virtual/Graphics.hh"
-#include <cglm/cglm.h>
 #include <locale>
 #include <codecvt>
+#include <glm/glm.hpp>
 
 #define PB_DIV_TOP 880
 #define PB_DIV_LEFT 1330
@@ -47,9 +47,9 @@ PlayerBox::PlayerBox(Player &p) : player(p)
 {
     int uc = p.getPID() - 1;
     float mgt = PB_DIV_TOP + uc * (PB_DIV_TOP + PB_DIV_H);
-    vec2 hpPos = {PB_DIV_LEFT + PB_HP_LEFT, mgt + PB_HP_TOP};
-    vec2 shPos = {PB_DIV_LEFT + PB_SH_LEFT, mgt + PB_SH_TOP};
-    vec4 hc = PB_HP_BAR_C, sc = PB_SH_BAR_C;
+    glm::vec2 hpPos = {PB_DIV_LEFT + PB_HP_LEFT, mgt + PB_HP_TOP};
+    glm::vec2 shPos = {PB_DIV_LEFT + PB_SH_LEFT, mgt + PB_SH_TOP};
+    glm::vec4 hc = PB_HP_BAR_C, sc = PB_SH_BAR_C;
     hpBar = Bar(HORZ, hpPos, PB_BAR_L, PB_BAR_HW);
     shieldBar = Bar(HORZ, shPos, PB_BAR_L, PB_BAR_HW);
     hpBar.setColor(hc);
@@ -74,7 +74,7 @@ void PlayerBox::draw(DrawContext &ctx)
     s.points[2][1] = mgt;
     s.points[3][0] = PB_DIV_LEFT + PB_DIV_W;
     s.points[3][1] = mgt + PB_DIV_H;
-    s.shader = "opaque-tex";
+    s.shader = "ui/opaque-tex";
     s.texture = "hud/pb-" + std::to_string(player.getPID());
 
     // Draw names
@@ -85,10 +85,7 @@ void PlayerBox::draw(DrawContext &ctx)
     ctp.xAlign = CENTER;
     auto cname = player.getCharName();
     ctp.text = std::wstring(cname.begin(), cname.end());
-
-    vec4 cColor = PB_CN_C;
-    glm_vec4_copy(cColor, ctp.color);
-
+    ctp.color = PB_CN_C;
     ctp.size = PB_N_SIZE;
 
     ctx.typos.push_back(ctp);

@@ -1,35 +1,14 @@
 #include "TestTools.hh"
 
-#include "gameplay/score/Score.hh"
-#include <cmath>
+#include "gameplay/score/ScoreRecord.hh"
 
 int main()
 {
-    GameRules gr;
-    gr.judgeValue =
-        {
-            .perfect = 300,
-            .almost = 200,
-            .accepted = 150,
-            .medium = 100,
-            .touched = 50,
-            .lost = 0,
-            .spaceNotesAmplifier = 2,
-        };
-    ScoreManager sm(gr);
-    sm.addJudgeGrade(PF, TAPU);
-    sm.addJudgeGrade(PF, PRSU);
-    WANT(sm.getAccuracyText() == "100.00%");
-    WANT(sm.getCurrentScore() == 600);
-    sm.addJudgeGrade(AC, HASHI);
-    WANT(sm.getCurrentScore() == 900);
-    WANT(sm.getFullScore() == 800);
-    WANT(sm.getAccuracyText() == "100.00%");
-    sm.addJudgeGrade(AT, HOSHI);
-    sm.addJudgeGrade(LT, SGKI);
-    sm.addJudgeGrade(LT, SUI);
-    WANT(sm.getCurrentScore() == 1300);
-    sm.addJudgeGrade(TC, TSAR);
-    WANT(sm.getCurrentScore() == 1400);
+    ScoreRecords rd;
+    rd.addRecord(NoteScoreEntry::create(TAPU, AT));
+    WANT(rd.exportScore() == 12);
+    rd.addAmplifier(1);
+    rd.addRecord(NoteScoreEntry::create(TAPU, PF));
+    WANT(rd.exportScore() == 54);
     TEND;
 }

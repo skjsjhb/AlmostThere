@@ -80,4 +80,22 @@ extern void vtDeCoord(int rx, int ry, int &sx, int &sy);
  */
 extern double vtGetScaleFactor();
 
+/**
+ * @brief Sets the max number of frames rendered per second.
+ *
+ * This functions guarantees that no more than specified count of frames are rendered, FPS
+ * may become lower if hardware failed to support.
+ *
+ * @note Even by setting fps to the same as screen this does not enable VSYNC.
+ * @param fps The max fps cap.
+ */
+extern void vtSetFPSCap(unsigned int fps);
+
+/**
+ * @brief Check if this frame should be drawn.
+ *
+ * @return `true` if engine considers its time to update a frame.
+ */
+extern bool vtShouldDraw();
+
 #endif /* ENGINE_VIRTUAL_WINDOW */

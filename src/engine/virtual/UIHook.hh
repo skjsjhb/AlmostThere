@@ -58,8 +58,8 @@ extern void vtDeUIHook(unsigned int hid);
  * @brief Fire an update event and call related callbacks using the
  * stats cached in the specified input buffer.
  *
- * @param isp The input buffer object (`InputSet`).
+ * @param ibuf Input buffer object.
  */
-extern void vtNotifyUIHooks(const InputSet &isp);
+extern void vtNotifyUIHooks(const InputBuffer &ibuf);
 
 #endif /* ENGINE_VIRTUAL_UIHOOK */

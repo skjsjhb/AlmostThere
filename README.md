@@ -12,4 +12,4 @@ We would like to thank the authors/vendors of the following softwares, services 
 
 - Services: GitHub, GLAD 2 Generator
 
-- Libraries: GLFW, Lua, CGLM Math Library, STB Vorbis, Miniaudio, STB Image, FreeType
+- Libraries: GLFW, Lua, GLM Math Library, STB Vorbis, Miniaudio, STB Image, FreeType, Layout

@@ -7,4 +7,4 @@ unsigned int vtAddUIHook(HookSt st)
 
 void vtDeUIHook(unsigned int hid) {}
 
-void vtNotifyUIHooks(const InputSet &isp) {}
+void vtNotifyUIHooks(const InputBuffer &ibuf) {}

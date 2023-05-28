@@ -68,7 +68,7 @@ void vtInitWindow()
         exit(1);
     }
     glfwMakeContextCurrent(_internalWindow);
-    glfwSwapInterval(0);
+    glfwSwapInterval(0); // Disable vsync
     auto ver = gladLoadGL(glfwGetProcAddress);
     if (!ver)
     {
@@ -81,6 +81,8 @@ void vtInitWindow()
     glEnable(GL_MULTISAMPLE);
     // glEnable(GL_POLYGON_SMOOTH);
     glEnable(GL_DEPTH_TEST);
+
+    glEnable(GL_DEPTH_CLAMP);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glViewport(0, 0, 1920, 1080);
@@ -108,6 +110,9 @@ static double lastTime = 0;
 static unsigned int frames = 0;
 #define FPS_COUNT_PERIOD 30
 #endif
+
+static double spf = 0;
+static double lastFrameTime = 0;
 
 bool vtWindowLoop()
 {
@@ -164,4 +169,14 @@ void vtDeCoord(int rx, int ry, int &sx, int &sy)
 double vtGetScaleFactor()
 {
     return scaleFactor * IMPL_DEV_EXT_SCALE;
+}
+
+void vtSetFPSCap(unsigned int fps)
+{
+    spf = 1.0 / fps;
+}
+
+bool vtShouldDraw()
+{
+    return (glfwGetTime() - lastFrameTime) >= spf;
 }

@@ -1,8 +1,6 @@
 #ifndef GAMEPLAY_PLAYER_PLAYER
 #define GAMEPLAY_PLAYER_PLAYER
 
-#include "gameplay/score/Score.hh"
-
 class Player;
 
 #include "./chars/CharList.hh"
@@ -68,9 +66,6 @@ public:
      */
     virtual double getSkillStat(SkillType st) const;
 
-    // Get score
-    virtual ScoreManager &getScoreManager();
-
     // Apply modifiers to the game and update self status
     // The display value of some stat like HP and shield are automatically synced
     // However, changes like judge window must be done manually
@@ -103,7 +98,7 @@ protected:
     unsigned int uid, pid;
     bool isDummy;
     std::string playerName, charName, auxName, finalName;
-    ScoreManager score;
+    unsigned int score; // TODO: reserved
     PlayerStat stat = NORMAL;
     unsigned shield, maxShield;
     bool auxShouldActivate = false, finalShouldActivate = false, auxActive = false;

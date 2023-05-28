@@ -1,7 +1,9 @@
 #include "engine/virtual/Input.hh"
 
+static InputBuffer ibuf;
+
 void vtPollEvents() {}
 
-void vtSetActiveInputSet(InputSet *input) {}
+void vtSetupListeners() {}
 
-extern void vtSetupKeyListener() {}
+const InputBuffer &vtGetInputBuffer() { return ibuf; }

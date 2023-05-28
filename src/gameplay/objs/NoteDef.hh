@@ -6,17 +6,14 @@ enum NoteType
     TAPU,  // Tapu
     PRSU,  // Puresu
     SZKU,  // Shizuku
+    RKU,   // Ranku
     KZTU,  // Kyozetsu
-    AKU,   // Aku
     HOSHI, // Hoshi
     HASHI, // Hashi
-    SGKI,  // Sogeki
-    SUI,   // Sui
-    TSAR   // 4D Tesseract
-
+    SUKI,  // Suki
 };
 
-#define NOTE_TYPE_SIZE 10
+#define NOTE_TYPE_SIZE 8
 
 enum NoteElementType
 {

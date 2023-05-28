@@ -19,11 +19,11 @@ void luaInit()
     luaEngine = luaL_newstate();
     luaL_openlibs(luaEngine);
     // Set libs search path
-    auto libPt = getAppResource("lualibs/?.lua");
+    auto libPt = getAppResource("lua/?.lua");
     lua_pushstring(luaEngine, libPt.c_str());
     lua_setglobal(luaEngine, "__native_lualibs_path");
     luaL_dostring(luaEngine, "package.path = __native_lualibs_path\n__native_lualibs_path=nil");
-    auto libPf = getAppResource("lualibs/preload.lua");
+    auto libPf = getAppResource("lua/preload.lua");
     luaL_dofile(luaEngine, libPf.c_str());
 }
 

@@ -2,12 +2,12 @@
 
 #include "gameplay/map/MapDef.hh"
 #include "lua/LuaSupport.hh"
-#include <cglm/cglm.h>
 #include <list>
 #include <set>
 #include <unordered_map>
 #include <any>
 #include <typeinfo>
+#include <glm/gtx/string_cast.hpp>
 
 #define IDF_RELMODE "RELMODE"
 #define IDF_POS "POS"
@@ -90,7 +90,7 @@ static int outImpl(lua_State *l)
     return 1;
 }
 
-static void readVec3(const std::string &outName, vec3 d)
+static void readVec3(const std::string &outName, glm::vec3 &d)
 {
     if (!outValuePool.contains(outName))
     {
@@ -123,9 +123,9 @@ static double readNumber(const std::string &outName, double dv)
 
 // TODO: readStr, readBool
 
-static void relVec(vec3 org, vec3 base, vec3 er, vec3 eu, vec3 en, PositionMethod md)
+static void relVec(glm::vec3 &org, glm::vec3 base, glm::vec3 er, glm::vec3 eu, glm::vec3 en, PositionMethod md)
 {
-    vec3 p;
+    glm::vec3 p;
     switch (md)
     {
     case REPROJ:
@@ -150,7 +150,7 @@ static void relVec(vec3 org, vec3 base, vec3 er, vec3 eu, vec3 en, PositionMetho
     default:
         return;
     }
-    glm_vec3_copy(p, org);
+    org = p;
 }
 
 void ObjController::tick(double absTime)
@@ -231,38 +231,43 @@ void ObjController::tick(double absTime)
 
     // Extract values
     // This is not the final coord, needs to be inherited
-    vec3 iPos = {0}, iUp = {0}, iNorm = {0}, tMode = {0};
+    glm::vec3 iPos, iUp, iNorm, tMode;
     int mode[3];
     readVec3(IDF_POS, iPos);
     readVec3(IDF_UP, iUp);
     readVec3(IDF_NORMAL, iNorm);
     readVec3(IDF_RELMODE, tMode);
+
     for (int i = 0; i < 3; i++)
     {
         mode[i] = (int)tMode[i];
     }
     currentState.alpha = readNumber(IDF_ALPHA, 1);
 
+    // Normalize vector
+    iUp = glm::normalize(iUp);
+    iNorm = glm::normalize(iNorm);
+
+    // Make rel
     if (!rel.expired())
     {
-        float *tPos, *tUp, *tNorm;
-        vec3 tRight;
         auto dep = rel.lock();
-        tUp = dep->currentState.up;
-        tNorm = dep->currentState.normal;
-        tPos = dep->currentState.pos;
-        glm_vec3_cross(tUp, tNorm, tRight);
-        glm_vec3_normalize(tRight);
+        auto tUp = dep->currentState.up;
+        auto tNorm = dep->currentState.normal;
+        auto tPos = dep->currentState.pos;
+        auto tRight = glm::cross(tUp, tNorm);
+        tRight = glm::normalize(tRight);
 
         // Update relative position method
         relVec(iPos, tPos, tRight, tUp, tNorm, (PositionMethod)mode[0]);
         relVec(iUp, tPos, tRight, tUp, tNorm, (PositionMethod)mode[1]);
         relVec(iNorm, tPos, tRight, tUp, tNorm, (PositionMethod)mode[2]);
     }
-
-    glm_vec3_copy(iPos, currentState.pos);
-    glm_vec3_copy(iUp, currentState.up);
-    glm_vec3_copy(iNorm, currentState.normal);
+    iUp = glm::normalize(iUp);
+    iNorm = glm::normalize(iNorm);
+    currentState.pos = iPos;
+    currentState.up = iUp;
+    currentState.normal = iNorm;
 
     // Cleanup output
     outValuePool.clear();

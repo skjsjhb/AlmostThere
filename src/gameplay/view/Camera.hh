@@ -2,39 +2,43 @@
 #define GAMEPLAY_VIEW_CAMERA
 
 #include "gameplay/objs/TickObject.hh"
-#include <cglm/cglm.h>
+#include <glm/glm.hpp>
 
 class CameraObject;
+class Game;
 
 class Camera : public TickObject
 {
 public:
-    void getViewMatrix(mat4 viewIn);
-    void getViewMatrixInv(mat4 viewIn);
-    void getProjectionMatrix(mat4 projIn);
-    void getProjectionMatrixInv(mat4 projIn);
-    void setState(vec3 pos, vec3 direction, vec3 up, double fov, double aspect);
-    void getPosition(vec3 pos);
-    void getDir(vec3 dir);
-    void tick(double absTime) override;
+    glm::mat4 getViewMatrix();
+    glm::mat4 getViewMatrixInv();
+    glm::mat4 getProjectionMatrix();
+    glm::mat4 getProjectionMatrixInv();
+    void setState(glm::vec3 pos, glm::vec3 direction, glm::vec3 up, double fov, double aspect);
+    glm::vec3 getPosition();
+    glm::vec3 getDir();
+    void tick() override;
+
+    // Constructor
+    using TickObject::TickObject;
 
     // A camera is an always-loaded object
-    virtual bool shouldTick(double absTime) const { return true; };
+    virtual bool shouldTick() const override { return true; };
 
-    virtual double getTickTime() { return 0; };
+    virtual double getTickTime() const override { return 0; };
 
-    static std::shared_ptr<Camera> createCamera(std::weak_ptr<CameraObject> o);
+    static std::shared_ptr<Camera> createCamera(std::weak_ptr<CameraObject> o, Game &g);
 
 protected:
-    vec3 pos;
-    vec3 direction;
-    vec3 up;
-    double fov = 90.0;
+    glm::vec3 pos;
+    glm::vec3 direction;
+    glm::vec3 up;
+    double fov = 45.0;
     double aspect = 1920.0 / 1080.0;
-    mat4 _cProjectionMatrix;    // Projection Matrix
-    mat4 _cProjectionMatrixInv; // Inversed
-    mat4 _cViewMatrix;          // View Matrix
-    mat4 _cViewMatrixInv;       // Inversed
+    glm::mat4 _cProjectionMatrix;    // Projection Matrix
+    glm::mat4 _cProjectionMatrixInv; // Inversed
+    glm::mat4 _cViewMatrix;          // View Matrix
+    glm::mat4 _cViewMatrixInv;       // Inversed
 };
 
 #endif /* GAMEPLAY_VIEW_CAMERA */

@@ -3,68 +3,73 @@
 #include "util/Util.hh"
 #include "gameplay/map/MapDef.hh"
 #include "engine/virtual/Window.hh"
+#include "gameplay/objs/TickObject.hh"
 
-#define PERSPECTIVE_NEAR 1.0f
+#define PERSPECTIVE_NEAR 0.1f
 #define PERSPECTIVE_FAR 100.0f
 
-void Camera::setState(vec3 pos_, vec3 direction_, vec3 up_, double fov_, double aspect_)
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtx/string_cast.hpp>
+
+void Camera::setState(glm::vec3 pos_, glm::vec3 direction_, glm::vec3 up_, double fov_, double aspect_)
 {
-    glm_vec3_copy(pos_, pos);
-    glm_vec3_copy(direction_, direction);
-    glm_vec3_copy(up_, up);
+    pos = pos_;
+    up = up_;
+    direction = direction_;
     fov = fov_;
     aspect = aspect_;
-
     // Calculate and cache matrices
-    glm_look(pos, direction, up, _cViewMatrix);
-    glm_mat4_inv(_cViewMatrix, _cViewMatrixInv);
+    _cViewMatrix = glm::lookAt(pos, pos + direction, up);
+    _cViewMatrixInv = glm::inverse(_cViewMatrix);
 
-    glm_perspective(fov, aspect, PERSPECTIVE_NEAR, PERSPECTIVE_FAR, _cProjectionMatrix);
-    glm_mat4_inv(_cProjectionMatrix, _cProjectionMatrixInv);
+    _cProjectionMatrix = glm::perspective(glm::radians(float(fov)), float(aspect), PERSPECTIVE_NEAR, PERSPECTIVE_FAR);
+    _cProjectionMatrixInv = glm::inverse(_cProjectionMatrix);
 }
 
-void Camera::tick(double absTime)
+void Camera::tick()
 {
-    TickObject::tick(absTime);
+    TickObject::tick();
     auto stat = controller->getState();
     int wx, wy;
     vtGetWindowSize(wx, wy);
+
     setState(stat.pos, stat.normal, stat.up, fov, wx / (double)wy);
 }
 
-std::shared_ptr<Camera> Camera::createCamera(std::weak_ptr<CameraObject> o)
+std::shared_ptr<Camera> Camera::createCamera(std::weak_ptr<CameraObject> o, Game &g)
 {
-    auto pt = std::make_shared<Camera>();
+    auto pt = std::make_shared<Camera>(g);
     pt->controller = std::make_shared<ObjController>(*o.lock());
     return pt;
 }
 
-void Camera::getViewMatrix(mat4 viewIn)
+glm::mat4 Camera::getViewMatrix()
 {
-    glm_mat4_copy(_cViewMatrix, viewIn);
+    return _cViewMatrix;
 }
 
-void Camera::getViewMatrixInv(mat4 viewIn)
+glm::mat4 Camera::getViewMatrixInv()
 {
-    glm_mat4_copy(_cViewMatrixInv, viewIn);
+    return _cViewMatrixInv;
 }
 
-void Camera::getProjectionMatrix(mat4 projIn)
+glm::mat4 Camera::getProjectionMatrix()
 {
-    glm_mat4_copy(_cProjectionMatrix, projIn);
+    return _cProjectionMatrix;
 }
 
-void Camera::getProjectionMatrixInv(mat4 projIn)
+glm::mat4 Camera::getProjectionMatrixInv()
 {
-    glm_mat4_copy(_cProjectionMatrixInv, projIn);
+    return _cProjectionMatrixInv;
 }
 
-void Camera::getPosition(vec3 posIn)
+glm::vec3 Camera::getPosition()
 {
-    glm_vec3_copy(pos, posIn);
+    return pos;
 }
 
-void Camera::getDir(vec3 dirIn)
+glm::vec3 Camera::getDir()
 {
-    glm_vec3_copy(direction, dirIn);
+    return direction;
 }

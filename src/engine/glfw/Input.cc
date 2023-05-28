@@ -3,6 +3,7 @@
 #include "engine/virtual/UIHook.hh"
 #include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
+
 using namespace spdlog;
 
 void vtPollEvents()
@@ -10,27 +11,19 @@ void vtPollEvents()
     glfwPollEvents();
 }
 
-static InputSet *_activeInputSet = NULL;
+static InputBuffer ibuf;
 
-void vtSetActiveInputSet(InputSet *input)
-{
-    _activeInputSet = input;
-}
-
-static vec2 mousePos;
+static glm::vec2 mousePos;
 static int mouseCount = 0;
 
 static void updateMouseStatus()
 {
-    if (_activeInputSet != NULL)
+    ibuf.touchPoints.clear();
+    if (mouseCount > 0)
     {
-        _activeInputSet->touchPoints.clear();
-        if (mouseCount > 0)
-        {
-            _activeInputSet->touchPoints.insert(std::to_array(mousePos));
-        }
-        vtNotifyUIHooks(*_activeInputSet);
+        ibuf.touchPoints.push_back(mousePos);
     }
+    vtNotifyUIHooks(ibuf);
 }
 
 // On PC there is only one touch point.
@@ -54,10 +47,16 @@ static void _internalMouseBtnCallback(GLFWwindow *window, int btn, int act, int 
     updateMouseStatus();
 }
 
-void vtSetupKeyListener()
+void vtSetupListeners()
 {
     info("Setting up input listeners.");
     auto w = static_cast<GLFWwindow *>(vtGetWindow());
     glfwSetCursorPosCallback(w, _internalMousePosCallback);
+
     glfwSetMouseButtonCallback(w, _internalMouseBtnCallback);
+}
+
+const InputBuffer &vtGetInputBuffer()
+{
+    return ibuf;
 }

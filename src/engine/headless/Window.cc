@@ -34,3 +34,7 @@ double vtGetScaleFactor()
 {
     return 1;
 }
+
+void vtSetFPSCap(unsigned int fps) {}
+
+bool vtShouldDraw() { return true; }

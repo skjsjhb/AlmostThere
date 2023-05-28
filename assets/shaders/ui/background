@@ -1,0 +1,24 @@
+#version 330
+layout (location = 0) in vec2 pos;
+layout (location = 1) in vec2 aTexCoord;
+out vec2 texCoord;
+
+void main() {
+    gl_Position = vec4(pos, 0, 1.0);
+    texCoord = aTexCoord;
+}
+
+// ---
+
+#version 330
+in vec2 texCoord;
+out vec4 color;
+
+uniform sampler2D img;
+
+void main () {
+    color = texture(img, texCoord) * vec4(0.2, 0.2, 0.2, 1);
+    if(color.a == 0) {
+        discard;
+    }
+}

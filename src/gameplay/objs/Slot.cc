@@ -1,14 +1,15 @@
 #include "Slot.hh"
 #include "Note.hh"
 
+#include "gameplay/base/Game.hh"
+
 #include <cstdlib>
 
 #define SLOT_SIZE 1.2
-#define SLOT_SINK_THRESHOLD 0.001
 
 static std::vector<std::string> slotTexName = {"circle", "eureka", "line"};
 
-void Slot::draw(DrawContext &ctx)
+void Slot::draw()
 {
     if (!isActive)
     {
@@ -17,38 +18,25 @@ void Slot::draw(DrawContext &ctx)
     auto stat = controller->getState();
     Polygon p;
     p.renderPreset = RECT;
-    p.shader = "rect";
+    p.shader = "3d/rect";
     p.texture = slotTexName[variant];
-    vec3 lt, lb, rt, rb, right, ctr;
-    vec3 dw, dh, t;
-    glm_vec3_cross(stat.up, stat.normal, right);
-    glm_normalize(right);
-    glm_vec3_scale(right, SLOT_SIZE, dw);
-    glm_vec3_scale(stat.up, variant == CIRCLE ? SLOT_SIZE : SLOT_SIZE / 2, dh);
-    glm_vec3_sub(stat.pos, dh, ctr);
 
-    glm_vec3_add(ctr, dw, t);
-    glm_vec3_add(t, dh, rt);
+    auto dw = glm::normalize(glm::cross(stat.up, stat.normal)) * float(SLOT_SIZE);
+    auto dh = stat.up * float(variant == CIRCLE ? SLOT_SIZE : SLOT_SIZE / 2);
+    auto ctr = stat.pos - dh;
 
-    glm_vec3_sub(ctr, dw, t);
-    glm_vec3_add(t, dh, lt);
+    auto rt = ctr + dw + dh;
+    auto lt = ctr - dw + dh;
+    auto lb = ctr - dw - dh;
+    auto rb = ctr + dw - dh;
 
-    glm_vec3_sub(ctr, dw, t);
-    glm_vec3_sub(t, dh, lb);
-
-    glm_vec3_sub(ctr, dh, t);
-    glm_vec3_add(t, dw, rb);
-
-    p.points.push_back(std::to_array(lt));
-    p.points.push_back(std::to_array(lb));
-    p.points.push_back(std::to_array(rt));
-    p.points.push_back(std::to_array(rb));
-    ctx.polygons.push_back(p);
+    p.points = {lt, lb, rt, rb};
+    game.drawContext.polygons.push_back(p);
 }
 
-std::shared_ptr<Slot> Slot::createSlot(std::weak_ptr<SlotObject> o)
+std::shared_ptr<Slot> Slot::createSlot(std::weak_ptr<SlotObject> o, Game &g)
 {
-    auto st = std::make_shared<Slot>();
+    auto st = std::make_shared<Slot>(g);
     auto opt = o.lock();
     st->controller = std::make_shared<ObjController>(*opt);
     st->variant = opt->slotType;

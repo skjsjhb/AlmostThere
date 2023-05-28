@@ -1,0 +1,28 @@
+#version 330
+layout (location = 0) in vec3 pos;
+layout (location = 1) in vec2 tex;
+
+uniform mat4 proj;
+
+out vec2 texCoord;
+
+void main() {
+    gl_Position = proj * vec4(pos.xy, 0.9, 1);
+    gl_Position.z = -1.0;
+    texCoord = tex;
+}
+
+// ---
+
+#version 330
+
+uniform float args[8];
+uniform sampler2D baseTex;
+
+in vec2 texCoord;
+
+out vec4 color;
+
+void main() {
+    color = texture(baseTex, texCoord);
+}

@@ -7,17 +7,14 @@
 #define OBJ_UNLOAD_DELAY 1
 
 struct DrawContext;
+class Game;
 
 class TickObject
 {
 public:
-    virtual bool shouldTick(double absTime) const
-    {
-        auto ref = controller->getReference();
-        return absTime >= ref.genTime && absTime <= ref.endTime + ref.length + OBJ_UNLOAD_DELAY;
-    };
+    virtual bool shouldTick() const;
 
-    virtual double getTickTime() { return controller->getReference().genTime; };
+    virtual double getTickTime() const { return controller->getReference().genTime; };
 
     /**
      * @brief Main tick method for any tickable object.
@@ -31,23 +28,22 @@ public:
      *
      * @note Passing `absTime` in a non-increasing order is considered a bad practice, as objects
      * which implements this might not always be able to handle reversed timeline correctly.
-     *
-     * @param absTime Current time.
      */
-    virtual void tick(double absTime) { controller->tick(absTime); };
+    virtual void tick();
 
     // Virtual plain destructor
     virtual ~TickObject() = default;
+
+    // Constructor
+    TickObject(Game &g) : game(g){};
 
     /**
      * @brief Object draw method.
      *
      * This method draw the object to the draw context using the current status.
      * The context will be used by the engine to render it to the screen.
-     *
-     * @param[in,out] ctx A reference to the active context for drawing.
      */
-    virtual void draw(DrawContext &ctx){};
+    virtual void draw(){};
 
     /**
      * @brief Get the controller for necessary access.
@@ -56,10 +52,16 @@ public:
      * manually might cause potential desync.
      * @return A weak ptr to the controller object.
      */
-    std::weak_ptr<ObjController> getController() { return controller; };
+    std::weak_ptr<ObjController> getController()
+    {
+        return controller;
+    };
 
 protected:
     std::shared_ptr<ObjController> controller;
+
+    // Game reference
+    Game &game;
 };
 
 #endif /* GAMEPLAY_OBJS_TICKOBJECT */

@@ -7,7 +7,6 @@
 #include <climits>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
-#include <cglm/cglm.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -20,12 +19,13 @@
 #include "spdlog/spdlog.h"
 #include <ft2build.h>
 #include <set>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 #include FT_FREETYPE_H
 
 using namespace spdlog;
-
-#define VT_ORTHO_NZ 0.1
-#define VT_ORTHO_FZ 2.0
 
 #define VT_SHADER_DELM "// ---"
 
@@ -40,8 +40,8 @@ static std::unordered_map<std::string, GLuint> shadersCtl;
 struct Glyph
 {
     unsigned int texID;
-    vec2 size;
-    vec2 bearing;
+    glm::vec2 size;
+    glm::vec2 bearing;
     unsigned int advance;
 };
 
@@ -357,9 +357,9 @@ void vtGraphicsCleanUp()
 
 struct Mesh
 {
-    vec3 vert[3];
-    vec2 texCoord[3];
-    vec3 normal;
+    glm::vec3 vert[3];
+    glm::vec2 texCoord[3];
+    glm::vec3 normal;
     bool orthoProj = false;
     float distanceToCam;
     unsigned int texture, shader;
@@ -416,7 +416,7 @@ static void getAbsCenter(vec3 vert[], vec3 ctr)
 }
 #endif
 
-static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
+static float getMeshDistanceProj(glm::vec3 vert[], glm::vec3 camPos, glm::vec3 camDir)
 {
 #ifdef ENABLE_MESH_SORTING
     vec3 ctr;
@@ -432,11 +432,11 @@ static float getMeshDistanceProj(vec3 vert[], vec3 camPos, vec3 camDir)
 }
 
 // UI projection matrix
-static mat4 uiProj;
+static glm::mat4 uiProj;
 
 void vtSetBufferSize(int w, int h)
 {
-    glm_ortho(0, w, 0, h, VT_ORTHO_NZ, VT_ORTHO_FZ, uiProj);
+    uiProj = glm::ortho(0, w, 0, h);
 }
 
 void vtSetBackground(const std::string &img)
@@ -457,7 +457,7 @@ static void drawBg()
         return;
     }
 
-    auto sd = loadShader("bg");
+    auto sd = loadShader("ui/background");
     glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
     glBindVertexArray(bgVAO);
     glUseProgram(sd);
@@ -471,12 +471,12 @@ static void drawBg()
 
 static void drawTypography(Typography &t)
 {
-    auto sd = loadShader("text");
+    auto sd = loadShader("ui/text");
     glUseProgram(sd);
     glUniform3f(glGetUniformLocation(sd, "tColor"), t.color[0], t.color[1], t.color[2]);
     glActiveTexture(GL_TEXTURE1); // Use another texture
     glUniform1i(glGetUniformLocation(sd, "baseTex"), 1);
-    glUniformMatrix4fv(glGetUniformLocation(sd, "proj"), 1, GL_FALSE, (float *)uiProj);
+    glUniformMatrix4fv(glGetUniformLocation(sd, "proj"), 1, GL_FALSE, glm::value_ptr(uiProj));
     glBindVertexArray(textVAO);
 
     // Coord Correction
@@ -557,11 +557,10 @@ static void pickPoints(Mesh &ms, const Polygon &p, const std::vector<unsigned in
             ms.vert[i][j] = p.points[curInd][j];
         }
     }
-    vec3 a, b;
-    glm_vec3_sub(ms.vert[2], ms.vert[1], a);
-    glm_vec3_sub(ms.vert[0], ms.vert[1], b);
-    glm_vec3_cross(a, b, ms.normal);
-    glm_vec3_normalize(ms.normal);
+    glm::vec3 a, b;
+    a = ms.vert[2] - ms.vert[1];
+    b = ms.vert[0] - ms.vert[1];
+    ms.normal = glm::normalize(glm::cross(a, b));
 }
 
 // 2D version of 'pickPoints'. Comparing to it, this one does not calculate normal, which makes it faster
@@ -578,8 +577,7 @@ static void pickShapePoints(Mesh &ms, const Shape &p, const std::vector<unsigned
         ms.vert[i][1] = ry;
         ms.vert[i][2] = 0;
     }
-    vec3 cNormal = {0, 0, 1};
-    glm_vec3_copy(cNormal, ms.normal);
+    ms.normal = {0, 0, 1};
 }
 
 static void pickTex(Mesh &ms, const std::vector<std::pair<float, float>> &st)
@@ -638,13 +636,13 @@ static inline void copyArgs(const float *si, float *di)
     }
 }
 
-static void procPolygonMesh(Polygon &p, vec3 camPos, vec3 camDir, std::vector<Mesh> &meshes)
+static void procPolygonMesh(Polygon &p, glm::vec3 camPos, glm::vec3 camDir, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(p.shader);
     unsigned int tx = 0;
     if (p.texture.size() > 0)
     {
-        tx = loadTexture(getAppResource("textures/" + p.texture + ".png"), true);
+        tx = loadTexture(getAppResource("textures/" + p.texture + ".png"), p.renderPreset != OCT && p.renderPreset != PRISM_FULL);
     }
     if (sd == INT_MAX || tx == INT_MAX)
     {
@@ -655,7 +653,7 @@ static void procPolygonMesh(Polygon &p, vec3 camPos, vec3 camDir, std::vector<Me
     unsigned int stx = 0;
     if (p.subTexture.size() > 0)
     {
-        stx = loadTexture(p.subTexture, false);
+        stx = loadTexture(getAppResource("textures/" + p.subTexture + ".png"), p.renderPreset != OCT && p.renderPreset != PRISM_FULL);
     }
     switch (p.renderPreset)
     {
@@ -831,7 +829,7 @@ static void procPolygonMesh(Polygon &p, vec3 camPos, vec3 camDir, std::vector<Me
     }
 }
 
-static void procShapeMesh(Shape &s, mat4 p, std::vector<Mesh> &meshes)
+static void procShapeMesh(Shape &s, glm::mat4 p, std::vector<Mesh> &meshes)
 {
     auto sd = loadShader(s.shader);
     auto tx = 0;
@@ -864,10 +862,9 @@ static void procShapeMesh(Shape &s, mat4 p, std::vector<Mesh> &meshes)
 static std::pair<std::vector<Mesh>, std::vector<Mesh>> makeMeshes(DrawContext &ctx)
 {
     std::vector<Mesh> meshOpaque, meshTrans;
-    vec3 camPos, camDir;
     auto gcam = ctx.cam.lock();
-    gcam->getPosition(camPos);
-    gcam->getDir(camDir);
+    auto camPos = gcam->getPosition();
+    auto camDir = gcam->getDir();
 
     for (auto &p : ctx.polygons)
     {
@@ -889,12 +886,9 @@ static std::pair<std::vector<Mesh>, std::vector<Mesh>> makeMeshes(DrawContext &c
 
 static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
 {
-    mat4 proj, view;
-    vec3 dir;
     auto gcam = ctx.cam.lock();
-    gcam->getDir(dir);
-    gcam->getProjectionMatrix(proj);
-    gcam->getViewMatrix(view);
+    auto proj = gcam->getProjectionMatrix();
+    auto view = gcam->getViewMatrix();
     for (auto &m : meshes)
     {
         float vertex[15] = {0};
@@ -915,14 +909,15 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
         if (m.orthoProj)
         {
             // Ortho projection
-            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, (float *)uiProj);
+            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, glm::value_ptr(uiProj));
         }
         else
         {
             // Perspective projection
-            glUniformMatrix4fv(glGetUniformLocation(m.shader, "view"), 1, GL_FALSE, (float *)view);
-            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, (float *)proj);
+            glUniformMatrix4fv(glGetUniformLocation(m.shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
+            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, glm::value_ptr(proj));
         }
+
         glUniform1f(glGetUniformLocation(m.shader, "time"), vtGetTime());
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, m.texture);
@@ -948,6 +943,7 @@ void vtProcessMeshes(DrawContext &ctx)
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     drawBg();
+    glClear(GL_DEPTH_BUFFER_BIT); // Background depth reset
     if (ctx.cam.expired())
     {
         warn("Camera not set in this draw context. Skipped draw request.");

@@ -5,10 +5,10 @@
 
 #define BAR_HALF_THICK 10
 
-Bar::Bar(BarDirection dirIn, vec2 posIn, int maxLengthIn, int widthIn, bool revertDir)
+Bar::Bar(BarDirection dirIn, const glm::vec2 &posIn, int maxLengthIn, int widthIn, bool revertDir)
 {
     dir = dirIn;
-    glm_vec2_copy(posIn, pos);
+    pos = posIn;
     maxl = maxLengthIn;
     revert = revertDir;
     th = widthIn;
@@ -19,9 +19,9 @@ void Bar::setLength(double l)
     len = l;
 }
 
-void Bar::setColor(vec4 c)
+void Bar::setColor(glm::vec4 c)
 {
-    glm_vec4_copy(c, color);
+    color = c;
 }
 
 void Bar::flip()
@@ -32,14 +32,14 @@ void Bar::flip()
 void Bar::draw(DrawContext &ctx)
 {
     Shape s;
-    s.shader = "hud-bar";
+    s.shader = "ui/bar";
     s.texture = "";
     for (int i = 0; i < 4; i++)
     {
         s.args[i] = color[i];
     }
     auto lx = (revert ? -1 : 1) * len * maxl;
-    vec3 bl, br, tl, tr;
+    glm::vec3 bl, br, tl, tr;
     switch (dir)
     {
     case VERT:
@@ -64,10 +64,10 @@ void Bar::draw(DrawContext &ctx)
         return;
     }
     tl[2] = bl[2] = tr[2] = br[2] = 0;
-    glm_vec2_copy(tl, s.points[0]);
-    glm_vec2_copy(bl, s.points[1]);
-    glm_vec2_copy(tr, s.points[2]);
-    glm_vec2_copy(br, s.points[3]);
+    s.points[0] = tl;
+    s.points[1] = bl;
+    s.points[2] = tr;
+    s.points[3] = br;
 
     ctx.shapes.push_back(s);
 }

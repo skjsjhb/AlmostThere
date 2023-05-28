@@ -5,19 +5,21 @@
 #include "engine/virtual/UIHook.hh"
 #include "engine/virtual/Graphics.hh"
 #include "gameplay/view/View.hh"
+#include "gameplay/base/Game.hh"
 
 int main()
 {
+    Game g;
     vtInitWindow();
     vtGraphicsInit();
-    InputSet ips;
+    InputBuffer ips;
     bool running = true;
     HookSt s = {
         .xbegin = 800, .xend = 1600, .ybegin = 450, .yend = 900, .xt = [&running]() -> void
         { running = false; }};
     WANT(vtAddUIHook(s) > 0);
     Shape sx = {
-        .shader = "hud-bar",
+        .shader = "ui/bar",
         .texture = "",
         .points = {
             {800, 900}, {800, 450}, {1600, 900}, {1600, 450}},
@@ -31,12 +33,11 @@ int main()
         .xAlign = CENTER,
         .yAlign = CENTER,
     };
-    ips.setupInputListeners();
+    vtSetupListeners();
     // Mock a touch point
-    std::array ar = {970.0f, 530.0f};
-    ips.touchPoints.insert(ar);
+    ips.touchPoints.push_back({970.0f, 530.0f});
     DrawContext ctx;
-    auto xpt = std::make_shared<Camera>();
+    auto xpt = std::make_shared<Camera>(g);
     ctx.cam = xpt;
     while (running)
     {

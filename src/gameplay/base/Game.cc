@@ -102,10 +102,10 @@ void Game::initGame(const std::string &mapId)
             tck = Note::createNote(std::dynamic_pointer_cast<NoteObject>(o), *this);
             break;
         case SLOT:
-            tck = Slot::createSlot(std::dynamic_pointer_cast<SlotObject>(o));
+            tck = Slot::createSlot(std::dynamic_pointer_cast<SlotObject>(o), *this);
             break;
         case CAMERA:
-            tck = Camera::createCamera(std::dynamic_pointer_cast<CameraObject>(o));
+            tck = Camera::createCamera(std::dynamic_pointer_cast<CameraObject>(o), *this);
             break;
         default:
             --counter;
@@ -147,10 +147,10 @@ void Game::initGame(const std::string &mapId)
     vtGetWindowSize(w, h);
     view.screenSize[0] = w;
     view.screenSize[1] = h;
-    input.setupInputListeners();
     mapTimer = Timer(vtGetTime);
     absTimer = Timer(vtGetTime);
-    score.rules = createDefaultGameRules();
+    // TODO: delegate score mgr
+    rules = createDefaultGameRules();
 
     // Set background
     if (map.meta.bgimg.size() > 0)
@@ -181,7 +181,9 @@ void Game::runOnce()
     {
         vtPauseAudio(audio.bgmBuf);
     }
+    // TODO: add game stop method
 
+    mapTimer.update();
     auto mapTimeNow = mapTimer.getTime();
 
     if (mapTimeNow > map.meta.duration)
@@ -191,13 +193,13 @@ void Game::runOnce()
     }
 
     // Handle events
-    input.pollInputEvents();
+    vtPollEvents();
 
     // Load and unload objects
     for (auto it = objects.bufferedObjects.begin(); it != objects.bufferedObjects.end();)
     {
         auto n = *it;
-        if (n->shouldTick(mapTimeNow))
+        if (n->shouldTick())
         {
             objects.activeObjects.insert(n);
             it = objects.bufferedObjects.erase(it);
@@ -211,10 +213,10 @@ void Game::runOnce()
     {
         auto n = *it;
         // If an object shouldn't be ticked, it has gone out of scope.
-        if (!n->shouldTick(mapTimeNow))
+        if (!n->shouldTick())
         {
             it = objects.activeObjects.erase(it);
-            // It might be necessary to collect them in the future, but so far not.
+            // TODO: It might be necessary to collect them in the future, but so far not.
         }
         else
         {
@@ -226,27 +228,28 @@ void Game::runOnce()
     for (auto &s : objects.activeObjects)
     {
         // Judgement of notes have been integrated into tick method, no need to run them again.
-        s->tick(mapTimeNow);
+        s->tick();
     }
 
-    // Draw objects
-    for (auto &s : objects.activeObjects)
+    if (vtShouldDraw())
     {
-        s->draw(drawContext);
+        // Draw objects
+        for (auto &s : objects.activeObjects)
+        {
+            s->draw();
+        }
+
+        if (!view.camera.expired())
+        {
+            drawContext.cam = view.camera.lock();
+        }
+        vtProcessMeshes(drawContext);
+        vtCompleteDraw(drawContext);
+        // Context cleanup and reuse
+        drawContext.polygons.clear();
+        drawContext.shapes.clear();
+        drawContext.typos.clear();
     }
-
-    if (!view.camera.expired())
-    {
-        drawContext.cam = view.camera.lock();
-    }
-
-    vtProcessMeshes(drawContext);
-    vtCompleteDraw(drawContext);
-
-    // Context cleanup and reuse
-    drawContext.polygons.clear();
-    drawContext.shapes.clear();
-    drawContext.typos.clear();
 
     // Close signals are ignored during gameplay
     vtWindowLoop();
