@@ -1,1 +1,6 @@
-option('backlib', type: 'combo', choices : ['glfw', 'headless', 'nothing'], description : 'Specify backend library to use')
+option(
+    'backlib',
+    type: 'combo',
+    choices: ['glfw', 'headless', 'nothing'],
+    description: 'Specify backend library to use',
+)
