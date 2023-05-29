@@ -10,7 +10,7 @@ testProgs = [
 ]
 
 if backend != 'headless'
-    testProgs += ['UI Hook Trigger']
+    testProgs += ['UI Hook Trigger', 'Text Render']
 endif
 
 
