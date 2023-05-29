@@ -436,7 +436,7 @@ static glm::mat4 uiProj;
 
 void vtSetBufferSize(int w, int h)
 {
-    uiProj = glm::ortho(0, w, 0, h);
+    uiProj = glm::ortho(0.0f, float(w), 0.0f, float(h));
 }
 
 void vtSetBackground(const std::string &img)
@@ -483,24 +483,8 @@ static void drawTypography(Typography &t)
     int x, y;
     vtGetCoord(t.pos[0], t.pos[1], x, y);
 
-    float xoffset = 0, yoffset = 0;
-    auto sz = t.size * vtGetScaleFactor(); // Scale text
-    std::list<Glyph *> useGlyphs;
-    // Calc offset
-    for (auto c : t.text)
-    {
-        if (!loadCharGlyph(c))
-        {
-            continue;
-        }
-        auto &g = glyphBuf[c];
-        useGlyphs.push_back(&g);
-
-        // Calculate bounding box
-        float h = g.size[1] * sz;
-        xoffset += (g.advance >> 6) * sz;
-        yoffset = h > yoffset ? h : yoffset;
-    }
+    double xoffset, yoffset;
+    vtGetTextRect(t, xoffset, yoffset);
 
     if (t.xAlign == RIGHT)
     {
@@ -519,9 +503,11 @@ static void drawTypography(Typography &t)
     {
         y -= yoffset / 2.0;
     }
-    for (auto gp : useGlyphs)
+
+    auto sz = t.size;
+    for (auto gp : t.text)
     {
-        Glyph &g = *gp;
+        Glyph &g = glyphBuf[gp];
         float w = g.size[0] * sz;
         float h = g.size[1] * sz;
         xoffset += (g.advance >> 6) * sz;
@@ -910,6 +896,10 @@ static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
         {
             // Ortho projection
             glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, glm::value_ptr(uiProj));
+            for (int i = 0; i < 3; i++)
+            {
+                auto pj = uiProj * glm::vec4(m.vert[i], 1.0);
+            }
         }
         else
         {
@@ -956,7 +946,6 @@ void vtProcessMeshes(DrawContext &ctx)
 
 void vtCompleteDraw(DrawContext &ctx)
 {
-
     // Meshes
     for (auto &p : DRAW_BUFFER_OPAQUE)
     {
@@ -984,4 +973,25 @@ void vtCompleteDraw(DrawContext &ctx)
 int vtGetGraphicsError()
 {
     return glGetError();
+}
+
+void vtGetTextRect(const Typography &tp, double &w, double &h)
+{
+    float xoffset = 0, yoffset = 0;
+    auto sz = tp.size * vtGetScaleFactor(); // Scale text
+    // Calc offset
+    for (auto c : tp.text)
+    {
+        if (!loadCharGlyph(c))
+        {
+            continue;
+        }
+        auto &g = glyphBuf[c];
+        // Calculate bounding box
+        float h = g.size[1] * sz;
+        xoffset += (g.advance >> 6) * sz;
+        yoffset = h > yoffset ? h : yoffset;
+    }
+    w = xoffset;
+    h = yoffset;
 }
