@@ -92,10 +92,12 @@ public:
   GeneratedObjects objects;
   GameMap map;
   ScoreRecords score;
-  DrawContext drawContext;
   AudioStat audio;
   GameRules rules;
   InputBuffer inputBuf;
+
+  DrawContext ctx3D, ctxUI;
+  DrawList drawList;
 };
 
 #endif /* GAMEPLAY_BASE_GAME */

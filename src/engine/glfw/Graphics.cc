@@ -29,13 +29,13 @@ using namespace spdlog;
 
 #define VT_SHADER_DELM "// ---"
 
-// #define ENABLE_MESH_SORTING
-#ifdef ENABLE_MESH_SORTING
-#warning "The blending system has known flaws and vulnerabilities. It will also reduce FPS significantly."
-#endif
+#define SHADER_VAR_VIEW "aView"
+#define SHADER_VAR_PROJ "aProj"
+#define SHADER_VAR_TIME "aTime"
+#define SHADER_VAR_TEX "aTex"
+#define SHADER_VAR_COLOR "aColor"
 
-static std::unordered_map<std::string, GLuint> texturesCtl;
-static std::unordered_map<std::string, GLuint> shadersCtl;
+static std::unordered_map<std::string, GLuint> texturesCtl, shadersCtl;
 
 struct Glyph
 {
@@ -140,7 +140,7 @@ static void loadFont()
             return;
         }
         info("Loaded font file '" + f + "'");
-        FT_Set_Pixel_Sizes(face, 0, 96);
+        FT_Set_Pixel_Sizes(face, 0, 48);
         alterFaces.push_back(face);
     }
 }
@@ -169,11 +169,11 @@ loadShader(const std::string &name)
     GLuint vsh, fsh, prog;
     vsh = glCreateShader(GL_VERTEX_SHADER);
     fsh = glCreateShader(GL_FRAGMENT_SHADER);
-    std::ifstream cbf(getAppResource("shaders/" + name));
+    std::ifstream cbf(name);
     if (cbf.fail())
     {
         error("Could not find shader files. Loading shader '" + name + "'");
-        return INT_MAX;
+        return 0;
     }
 
     std::stringstream ssrc;
@@ -200,7 +200,7 @@ loadShader(const std::string &name)
         glGetShaderInfoLog(vsh, 1024, NULL, infoLog);
         error("Shader compilation error detected. In VERT '" + name + "':");
         error(infoLog);
-        return INT_MAX;
+        return 0;
     };
     glGetShaderiv(fsh, GL_COMPILE_STATUS, &success);
     if (!success)
@@ -208,7 +208,7 @@ loadShader(const std::string &name)
         glGetShaderInfoLog(fsh, 1024, NULL, infoLog);
         error("Shader compilation error detected. In FRAG '" + name + "':");
         error(infoLog);
-        return INT_MAX;
+        return 0;
     };
 
     prog = glCreateProgram();
@@ -222,7 +222,7 @@ loadShader(const std::string &name)
         glGetProgramInfoLog(prog, 1024, NULL, infoLog);
         error("Shader program linkage error detected. In '" + name + "':");
         error(infoLog);
-        return INT_MAX;
+        return 0;
     };
     glDeleteShader(vsh);
     glDeleteShader(fsh);
@@ -248,7 +248,7 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
     if (data == NULL)
     {
         error("Could not load texture '" + name + "'. Is this file missing, or is stb_image corrupted?");
-        return INT_MAX;
+        return 0;
     }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -285,7 +285,7 @@ static GLuint vbo, vao, textVBO, textVAO, bgVBO, bgVAO;
 float bgDrawVert[6][4] = {
     {-1, 1, 0, 1}, {-1, -1, 0, 0}, {1, 1, 1, 1}, {1, 1, 1, 1}, {-1, -1, 0, 0}, {1, -1, 1, 0}};
 
-void vtGraphicsInit()
+void vtInitGraphics()
 {
     info("Initializing graphics buffers.");
     glGenBuffers(1, &vbo);
@@ -333,7 +333,7 @@ void vtGraphicsInit()
     loadFont();
 }
 
-void vtGraphicsCleanUp()
+void vtDeInitGraphics()
 {
     info("Deleting graphics buffers.");
     glDeleteBuffers(1, &vbo);
@@ -355,90 +355,7 @@ void vtGraphicsCleanUp()
     cleanFont();
 }
 
-struct Mesh
-{
-    glm::vec3 vert[3];
-    glm::vec2 texCoord[3];
-    glm::vec3 normal;
-    bool orthoProj = false;
-    float distanceToCam;
-    unsigned int texture, shader;
-    float args[VT_SD_ARGS];
-};
-
-#ifdef ENABLE_MESH_SORTING
-
-static bool isAround(float a, float b)
-{
-    auto diff = std::abs(1 - a / b);
-    return diff <= 0.01;
-}
-
-static void getAbsCenter(vec3 vert[], vec3 ctr)
-{
-    vec3 a, b;
-    float d10 = glm_vec3_distance2(vert[1], vert[0]);
-    float d21 = glm_vec3_distance2(vert[2], vert[1]);
-    float d20 = glm_vec3_distance2(vert[2], vert[0]);
-    float sum = (d10 + d21 + d20) / 2;
-    if (isAround(sum, d10) || isAround(sum, d21) || isAround(sum, d20))
-    {
-        // Use hypo point
-        glm_vec3_sub(vert[1], vert[0], a);
-        glm_vec3_sub(vert[2], vert[0], b);
-        glm_vec3_normalize(a);
-        glm_vec3_normalize(b);
-        if (glm_vec3_dot(a, b) < 0.01)
-        {
-            glm_vec3_add(vert[1], vert[2], ctr);
-        }
-        else
-        {
-            if (d10 > d20)
-            {
-                glm_vec3_add(vert[1], vert[0], ctr);
-            }
-            else
-            {
-                glm_vec3_add(vert[2], vert[0], ctr);
-            }
-        }
-        glm_vec3_scale(ctr, 0.5, ctr);
-    }
-    else
-    {
-        // Use weight point
-        for (int i = 0; i < 3; i++)
-        {
-            ctr[i] = (vert[0][i] + vert[1][i] + vert[2][i]) / 3.0;
-        }
-    }
-}
-#endif
-
-static float getMeshDistanceProj(glm::vec3 vert[], glm::vec3 camPos, glm::vec3 camDir)
-{
-#ifdef ENABLE_MESH_SORTING
-    vec3 ctr;
-    getAbsCenter(vert, ctr);
-    vec3 a, x;
-    glm_vec3_sub(ctr, camPos, a);
-    glm_vec3_copy(camDir, x);
-    glm_vec3_normalize(x);
-    return glm_vec3_dot(a, x);
-#else
-    return 0;
-#endif
-}
-
 // UI projection matrix
-static glm::mat4 uiProj;
-
-void vtSetBufferSize(int w, int h)
-{
-    uiProj = glm::ortho(0.0f, float(w), 0.0f, float(h));
-}
-
 void vtSetBackground(const std::string &img)
 {
     if (img.size() == 0)
@@ -457,63 +374,115 @@ static void drawBg()
         return;
     }
 
-    auto sd = loadShader("ui/background");
+    auto sd = loadShader(getAppResource("shaders/ui/background"));
     glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
     glBindVertexArray(bgVAO);
     glUseProgram(sd);
     glActiveTexture(GL_TEXTURE2); // Texture 2 for bg
     glBindTexture(GL_TEXTURE_2D, bgTex);
-    glUniform1i(glGetUniformLocation(sd, "img"), 2);
+    glUniform1i(glGetUniformLocation(sd, SHADER_VAR_TEX), 2);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 }
 
-static void drawTypography(Typography &t)
+int vtGetGraphicsError()
 {
-    auto sd = loadShader("ui/text");
+    return glGetError();
+}
+
+void Triangle::draw() const
+{
+    // The drawing of triangle uses buffer set 0 (default VBO and VAO)
+    // With vertex data structure (xyzst)[3]
+    float vertex[15] = {0};
+    for (int i = 0; i < 3; ++i)
+    {
+        auto p = pt[i];
+        for (int j = 0; j < 5; ++j)
+        {
+            vertex[5 * i + j] = p[j];
+        }
+    }
+    auto sd = loadShader(params.external ? params.shader : getAppResource("shaders/" + params.shader));
+    if (sd == 0)
+    {
+        warn("Invalid shader usage detected. Object might fail to draw.");
+    }
     glUseProgram(sd);
-    glUniform3f(glGetUniformLocation(sd, "tColor"), t.color[0], t.color[1], t.color[2]);
+    glUniformMatrix4fv(glGetUniformLocation(sd, SHADER_VAR_VIEW), 1, GL_FALSE, glm::value_ptr(params.ctx.viewMat));
+    glUniformMatrix4fv(glGetUniformLocation(sd, SHADER_VAR_PROJ), 1, GL_FALSE, glm::value_ptr(params.ctx.projMat));
+
+    auto tx = loadTexture(params.external ? params.texture : getAppResource("textures/" + params.texture + ".png"), false);
+    if (tx != 0)
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tx);
+    }
+
+    glUniform1i(glGetUniformLocation(sd, SHADER_VAR_TEX), 0);
+
+    // Assign extra values
+    float arg[params.args.size()];
+    for (int i = 0; i < params.args.size(); ++i)
+    {
+        arg[i] = params.args[i];
+    }
+    glUniform1fv(glGetUniformLocation(sd, "args"), params.args.size(), arg);
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex), vertex);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void Rect::draw() const
+{
+    pt[0].draw();
+    pt[1].draw();
+}
+
+void TriangleStrip::draw() const
+{
+    if (pts.size() < 3 || pts.size() % 3 != 0)
+    {
+        return;
+    }
+    for (int i = 0; i < int(pts.size() / 3); ++i)
+    {
+        Triangle t(pts[3 * i], pts[3 * i + 1], pts[3 * i + 2], params);
+        t.draw();
+    }
+}
+
+void DisplayText::draw() const
+{
+    auto sd = loadShader(getAppResource("shaders/ui/text"));
+    glUseProgram(sd);
+    glUniform4f(glGetUniformLocation(sd, SHADER_VAR_COLOR), color.r, color.g, color.b, color.a);
     glActiveTexture(GL_TEXTURE1); // Use another texture
-    glUniform1i(glGetUniformLocation(sd, "baseTex"), 1);
-    glUniformMatrix4fv(glGetUniformLocation(sd, "proj"), 1, GL_FALSE, glm::value_ptr(uiProj));
+    glUniform1i(glGetUniformLocation(sd, SHADER_VAR_TEX), 1);
+    glUniformMatrix4fv(glGetUniformLocation(sd, SHADER_VAR_PROJ), 1, GL_FALSE, glm::value_ptr(params.ctx.projMat));
+    // View matrix is omitted
     glBindVertexArray(textVAO);
 
-    // Coord Correction
-    int x, y;
-    vtGetCoord(t.pos[0], t.pos[1], x, y);
-
-    double xoffset, yoffset;
-    vtGetTextRect(t, xoffset, yoffset);
-
-    if (t.xAlign == RIGHT)
+    // Coord Correction is no longer necessary
+    auto x = pos.x;
+    auto y = pos.y;
+    for (auto gp : text)
     {
-        x -= xoffset;
-    }
-    else if (t.xAlign == CENTER)
-    {
-        x -= xoffset / 2.0;
-    }
-
-    if (t.yAlign == RIGHT)
-    {
-        y -= yoffset;
-    }
-    else if (t.yAlign == CENTER)
-    {
-        y -= yoffset / 2.0;
-    }
-
-    auto sz = t.size;
-    for (auto gp : t.text)
-    {
+        if (!loadCharGlyph(gp))
+        {
+            warn("Missing font glyph for char id " + std::to_string(int(gp)));
+            continue;
+        }
         Glyph &g = glyphBuf[gp];
-        float w = g.size[0] * sz;
-        float h = g.size[1] * sz;
-        xoffset += (g.advance >> 6) * sz;
-        yoffset = h > yoffset ? h : yoffset;
-        float xpos = x + g.bearing[0] * sz;
-        float ypos = y - (g.size[1] - g.bearing[1]) * sz;
+        float w = g.size[0] * fSize;
+        float h = g.size[1] * fSize;
+        float xpos = x + g.bearing[0] * fSize;
+        float ypos = y - (g.size[1] - g.bearing[1]) * fSize;
         float vertices[6][4] = {
             {xpos, ypos + h, 0.0f, 0.0f},
             {xpos, ypos, 0.0f, 1.0f},
@@ -522,476 +491,27 @@ static void drawTypography(Typography &t)
             {xpos, ypos + h, 0.0f, 0.0f},
             {xpos + w, ypos, 1.0f, 1.0f},
             {xpos + w, ypos + h, 1.0f, 0.0f}};
+
         glBindTexture(GL_TEXTURE_2D, g.texID);
         glBindBuffer(GL_ARRAY_BUFFER, textVBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        x += (g.advance >> 6) * sz;
+        x += (g.advance >> 6) * fSize;
     }
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-static void pickPoints(Mesh &ms, const Polygon &p, const std::vector<unsigned int> &ptOrder)
-{
-    for (int i = 0; i < 3; i++)
-    {
-        unsigned curInd = ptOrder[i];
-        for (int j = 0; j < 3; j++)
-        {
-            ms.vert[i][j] = p.points[curInd][j];
-        }
-    }
-    glm::vec3 a, b;
-    a = ms.vert[2] - ms.vert[1];
-    b = ms.vert[0] - ms.vert[1];
-    ms.normal = glm::normalize(glm::cross(a, b));
-}
-
-// 2D version of 'pickPoints'. Comparing to it, this one does not calculate normal, which makes it faster
-static void pickShapePoints(Mesh &ms, const Shape &p, const std::vector<unsigned int> &ptOrder)
-{
-    for (int i = 0; i < 3; i++)
-    {
-        unsigned curInd = ptOrder[i];
-
-        // Apply coord correction
-        int rx, ry;
-        vtGetCoord(p.points[curInd][0], p.points[curInd][1], rx, ry);
-        ms.vert[i][0] = rx;
-        ms.vert[i][1] = ry;
-        ms.vert[i][2] = 0;
-    }
-    ms.normal = {0, 0, 1};
-}
-
-static void pickTex(Mesh &ms, const std::vector<std::pair<float, float>> &st)
-{
-    ms.texCoord[0][0] = st[0].first;
-    ms.texCoord[0][1] = st[0].second;
-    ms.texCoord[1][0] = st[1].first;
-    ms.texCoord[1][1] = st[1].second;
-    ms.texCoord[2][0] = st[2].first;
-    ms.texCoord[2][1] = st[2].second;
-}
-
-// Prism indicies data
-static std::vector<std::vector<std::pair<float, float>>> PRISM_TEX_COORDS = {
-    // Bottom 4 triangles
-    {{0.25, 0.933}, {0, 0.5}, {0.25, 0.067}},
-    {{0.75, 0.933}, {0.25, 0.933}, {0.25, 0.067}},
-    {{0.75, 0.933}, {0.25, 0.067}, {0.75, 0.067}},
-    {{0.75, 0.933}, {0.75, 0.067}, {1, 0.5}},
-
-    // Top 4 triangles
-    {{0.75, 0.067}, {1, 0.5}, {0.75, 0.933}},
-    {{0.75, 0.067}, {0.75, 0.933}, {0.25, 0.933}},
-    {{0.25, 0.067}, {0.75, 0.067}, {0.25, 0.933}},
-    {{0, 0.5}, {0.25, 0.067}, {0.25, 0.933}},
-
-    // Body
-    {{0, 1}, {1, 0}, {1, 1}},
-    {{0, 1}, {0, 0}, {1, 0}},
-
-    {{0, 1}, {0, 0}, {1, 0}},
-    {{0, 1}, {1, 0}, {1, 1}},
-
-    {{0, 1}, {0, 0}, {1, 1}},
-    {{1, 1}, {0, 0}, {1, 0}},
-
-    {{1, 1}, {0, 1}, {0, 0}},
-    {{1, 1}, {0, 0}, {1, 0}},
-
-    {{1, 1}, {0, 1}, {0, 0}},
-    {{1, 1}, {0, 0}, {1, 0}},
-
-    {{1, 1}, {0, 1}, {0, 0}},
-    {{1, 1}, {0, 0}, {1, 0}},
-
-};
-
-static std::vector<std::vector<unsigned int>> PRISM_VERTEX = {
-    {1, 0, 5}, {2, 1, 5}, {2, 5, 4}, {2, 4, 3}, {11, 6, 7}, {11, 7, 8}, {10, 11, 8}, {9, 10, 8}, {10, 5, 11}, {10, 4, 5}, {11, 5, 0}, {11, 0, 6}, {6, 0, 7}, {7, 0, 1}, {8, 7, 1}, {8, 1, 2}, {9, 8, 2}, {9, 2, 3}, {10, 9, 3}, {10, 3, 4}};
-
-static inline void copyArgs(const float *si, float *di)
-{
-    for (int i = 0; i < VT_SD_ARGS; ++i)
-    {
-        di[i] = si[i];
-    }
-}
-
-static void procPolygonMesh(Polygon &p, glm::vec3 camPos, glm::vec3 camDir, std::vector<Mesh> &meshes)
-{
-    auto sd = loadShader(p.shader);
-    unsigned int tx = 0;
-    if (p.texture.size() > 0)
-    {
-        tx = loadTexture(getAppResource("textures/" + p.texture + ".png"), p.renderPreset != OCT && p.renderPreset != PRISM_FULL);
-    }
-    if (sd == INT_MAX || tx == INT_MAX)
-    {
-        // Problem loading, skip render
-        warn("Skipped mesh process due to previous errors. Check log output for details.");
-        return;
-    }
-    unsigned int stx = 0;
-    if (p.subTexture.size() > 0)
-    {
-        stx = loadTexture(getAppResource("textures/" + p.subTexture + ".png"), p.renderPreset != OCT && p.renderPreset != PRISM_FULL);
-    }
-    switch (p.renderPreset)
-    {
-    case RECT:
-    {
-        Mesh ms[2];
-
-        // Attach points
-        pickPoints(ms[0], p, {0, 1, 2});
-        pickPoints(ms[1], p, {2, 1, 3});
-        pickTex(ms[0], {{0, 1}, {0, 0}, {1, 1}});
-        pickTex(ms[1], {{1, 1}, {0, 0}, {1, 0}});
-
-        for (int i : {0, 1})
-        {
-            ms[i].shader = sd;
-            ms[i].texture = tx;
-            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            copyArgs(p.args, ms[i].args);
-            meshes.push_back(ms[i]);
-        }
-
-        break;
-    }
-    case OCT:
-    {
-        Mesh ms[8];
-        pickPoints(ms[0], p, {0, 5, 2});
-        pickPoints(ms[1], p, {0, 3, 5});
-        pickPoints(ms[2], p, {2, 5, 1});
-        pickPoints(ms[3], p, {5, 3, 1});
-        pickPoints(ms[4], p, {0, 4, 3});
-        pickPoints(ms[5], p, {0, 2, 4});
-        pickPoints(ms[6], p, {4, 2, 1});
-        pickPoints(ms[7], p, {3, 4, 1});
-
-        pickTex(ms[0], {{0, 1}, {0, 0}, {1, 0}});
-        pickTex(ms[1], {{0, 1}, {1, 0}, {0, 0}});
-        pickTex(ms[2], {{1, 0}, {0, 0}, {0, 1}});
-        pickTex(ms[3], {{0, 0}, {1, 0}, {0, 1}});
-        pickTex(ms[4], {{0, 1}, {0, 0}, {1, 0}});
-        pickTex(ms[5], {{0, 1}, {0, 0}, {1, 0}});
-        pickTex(ms[6], {{0, 0}, {1, 0}, {0, 1}});
-        pickTex(ms[7], {{1, 0}, {0, 0}, {0, 1}});
-
-        for (int i = 0; i < 8; i++)
-        {
-            ms[i].shader = sd;
-            ms[i].texture = tx;
-            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            copyArgs(p.args, ms[i].args);
-            meshes.push_back(ms[i]);
-        }
-
-        break;
-    }
-    // Full prism draw can only be used for short ones
-    case PRISM_FULL:
-    {
-        // The prism is a little bit tricky, we must use the center of each square, rather than triangle
-        Mesh ms[20];
-        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
-        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
-        for (int i = 0; i < 20; i++)
-        {
-            pickPoints(ms[i], p, points[i]);
-            pickTex(ms[i], texCoords[i]);
-            ms[i].shader = sd;
-            if (i < 8)
-            {
-                ms[i].texture = tx;
-            }
-            else
-            {
-                ms[i].texture = stx;
-            }
-
-            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            copyArgs(p.args, ms[i].args);
-            meshes.push_back(ms[i]);
-        }
-        break;
-    }
-
-    case PRISM_BTM:
-    {
-        Mesh ms[16];
-        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
-        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
-        for (int i = 0; i < 4; i++)
-        {
-            points.erase(points.begin() + 4); // Remove elements at index 4
-            texCoords.erase(texCoords.begin() + 4);
-        }
-        for (int i = 0; i < 16; i++)
-        {
-            pickPoints(ms[i], p, points[i]);
-            pickTex(ms[i], texCoords[i]);
-            ms[i].shader = sd;
-            if (i < 4)
-            {
-                ms[i].texture = tx;
-            }
-            else
-            {
-                ms[i].texture = stx;
-            }
-
-            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            copyArgs(p.args, ms[i].args);
-            meshes.push_back(ms[i]);
-        }
-        break;
-    }
-    case PRISM_HAT:
-    {
-        Mesh ms[16];
-        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
-        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
-        for (int i = 0; i < 4; i++)
-        {
-            points.erase(points.begin());
-            texCoords.erase(texCoords.begin());
-        }
-        for (int i = 0; i < 16; i++)
-        {
-            pickPoints(ms[i], p, points[i]);
-            pickTex(ms[i], texCoords[i]);
-            ms[i].shader = sd;
-            if (i < 4)
-            {
-                // Attach btm and hat
-                ms[i].texture = tx;
-            }
-            else
-            {
-                // Attach side texture
-                ms[i].texture = stx;
-            }
-
-            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            copyArgs(p.args, ms[i].args);
-            meshes.push_back(ms[i]);
-        }
-        break;
-    }
-    case PRISM_SIDE:
-    {
-        Mesh ms[12];
-        std::vector<std::vector<unsigned int>> points = PRISM_VERTEX;
-        std::vector<std::vector<std::pair<float, float>>> texCoords = PRISM_TEX_COORDS;
-        for (int i = 0; i < 8; i++)
-        {
-            points.erase(points.begin());
-            texCoords.erase(texCoords.begin());
-        }
-
-        for (int i = 0; i < 12; i++)
-        {
-            pickPoints(ms[i], p, points[i]);
-            pickTex(ms[i], texCoords[i]);
-            ms[i].shader = sd;
-            ms[i].texture = stx;
-            ms[i].distanceToCam = getMeshDistanceProj(ms[i].vert, camPos, camDir);
-            copyArgs(p.args, ms[i].args);
-            meshes.push_back(ms[i]);
-        }
-        break;
-    }
-    default:
-        warn("Unknown mesh preset: " + std::to_string(p.renderPreset) + ", skipped.");
-        break;
-    }
-}
-
-static void procShapeMesh(Shape &s, glm::mat4 p, std::vector<Mesh> &meshes)
-{
-    auto sd = loadShader(s.shader);
-    auto tx = 0;
-    if (s.texture.size() > 0)
-    {
-        tx = loadTexture(getAppResource("textures/" + s.texture + ".png"), false);
-    }
-    if (sd == INT_MAX || tx == INT_MAX)
-    {
-        warn("Skipped mesh process due to previous errors. Check log output for details.");
-        return;
-    }
-    Mesh ms[2];
-    pickShapePoints(ms[0], s, {0, 1, 2});
-    pickShapePoints(ms[1], s, {2, 1, 3});
-    pickTex(ms[0], {{0, 1}, {0, 0}, {1, 1}});
-    pickTex(ms[1], {{1, 1}, {0, 0}, {1, 0}});
-
-    for (int i : {0, 1})
-    {
-        ms[i].shader = sd;
-        ms[i].texture = tx;
-        ms[i].distanceToCam = 0;
-        ms[i].orthoProj = true;
-        copyArgs(s.args, ms[i].args);
-        meshes.push_back(ms[i]);
-    }
-}
-
-static std::pair<std::vector<Mesh>, std::vector<Mesh>> makeMeshes(DrawContext &ctx)
-{
-    std::vector<Mesh> meshOpaque, meshTrans;
-    auto gcam = ctx.cam.lock();
-    auto camPos = gcam->getPosition();
-    auto camDir = gcam->getDir();
-
-    for (auto &p : ctx.polygons)
-    {
-        // Make sure transparent objects draw last
-        procPolygonMesh(p, camPos, camDir, p.isOpaque ? meshOpaque : meshTrans);
-    }
-
-#ifdef ENABLE_MESH_SORTING
-    std::sort(meshTrans.begin(), meshTrans.end(), [](const Mesh &m1, const Mesh &m2) -> int
-              { return m1.distanceToCam > m2.distanceToCam; });
-#endif
-    // Insert ui shapes after sorting
-    for (auto &s : ctx.shapes)
-    {
-        procShapeMesh(s, uiProj, meshTrans);
-    }
-    return std::pair(meshOpaque, meshTrans);
-}
-
-static void completeDraw(std::vector<Mesh> &meshes, DrawContext &ctx)
-{
-    auto gcam = ctx.cam.lock();
-    auto proj = gcam->getProjectionMatrix();
-    auto view = gcam->getViewMatrix();
-    for (auto &m : meshes)
-    {
-        float vertex[15] = {0};
-        for (int i = 0; i < 3; i++)
-        {
-            int j = 0;
-            for (; j < 3; j++)
-            {
-                vertex[5 * i + j] = m.vert[i][j];
-            }
-            for (; j < 5; j++)
-            {
-                vertex[5 * i + j] = m.texCoord[i][j - 3];
-            }
-        }
-
-        glUseProgram(m.shader);
-        if (m.orthoProj)
-        {
-            // Ortho projection
-            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, glm::value_ptr(uiProj));
-            for (int i = 0; i < 3; i++)
-            {
-                auto pj = uiProj * glm::vec4(m.vert[i], 1.0);
-            }
-        }
-        else
-        {
-            // Perspective projection
-            glUniformMatrix4fv(glGetUniformLocation(m.shader, "view"), 1, GL_FALSE, glm::value_ptr(view));
-            glUniformMatrix4fv(glGetUniformLocation(m.shader, "proj"), 1, GL_FALSE, glm::value_ptr(proj));
-        }
-
-        glUniform1f(glGetUniformLocation(m.shader, "time"), vtGetTime());
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m.texture);
-        glUniform1i(glGetUniformLocation(m.shader, "baseTex"), 0);
-
-        // Assign extra values
-        glUniform1fv(glGetUniformLocation(m.shader, "args"), VT_SD_ARGS, m.args);
-
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex), vertex);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(0);
-    }
-}
-
-static std::list<std::vector<Mesh>> DRAW_BUFFER_OPAQUE, DRAW_BUFFER_ALPHA;
-
-void vtProcessMeshes(DrawContext &ctx)
+void vtDrawList(DrawList &buf)
 {
     glGetError(); // Dispose previous
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     drawBg();
     glClear(GL_DEPTH_BUFFER_BIT); // Background depth reset
-    if (ctx.cam.expired())
+    for (auto &b : buf.objects)
     {
-        warn("Camera not set in this draw context. Skipped draw request.");
-        return;
+        b->draw();
     }
-    auto meshes = makeMeshes(ctx);
-    DRAW_BUFFER_OPAQUE.push_back(meshes.first);
-    DRAW_BUFFER_ALPHA.push_back(meshes.second);
-};
-
-void vtCompleteDraw(DrawContext &ctx)
-{
-    // Meshes
-    for (auto &p : DRAW_BUFFER_OPAQUE)
-    {
-        completeDraw(p, ctx);
-    }
-    for (auto &p : DRAW_BUFFER_ALPHA)
-    {
-        completeDraw(p, ctx);
-    }
-    // Typography
-    for (auto &t : ctx.typos)
-    {
-        drawTypography(t);
-    }
-    DRAW_BUFFER_OPAQUE.clear();
-    DRAW_BUFFER_ALPHA.clear();
-
-    auto err = glGetError();
-    if (err != GL_NO_ERROR)
-    {
-        warn("GL error detected: " + std::to_string(err) + ". Check draw instructions.");
-    }
-}
-
-int vtGetGraphicsError()
-{
-    return glGetError();
-}
-
-void vtGetTextRect(const Typography &tp, double &w, double &h)
-{
-    float xoffset = 0, yoffset = 0;
-    auto sz = tp.size * vtGetScaleFactor(); // Scale text
-    // Calc offset
-    for (auto c : tp.text)
-    {
-        if (!loadCharGlyph(c))
-        {
-            continue;
-        }
-        auto &g = glyphBuf[c];
-        // Calculate bounding box
-        float h = g.size[1] * sz;
-        xoffset += (g.advance >> 6) * sz;
-        yoffset = h > yoffset ? h : yoffset;
-    }
-    w = xoffset;
-    h = yoffset;
 }

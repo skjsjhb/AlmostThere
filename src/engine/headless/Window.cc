@@ -30,11 +30,6 @@ void vtGetCoord(int sx, int sy, int &rx, int &ry)
     ry = sy;
 }
 
-double vtGetScaleFactor()
-{
-    return 1;
-}
-
 void vtSetFPSCap(unsigned int fps) {}
 
 bool vtShouldDraw() { return true; }

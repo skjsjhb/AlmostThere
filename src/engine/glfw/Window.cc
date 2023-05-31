@@ -37,7 +37,6 @@ static void adjustFramebuffer(GLFWwindow *window, int x, int y)
     }
     scaleFactor = cx / 1600.0;
     glViewport(dx, dy, cx, cy);
-    vtSetBufferSize(cx, cy);
     wx = cx;
     wy = cy;
 }
@@ -56,7 +55,7 @@ void vtInitWindow()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 16);
+    glfwWindowHint(GLFW_SAMPLES, 4);
 
     info("GLFW: " + std::string(glfwGetVersionString()));
     info("GLAD: " + std::string(GLAD_GENERATOR_VERSION));
@@ -77,7 +76,7 @@ void vtInitWindow()
     }
     info("Window created.");
     info("OpenGL Context: " + std::to_string(GLAD_VERSION_MAJOR(ver)) + "." + std::to_string(GLAD_VERSION_MINOR(ver)));
-    // Now GL functions are available
+
     glEnable(GL_MULTISAMPLE);
     // glEnable(GL_POLYGON_SMOOTH);
     glEnable(GL_DEPTH_TEST);
@@ -90,7 +89,6 @@ void vtInitWindow()
     // Setup framebuffer callback
     glfwSetFramebufferSizeCallback(_internalWindow, adjustFramebuffer);
     glfwSetWindowCloseCallback(_internalWindow, acceptWindowClose);
-    vtSetBufferSize(1920, 1080); // Initial update
 }
 
 void *vtGetWindow()
@@ -164,11 +162,6 @@ void vtDeCoord(int rx, int ry, int &sx, int &sy)
 {
     sx = rx * VT_STDW_W / wx;
     sy = ry * VT_STDW_H / wy;
-}
-
-double vtGetScaleFactor()
-{
-    return scaleFactor * IMPL_DEV_EXT_SCALE;
 }
 
 void vtSetFPSCap(unsigned int fps)

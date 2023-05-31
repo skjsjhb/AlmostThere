@@ -1,6 +1,0 @@
-#ifndef GAMEPLAY_HUD_HUDDEF
-#define GAMEPLAY_HUD_HUDDEF
-
-#define HUD_WH_ASPECT (16.0 / 9.0)
-
-#endif /* GAMEPLAY_HUD_HUDDEF */

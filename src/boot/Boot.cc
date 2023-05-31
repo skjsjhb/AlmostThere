@@ -33,7 +33,7 @@ void sysInitFull()
     spdlog::info("System is setting up.");
     // Engine init
     vtInitWindow();
-    vtGraphicsInit();
+    vtInitGraphics();
     vtInitAudio();
 
     // Support env init
@@ -61,7 +61,7 @@ void sysStop()
     spdlog::info("Stopping!");
     luaClose();
     vtCloseAudio();
-    vtGraphicsCleanUp();
+    vtDeInitGraphics();
     vtStopWindow();
     spdlog::info("All systems stopped. 'See you next time'!");
 }

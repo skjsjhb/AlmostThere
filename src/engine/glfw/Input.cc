@@ -6,11 +6,6 @@
 
 using namespace spdlog;
 
-void vtPollEvents()
-{
-    glfwPollEvents();
-}
-
 static InputBuffer ibuf;
 
 static glm::vec2 mousePos;

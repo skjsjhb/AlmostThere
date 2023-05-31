@@ -1,16 +1,13 @@
 #include "engine/virtual/Graphics.hh"
 
-void vtProcessMeshes(DrawContext &ctx) {}
+void vtInitGraphics() {}
 
-int vtGetGraphicsError()
-{
-    return 0;
-}
+void vtDeInitGraphics() {}
 
-void vtCompleteDraw(DrawContext &ctx) {}
+int vtGetGraphicsError() { return 0; }
 
-void vtGraphicsInit() {}
-
-void vtGraphicsCleanUp() {}
+void vtSetBufferSize(int w, int h) {}
 
 void vtSetBackground(const std::string &img) {}
+
+void vtDrawList(DrawList &buf) {}

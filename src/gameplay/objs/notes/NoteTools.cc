@@ -65,6 +65,7 @@ bool isPressed2D(const glm::vec3 origin[4], View &v, const InputBuffer &ibuf)
         ptsc[i][0] = cr[0] / cr[3];
         ptsc[i][1] = cr[1] / cr[3];
     }
+
     for (auto &i : ibuf.touchPoints)
     {
         glm::vec2 ndc;

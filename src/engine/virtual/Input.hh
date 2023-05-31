@@ -11,8 +11,6 @@ struct InputBuffer
     std::set<unsigned int> keys;
 };
 
-extern void vtPollEvents();
-
 extern void vtSetupListeners();
 
 extern const InputBuffer &vtGetInputBuffer();

@@ -16,10 +16,6 @@ void Slot::draw()
         return;
     }
     auto stat = controller->getState();
-    Polygon p;
-    p.renderPreset = RECT;
-    p.shader = "3d/rect";
-    p.texture = slotTexName[variant];
 
     auto dw = glm::normalize(glm::cross(stat.up, stat.normal)) * float(SLOT_SIZE);
     auto dh = stat.up * float(variant == CIRCLE ? SLOT_SIZE : SLOT_SIZE / 2);
@@ -30,8 +26,10 @@ void Slot::draw()
     auto lb = ctr - dw - dh;
     auto rb = ctr + dw - dh;
 
-    p.points = {lt, lb, rt, rb};
-    game.drawContext.polygons.push_back(p);
+    Point ltp = {lt, {0, 1}}, lbp = {lb, {0, 0}}, rtp = {rt, {1, 1}}, rbp = {rb, {1, 0}};
+    DrawParam p = {.shader = "3d/rect", .texture = slotTexName[variant], .ctx = game.ctx3D};
+    Rect r = {ltp, lbp, rtp, rbp, p};
+    game.drawList.add(std::make_unique<Rect>(r));
 }
 
 std::shared_ptr<Slot> Slot::createSlot(std::weak_ptr<SlotObject> o, Game &g)

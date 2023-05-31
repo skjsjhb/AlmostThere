@@ -1,2 +1,2 @@
-src += files(['Note.cc', 'Slot.cc', 'Mask.cc', 'TickObject.cc'])
+src += files('Note.cc', 'Slot.cc', 'TickObject.cc')
 subdir('notes')

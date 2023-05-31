@@ -9,6 +9,8 @@
 #include "engine/virtual/Graphics.hh"
 #include "gameplay/player/Player.hh"
 #include "user/Account.hh"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "lua/LuaSupport.hh"
 #include "spdlog/spdlog.h"
 #include "support/Resource.hh"
@@ -181,7 +183,6 @@ void Game::runOnce()
     {
         vtPauseAudio(audio.bgmBuf);
     }
-    // TODO: add game stop method
 
     mapTimer.update();
     auto mapTimeNow = mapTimer.getTime();
@@ -190,10 +191,10 @@ void Game::runOnce()
     {
         status = DONE;
         return;
-    }
+    } // TODO: end when squad eliminated
 
     // Handle events
-    vtPollEvents();
+    inputBuf = vtGetInputBuffer();
 
     // Load and unload objects
     for (auto it = objects.bufferedObjects.begin(); it != objects.bufferedObjects.end();)
@@ -233,22 +234,25 @@ void Game::runOnce()
 
     if (vtShouldDraw())
     {
+        if (view.camera.expired())
+        {
+            error("No camera set for game objects drawing. Skipped.");
+        }
+        // Update draw context
+        ctx3D.viewMat = view.camera.lock()->getViewMatrix();
+        ctx3D.projMat = view.camera.lock()->getProjectionMatrix();
+
+        // Update ortho projection
+        ctxUI.viewMat = glm::mat4();
+        ctxUI.projMat = glm::ortho(0.0f, 1600.0f, 0.0f, 900.0f); // Constant projection matrix
+
         // Draw objects
         for (auto &s : objects.activeObjects)
         {
             s->draw();
         }
 
-        if (!view.camera.expired())
-        {
-            drawContext.cam = view.camera.lock();
-        }
-        vtProcessMeshes(drawContext);
-        vtCompleteDraw(drawContext);
-        // Context cleanup and reuse
-        drawContext.polygons.clear();
-        drawContext.shapes.clear();
-        drawContext.typos.clear();
+        vtDrawList(drawList);
     }
 
     // Close signals are ignored during gameplay

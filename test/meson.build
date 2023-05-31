@@ -10,7 +10,7 @@ testProgs = [
 ]
 
 if backend != 'headless'
-    testProgs += ['UI Hook Trigger', 'Text Render']
+    testProgs += ['Text Render']
 endif
 
 
@@ -22,8 +22,9 @@ foreach p : testProgs
         srcp,
         include_directories: incdir,
         dependencies: deps,
-        override_options: ['c_std=c17', 'cpp_std=c++20'],
+        override_options: optn,
         link_with: atlib,
+        link_args: linkarg,
     )
     test(p, exe)
 endforeach

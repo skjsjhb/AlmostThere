@@ -11,6 +11,9 @@
 
 #define VT_SD_ARGS 8
 
+/**
+ * @deprecated Use object-based drawing instead.
+ */
 enum RenderPreset
 {
     RECT,       // For most flat notes
@@ -21,20 +24,15 @@ enum RenderPreset
     OCT,        // For Hoshi
 };
 
-// Point class def
 class Point
 {
 public:
-    Point() = default;
-    Point(const glm::vec3 x) { p = x; };
-    Point(float x, float y, float z)
-    {
-        p[0] = x;
-        p[1] = y;
-        p[2] = z;
-    }
+    Point() : p(0.0f), st(0.0f){};
+    Point(const glm::vec3 &x) : p(x), st(0.0f){};
+    Point(const glm::vec3 &x, const glm::vec2 &s) : p(x), st(s){};
 
-    glm::vec3 getCoord() const { return p; }
+    glm::vec3 getPosition() const { return p; }
+    glm::vec2 getTexCoord() const { return st; }
 
     float operator[](int ind) const
     {
@@ -42,22 +40,94 @@ public:
         {
             return p[ind];
         }
+        else if (ind <= 4)
+        {
+            return st[ind - 3];
+        }
         return 0;
     }
 
 protected:
-    glm::vec3 p;
+    glm::vec3 p;  // Position
+    glm::vec2 st; // Texture coord
 };
 
-// 3D world polygon
-struct Polygon
+struct DrawContext
 {
-    // A int pointing which preset to be used, including shaders, etc.
-    RenderPreset renderPreset;
-    bool isOpaque = true;
-    std::string shader, texture, subTexture;
-    std::vector<Point> points;
-    float args[VT_SD_ARGS] = {0};
+    glm::mat4 viewMat, projMat;
+};
+
+struct DrawParam
+{
+    std::string shader;
+    std::string texture;
+    bool external = false; // Whether the specified assets shoule be intepreted as external assets
+
+    // Arguments for shaders
+    std::vector<float> args;
+    const DrawContext &ctx;
+};
+
+class DrawObject
+{
+public:
+    DrawObject() = default;
+    DrawObject(const DrawParam &p) : params(p){};
+    virtual void draw() const {};
+
+protected:
+    DrawParam params;
+};
+
+class Triangle : public DrawObject
+{
+public:
+    Triangle(const Point &p1, const Point &p2, const Point &p3, const DrawParam &p) : DrawObject(p)
+    {
+        pt[0] = p1;
+        pt[1] = p2;
+        pt[2] = p3;
+    };
+    void draw() const override;
+
+protected:
+    std::array<Point, 3> pt;
+};
+
+class Rect : public DrawObject
+{
+public:
+    Rect(const Point &p1, const Point &p2, const Point &p3, const Point &p4,
+         const DrawParam &p) : DrawObject(p), pt({Triangle(p1, p2, p3, p), Triangle(p3, p2, p4, p)}){};
+    void draw() const override;
+
+protected:
+    std::array<Triangle, 2> pt;
+};
+
+class TriangleStrip : public DrawObject
+{
+public:
+    TriangleStrip(const std::vector<Point> &pt, const DrawParam &p) : DrawObject(p) { pts = pt; };
+    void draw() const override;
+
+protected:
+    std::vector<Point> pts;
+};
+
+class DisplayText : public DrawObject
+{
+public:
+    DisplayText(const glm::vec2 coord, float size, const std::wstring &st, glm::vec4 col, const DrawParam &p)
+        : DrawObject(p), pos(coord), fSize(size), color(col), text(st){};
+
+    void draw() const override;
+
+protected:
+    glm::vec2 pos;
+    float fSize;
+    glm::vec4 color = {1, 1, 1, 1};
+    std::wstring text;
 };
 
 enum Align
@@ -67,46 +137,21 @@ enum Align
     CENTER
 };
 
-// Text
-struct Typography
+class DrawList
 {
-    std::wstring text;
-    glm::vec2 pos; // Left bottom
-    glm::vec4 color;
-    float size = 0.5;
-    Align xAlign = LEFT, yAlign = RIGHT;
+public:
+    std::list<std::unique_ptr<DrawObject>> objects;
+    void add(std::unique_ptr<DrawObject> &&objs) { objects.push_back(std::move(objs)); }
 };
 
-// 2D shapes, currently only rectangle
-struct Shape
-{
-    std::string shader, texture;
-    glm::vec2 points[4]; // LT, LB, RT, RB
-    float args[VT_SD_ARGS] = {0};
-};
+extern void vtInitGraphics();
 
-class Camera;
-
-struct DrawContext
-{
-    std::weak_ptr<Camera> cam;
-    std::vector<Polygon> polygons;
-    std::list<Typography> typos;
-    std::list<Shape> shapes;
-};
-
-extern void vtGraphicsInit();
-
-extern void vtGraphicsCleanUp();
-
-extern void vtProcessMeshes(DrawContext &ctx);
-
-extern void vtCompleteDraw(DrawContext &ctx);
+extern void vtDeInitGraphics();
 
 extern int vtGetGraphicsError();
 
-extern void vtSetBufferSize(int w, int h);
-
 extern void vtSetBackground(const std::string &img);
+
+extern void vtDrawList(DrawList &buf);
 
 #endif /* ENGINE_VIRTUAL_GRAPHICS */

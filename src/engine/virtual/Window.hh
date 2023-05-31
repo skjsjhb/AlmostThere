@@ -71,16 +71,6 @@ extern void vtGetCoord(int sx, int sy, int &rx, int &ry);
 extern void vtDeCoord(int rx, int ry, int &sx, int &sy);
 
 /**
- * @brief Return the scale factor of the text.
- *
- * Texts are rendered using absolute size and therefore must be scaled before
- * rendering.
- *
- * @return The scale factor.
- */
-extern double vtGetScaleFactor();
-
-/**
  * @brief Sets the max number of frames rendered per second.
  *
  * This functions guarantees that no more than specified count of frames are rendered, FPS

@@ -10,18 +10,17 @@ void FlatNote::draw()
         return;
     }
     auto stat = controller->getState();
-    auto &ctx = game.drawContext;
+
+    DrawParam p = {
+        .shader = "3d/mesh",
+        .texture = name,
+        .ctx = game.ctx3D,
+    };
 
     glm::vec3 pts[4];
     createRect(stat.pos, stat.up, stat.normal, sizew, sizeh, pts);
 
-    Polygon pg = {
-        .renderPreset = RECT,
-        .isOpaque = true,
-        .shader = "3d/rect",
-        .texture = name,
-        .points = {pts[0], pts[1], pts[2], pts[3]},
-    };
+    Rect r = {{pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, p};
 
-    ctx.polygons.push_back(pg);
+    game.drawList.add(std::make_unique<Rect>(r));
 }

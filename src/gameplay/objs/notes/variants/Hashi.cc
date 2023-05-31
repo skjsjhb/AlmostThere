@@ -1,6 +1,7 @@
 #include "Hashi.hh"
 
 #include "gameplay/base/Game.hh"
+#include "util/Util.hh"
 #include <glm/glm.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -72,17 +73,24 @@ void Hashi::draw()
     {
         return;
     }
-    glm::vec3 btmPoints[6], headPoints[6]; // CCW start from right
     auto right = glm::normalize(glm::cross(stat.up, stat.normal)) * float(sizew);
-    Polygon ps;
+
+    Point btmPoints[6], headPoints[6];
+
+    /*
+    BOTTOM:
+      2  1
+    3      0
+      4  5
+    */
+
     for (int i = 0; i < 6; i++)
     {
-        btmPoints[i] = stat.pos + right;
-        ps.points.push_back(btmPoints[i]);
-        if (i != 5)
-        {
-            right = glm::rotate(right, glm::radians(60.0f), stat.normal);
-        }
+        auto ang = glm::radians(i * 60.0f);
+        btmPoints[i] = {
+            stat.pos + glm::rotate(right, ang, stat.normal), // Pos Coord
+            glm::vec2(0.5, 0.5) + glm::rotate(glm::vec2({0.5, 0}), ang),
+        };
     }
 
     auto upLength = glm::normalize(stat.normal) * float(stat.len * HASHI_LENGTH_SCALE);
@@ -90,16 +98,39 @@ void Hashi::draw()
     // In the past, long Hashi notes requires cutting in order to render them
     // correctly. Now Hashi are opaque and there is no need to calculate this
     // anymore.
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 6; ++i)
     {
         // Get corresponding point on the head face
-        headPoints[i] = btmPoints[i] + upLength;
-        ps.points.push_back(headPoints[i]);
+        auto b = btmPoints[i];
+        headPoints[i] = {b.getPosition() + upLength, b.getTexCoord()};
     }
 
-    ps.renderPreset = PRISM_FULL;
-    ps.shader = "3d/hashi";
-    ps.texture = "hashi-hat";
-    ps.subTexture = "hashi-side";
-    game.drawContext.polygons.push_back(ps);
+    DrawParam hat = {
+        .shader = "3d/mesh",
+        .texture = "hashi-hat",
+        .ctx = game.ctx3D,
+    };
+    std::vector<unsigned int> ptInd = {5, 0, 1, 5, 1, 2, 5, 2, 3, 5, 3, 4};
+    TriangleStrip tsb = {strip(btmPoints, ptInd), hat};
+    TriangleStrip tsp = {strip(headPoints, ptInd), hat};
+
+    game.drawList.add(std::make_unique<TriangleStrip>(tsb));
+    game.drawList.add(std::make_unique<TriangleStrip>(tsp));
+
+    DrawParam side = {
+        .shader = "3d/mesh",
+        .texture = "hashi-side",
+        .ctx = game.ctx3D,
+    };
+
+    for (int i = 0; i < 6; ++i)
+    {
+        Rect r(
+            {headPoints[i].getPosition(), {0, 1}},
+            {btmPoints[i].getPosition(), {0, 0}},
+            {headPoints[i + 1].getPosition(), {1, 1}},
+            {btmPoints[i + 1].getPosition(), {1, 0}},
+            side);
+        game.drawList.add(std::make_unique<Rect>(r));
+    }
 }

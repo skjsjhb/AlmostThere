@@ -1,28 +1,27 @@
-#version 330
-layout (location = 0) in vec4 vert;
-out vec2 tex;
+#version 330 core
+layout (location = 0) in vec4 aVert;
+out vec2 texCoord;
 
-uniform mat4 proj;
+uniform mat4 aProj;
 
 void main()
 {
-    gl_Position = proj * vec4(vert.xy, 0.95, 1);
+    gl_Position = aProj * vec4(aVert.xy, 0, 1);
     gl_Position.z = -1.0;
-    tex = vert.zw;
+    texCoord = aVert.zw;
 }
 
 // ---
 
 #version 330 core
-in vec2 tex;
+in vec2 texCoord;
 out vec4 color;
 
-uniform sampler2D baseTex;
-uniform vec3 tColor;
+uniform sampler2D aTex;
+uniform vec4 aColor;
 
 void main()
-{    
-    color = vec4(1.0, 1.0, 1.0, 1.0);
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(baseTex, tex).r);
-    color = vec4(tColor, 1.0) * sampled;
+{   
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(aTex, texCoord).r);
+    color = aColor * sampled;
 }  

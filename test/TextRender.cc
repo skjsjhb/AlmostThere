@@ -4,25 +4,27 @@
 #include "engine/virtual/Window.hh"
 #include "gameplay/view/View.hh"
 #include "gameplay/base/Game.hh"
+#include <glm/gtc/matrix_transform.hpp>
 
 int main()
 {
     vtInitWindow();
-    vtGraphicsInit();
-    Typography tp = {
-        .text = L"Hello World",
-        .pos = {800, 450},
-        .color = {1, 1, 1, 1},
-        .xAlign = LEFT,
-        .yAlign = RIGHT,
+    vtInitGraphics();
+    DrawParam p = {
+        .ctx = {
+            .viewMat = glm::mat4(),
+            .projMat = glm::ortho(0.0f, 1600.0f, 0.0f, 900.0f),
+        },
     };
-    DrawContext dc;
+    DisplayText t({800, 450}, 1, L"hello, world", {1, 1, 1, 1}, p);
+    DrawList d;
     Game g;
     auto xpt = std::make_shared<Camera>(g);
-    dc.cam = xpt;
-    dc.typos.push_back(tp);
-    vtProcessMeshes(dc);
-    vtCompleteDraw(dc);
-    vtWindowLoop(); // Run once
+    d.add(std::make_unique<DisplayText>(t));
+    while (true)
+    {
+        vtDrawList(d);
+        vtWindowLoop(); // Run once
+    }
     TEND;
 };

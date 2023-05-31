@@ -1,5 +1,5 @@
-#ifndef GAMEPLAY_OBJS_NOTES_TAPU
-#define GAMEPLAY_OBJS_NOTES_TAPU
+#ifndef GAMEPLAY_OBJS_NOTES_VARIANTS_TAPU
+#define GAMEPLAY_OBJS_NOTES_VARIANTS_TAPU
 
 #include "../SingletonNote.hh"
 #include "../FlatNote.hh"
@@ -15,4 +15,4 @@ public:
     };
 };
 
-#endif /* GAMEPLAY_OBJS_NOTES_TAPU */
+#endif /* GAMEPLAY_OBJS_NOTES_VARIANTS_TAPU */

@@ -2,8 +2,6 @@
 
 static InputBuffer ibuf;
 
-void vtPollEvents() {}
-
 void vtSetupListeners() {}
 
 const InputBuffer &vtGetInputBuffer() { return ibuf; }

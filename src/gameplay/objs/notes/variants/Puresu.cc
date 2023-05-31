@@ -127,7 +127,6 @@ void Puresu::draw()
         return;
     }
 
-    Polygon head, tail, body;
     sizeh /= 2.0; // Temporarily shift
     auto upLen = stat.up * float(sizeh);
     auto ctr = stat.pos - upLen;
@@ -135,10 +134,13 @@ void Puresu::draw()
     glm::vec3 pts[4];
     createRect(ctr, stat.up, stat.normal, sizew, sizeh, pts);
 
-    head.renderPreset = RECT;
-    head.shader = "3d/rect";
-    head.texture = "puresu-head";
-    head.points = {pts[0], pts[1], pts[2], pts[3]};
+    DrawParam headPar = {
+        .shader = "3d/mesh",
+        .texture = "puresu-head",
+        .ctx = game.ctx3D,
+    };
+
+    Rect head({pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, headPar);
 
     auto scaleFac = stat.len * PURESU_LENGTH_SCALE * 0.5;
     auto centerMove = stat.up * float(scaleFac);
@@ -146,22 +148,28 @@ void Puresu::draw()
 
     createRect(bCenter, stat.up, stat.normal, sizew, scaleFac, pts);
 
-    body.renderPreset = RECT;
-    body.shader = "3d/rect";
-    body.texture = "puresu-body";
-    body.points = {pts[0], pts[1], pts[2], pts[3]};
+    DrawParam bodyPar = {
+        .shader = "3d/mesh",
+        .texture = "puresu-body",
+        .ctx = game.ctx3D,
+    };
+
+    Rect body({pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, bodyPar);
 
     auto tCenter = bCenter + centerMove + upLen;
 
     createRect(tCenter, stat.up, stat.normal, sizew, sizeh, pts);
-    tail.renderPreset = RECT;
-    tail.shader = "3d/rect";
-    tail.texture = "puresu-tail";
-    tail.points = {pts[0], pts[1], pts[2], pts[3]};
+    DrawParam tailPar = {
+        .shader = "3d/mesh",
+        .texture = "puresu-tail",
+        .ctx = game.ctx3D,
+    };
 
-    game.drawContext.polygons.push_back(body);
-    game.drawContext.polygons.push_back(tail);
-    game.drawContext.polygons.push_back(head);
+    Rect tail({pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, tailPar);
+
+    game.drawList.add(std::make_unique<Rect>(head));
+    game.drawList.add(std::make_unique<Rect>(body));
+    game.drawList.add(std::make_unique<Rect>(tail));
 
     sizeh *= 2.0;
 }

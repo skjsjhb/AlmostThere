@@ -30,12 +30,17 @@ endforeach
 if not luaDep.found()
     error('No Lua found. Almost There requires Lua to run.')
 endif
+
+optn = ['c_std=c17', 'cpp_std=c++20']
+linkarg = ['-static-libstdc++']
+
 atlib = static_library(
     'atgame',
     src,
     include_directories: incdir,
     dependencies: deps,
-    override_options: ['c_std=c17', 'cpp_std=c++20'],
+    override_options: optn,
+    link_args: linkarg,
 )
 if backend != 'nothing'
     shared_library(
@@ -43,7 +48,8 @@ if backend != 'nothing'
         src,
         include_directories: incdir,
         dependencies: deps,
-        override_options: ['c_std=c17', 'cpp_std=c++20'],
+        override_options: optn,
+        link_args: linkarg,
     )
     subdir('test')
 else
@@ -58,4 +64,6 @@ atgame = executable(
     dependencies: deps,
     include_directories: incdir,
     link_with: atlib,
+    override_options: optn,
+    link_args: linkarg,
 )
