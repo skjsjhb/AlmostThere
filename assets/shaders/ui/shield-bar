@@ -1,0 +1,28 @@
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTexCoord;
+
+out vec2 texCoord;
+
+uniform mat4 aProj;
+
+void main() {
+    gl_Position = aProj * vec4(aPos, 1.0);
+    gl_Position.z = -0.9;
+    texCoord = aTexCoord;
+}
+
+// ---
+
+#version 330 core
+in vec2 texCoord;
+out vec4 color;
+
+uniform sampler2D aTex;
+
+void main () {
+    color = texture(aTex, texCoord);
+    if(color.a == 0){
+        discard;
+    }
+}

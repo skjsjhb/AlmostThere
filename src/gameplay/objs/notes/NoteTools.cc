@@ -103,19 +103,19 @@ void createRect(const glm::vec3 &pos, const glm::vec3 &up, const glm::vec3 &norm
 
 ScoreGrade getTimingGrade(double absTime, double noteTime, const GameRules &rules)
 {
-    if (isOverlapped(noteTime, rules.judgeTime.perfect, absTime, 0))
+    if (isOverlapped(noteTime, rules.judgeTimeWindow.perfect, absTime, 0))
     {
         return PF;
     }
-    else if (isOverlapped(noteTime, rules.judgeTime.almost, absTime, 0))
+    else if (isOverlapped(noteTime, rules.judgeTimeWindow.almost, absTime, 0))
     {
         return AT;
     }
-    else if (isOverlapped(noteTime, rules.judgeTime.good, absTime, 0))
+    else if (isOverlapped(noteTime, rules.judgeTimeWindow.good, absTime, 0))
     {
         return AC;
     }
-    else if (isOverlapped(noteTime, rules.judgeTime.range, absTime, 0))
+    else if (isOverlapped(noteTime, rules.judgeTimeWindow.range, absTime, 0))
     {
         return TC;
     }

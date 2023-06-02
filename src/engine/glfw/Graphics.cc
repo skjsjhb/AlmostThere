@@ -100,8 +100,8 @@ static bool loadCharGlyph(wchar_t c)
                 GL_UNSIGNED_BYTE,
                 f->glyph->bitmap.buffer);
             // set texture options
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -161,6 +161,10 @@ static void cleanFont()
 static GLuint
 loadShader(const std::string &name)
 {
+    if (name.size() == 0)
+    {
+        return 0;
+    }
     if (shadersCtl.contains(name))
     {
         return shadersCtl[name];
@@ -233,6 +237,10 @@ loadShader(const std::string &name)
 
 static GLuint loadTexture(const std::string &name, bool enableMipmap)
 {
+    if (name.size() == 0)
+    {
+        return 0;
+    }
     if (texturesCtl.contains(name))
     {
         return texturesCtl[name];
@@ -250,8 +258,8 @@ static GLuint loadTexture(const std::string &name, bool enableMipmap)
         error("Could not load texture '" + name + "'. Is this file missing, or is stb_image corrupted?");
         return 0;
     }
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     if (enableMipmap)
     {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -413,7 +421,11 @@ void Triangle::draw() const
     glUniformMatrix4fv(glGetUniformLocation(sd, SHADER_VAR_VIEW), 1, GL_FALSE, glm::value_ptr(params.ctx.viewMat));
     glUniformMatrix4fv(glGetUniformLocation(sd, SHADER_VAR_PROJ), 1, GL_FALSE, glm::value_ptr(params.ctx.projMat));
 
-    auto tx = loadTexture(params.external ? params.texture : getAppResource("textures/" + params.texture + ".png"), false);
+    unsigned int tx = 0;
+    if (params.texture.size() > 0)
+    {
+        tx = loadTexture(params.external ? params.texture : getAppResource("textures/" + params.texture + ".png"), false);
+    }
     if (tx != 0)
     {
         glActiveTexture(GL_TEXTURE0);
@@ -424,7 +436,7 @@ void Triangle::draw() const
 
     // Assign extra values
     float arg[params.args.size()];
-    for (int i = 0; i < params.args.size(); ++i)
+    for (int i = 0; i < int(params.args.size()); ++i)
     {
         arg[i] = params.args[i];
     }

@@ -14,7 +14,7 @@ void SingletonNote::performJudge()
         // Fake notes are not judged
         return;
     }
-    auto range = game.rules.judgeTime.range;
+    auto range = game.rules.judgeTimeWindow.range;
 
     auto &ref = controller->getReference();
 

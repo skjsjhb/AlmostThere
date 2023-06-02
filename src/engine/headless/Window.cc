@@ -33,3 +33,7 @@ void vtGetCoord(int sx, int sy, int &rx, int &ry)
 void vtSetFPSCap(unsigned int fps) {}
 
 bool vtShouldDraw() { return true; }
+
+void vtDisplayFlip() {}
+
+void vtSetTPSCap(unsigned int tps) {}

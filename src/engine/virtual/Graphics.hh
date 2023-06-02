@@ -142,6 +142,7 @@ class DrawList
 public:
     std::list<std::unique_ptr<DrawObject>> objects;
     void add(std::unique_ptr<DrawObject> &&objs) { objects.push_back(std::move(objs)); }
+    void clear() { objects.clear(); };
 };
 
 extern void vtInitGraphics();

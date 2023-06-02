@@ -77,9 +77,24 @@ extern void vtDeCoord(int rx, int ry, int &sx, int &sy);
  * may become lower if hardware failed to support.
  *
  * @note Even by setting fps to the same as screen this does not enable VSYNC.
+ * @note FPS cannot be higher than TPS, since frames are rendered inside the loop of each tick.
+ * @see `vtSetTPSCap`
  * @param fps The max fps cap.
  */
 extern void vtSetFPSCap(unsigned int fps);
+
+/**
+ * @brief Sets the max number of ticks to be run per second.
+ *
+ * This functions guarantees that no more than specified count of ticks are processed. On
+ * low-end devices the actual TPS might get even slower.
+ *
+ * @note Values lower than 500 are not accepted.
+ * @note Due to the limit of the hardware (timings are not that accurate), the actual tps
+ * might be slightly lower than the set value.
+ * @param tps The max tps cap.
+ */
+extern void vtSetTPSCap(unsigned int tps);
 
 /**
  * @brief Check if this frame should be drawn.
@@ -87,5 +102,12 @@ extern void vtSetFPSCap(unsigned int fps);
  * @return `true` if engine considers its time to update a frame.
  */
 extern bool vtShouldDraw();
+
+/**
+ * @brief Flush the render buffer.
+ *
+ * VMC Turbo uses double-buffered output, this function updated the display.
+ */
+extern void vtDisplayFlip();
 
 #endif /* ENGINE_VIRTUAL_WINDOW */

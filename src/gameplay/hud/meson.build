@@ -1,1 +1,1 @@
-src += [] # files('Bar.cc', 'Interact.cc', 'PlayerBox.cc')
+src += files(['HPBar.cc', 'ShieldBar.cc', 'ScoreDisplay.cc', 'EffectMask.cc'])

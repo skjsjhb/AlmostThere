@@ -21,10 +21,8 @@ int main()
     Game g;
     auto xpt = std::make_shared<Camera>(g);
     d.add(std::make_unique<DisplayText>(t));
-    while (true)
-    {
-        vtDrawList(d);
-        vtWindowLoop(); // Run once
-    }
+    vtDrawList(d);
+    vtWindowLoop(); // Run once
+    WANT(vtGetGraphicsError() == 0);
     TEND;
 };

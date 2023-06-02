@@ -20,32 +20,6 @@ using namespace spdlog;
 static View *activeView = nullptr;
 static Game *activeGame = nullptr;
 
-static GameRules createDefaultGameRules()
-{
-    GameRules gr;
-    gr.judgeValue = {
-        .perfect = 300,
-        .almost = 200,
-        .accepted = 150,
-        .medium = 100,
-        .touched = 50,
-        .lost = 0,
-        .spaceNotesAmplifier = 2.0,
-    };
-
-    gr.judgeTime = {
-        .range = 0.2,
-        .good = 0.15,
-        .almost = 0.08,
-        .perfect = 0.04,
-        .allowBreak = 0.04,
-    };
-    gr.inputOptn = {
-        .judgeRayAngle = 0.015,
-    };
-    return gr;
-}
-
 // Active camera interface
 static int useCam(lua_State *l)
 {
@@ -151,8 +125,6 @@ void Game::initGame(const std::string &mapId)
     view.screenSize[1] = h;
     mapTimer = Timer(vtGetTime);
     absTimer = Timer(vtGetTime);
-    // TODO: delegate score mgr
-    rules = createDefaultGameRules();
 
     // Set background
     if (map.meta.bgimg.size() > 0)
@@ -253,6 +225,8 @@ void Game::runOnce()
         }
 
         vtDrawList(drawList);
+        drawList.clear();
+        vtDisplayFlip();
     }
 
     // Close signals are ignored during gameplay

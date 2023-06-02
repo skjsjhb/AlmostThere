@@ -3,6 +3,8 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
+#include <thread>
+#include <chrono>
 #include <iostream>
 using namespace spdlog;
 
@@ -106,25 +108,50 @@ void vtStopWindow()
 #ifdef ENABLE_FPS_COUNT
 static double lastTime = 0;
 static unsigned int frames = 0;
-#define FPS_COUNT_PERIOD 30
+#define FPS_COUNT_PERIOD 10
 #endif
 
-static double spf = 0;
+static double spf = 0, spt = 0;
 static double lastFrameTime = 0;
+
+static double lastTickTime = 0;
+
+#define TPS_MINIMUM_COUNT 500
+
+static void exSleep(double dt)
+{
+    static constexpr std::chrono::duration<double> a(0);
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+    while (std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() < dt)
+    {
+        std::this_thread::sleep_for(a);
+    }
+}
 
 bool vtWindowLoop()
 {
     ++frames;
     auto currentTime = glfwGetTime();
+
     if (currentTime - lastTime >= FPS_COUNT_PERIOD)
     {
-        auto fps = int(frames / (currentTime - lastTime));
-        info("FPS: " + std::to_string(fps));
+        auto tps = int(frames / (currentTime - lastTime));
+        info("TPS: " + std::to_string(tps));
+        if (tps < TPS_MINIMUM_COUNT)
+        {
+            warn("Low TPS (<500) detected. Game logic might not able to run correctly.");
+        }
         lastTime = currentTime;
         frames = 0;
     }
+
+    auto tmfs = currentTime - lastTickTime;
+    if (tmfs > 0)
+    {
+        exSleep(spt - tmfs);
+    }
+    lastTickTime = glfwGetTime();
     glfwPollEvents();
-    glfwSwapBuffers(_internalWindow);
     return glfwWindowShouldClose(_internalWindow);
 }
 
@@ -164,12 +191,30 @@ void vtDeCoord(int rx, int ry, int &sx, int &sy)
     sy = ry * VT_STDW_H / wy;
 }
 
+void vtDisplayFlip()
+{
+    glfwSwapBuffers(_internalWindow);
+    lastFrameTime = glfwGetTime();
+}
+
+void vtSetTPSCap(unsigned int tps)
+{
+    if (tps < TPS_MINIMUM_COUNT)
+    {
+        warn("Target TPS (" + std::to_string(tps) + ") is too low and therefore not accepted.");
+        return;
+    }
+    info("TPS limit set to " + std::to_string(tps));
+    spt = 1.0 / tps;
+}
+
 void vtSetFPSCap(unsigned int fps)
 {
+    info("FPS limit set to " + std::to_string(fps));
     spf = 1.0 / fps;
 }
 
 bool vtShouldDraw()
 {
-    return (glfwGetTime() - lastFrameTime) >= spf;
+    return glfwGetTime() - lastFrameTime >= spf;
 }

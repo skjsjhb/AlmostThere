@@ -20,7 +20,7 @@ void Kyozetsu::performJudge()
         return;
     default:
         // In all other cases, check and judge
-        if (isOverlapped(ref.endTime, game.rules.judgeTime.good, time, 0))
+        if (isOverlapped(ref.endTime, game.rules.judgeTimeWindow.good, time, 0))
         {
             if (isPressed())
             {
@@ -31,7 +31,7 @@ void Kyozetsu::performJudge()
         }
         else
         {
-            if (time > ref.endTime + game.rules.judgeTime.good)
+            if (time > ref.endTime + game.rules.judgeTimeWindow.good)
             {
                 // OK very well!
                 game.score.addRecord(NoteScoreEntry::create(KZTU, LT));

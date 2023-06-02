@@ -16,9 +16,9 @@ void Puresu::performJudge()
 
     auto time = game.mapTimer.getTime();
 
-    auto range = game.rules.judgeTime.range;
-    auto almost = game.rules.judgeTime.almost;
-    auto good = game.rules.judgeTime.good;
+    auto range = game.rules.judgeTimeWindow.range;
+    auto almost = game.rules.judgeTimeWindow.almost;
+    auto good = game.rules.judgeTimeWindow.good;
 
     auto &ref = controller->getReference();
 
@@ -100,7 +100,7 @@ void Puresu::performJudge()
             lastSuccJudge = time; // Reset flag
         }
         if (lastSuccJudge != -1 &&
-            time - lastSuccJudge > game.rules.judgeTime.allowBreak)
+            time - lastSuccJudge > game.rules.judgeTimeWindow.allowBreak)
         {
             if (lastSuccJudge - ref.endTime > 0.5 * ref.length)
             {
