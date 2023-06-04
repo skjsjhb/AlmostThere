@@ -13,3 +13,7 @@ void vtPauseAudio(unsigned int sid) {}
 void vtResetAudio(unsigned int sid) {}
 
 void vtCloseAudio() {}
+
+void vtAudioSpeed(unsigned int sid, float spd) {}
+
+void vtResumeAudio(unsigned int sid) {}

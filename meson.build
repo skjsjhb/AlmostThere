@@ -31,6 +31,17 @@ if not luaDep.found()
     error('No Lua found. Almost There requires Lua to run.')
 endif
 
+cc = meson.get_compiler('cpp')
+
+if backend == 'glfw'
+    soloud = declare_dependency(
+        link_args: 'libsoloud.a',
+        include_directories: incdir,
+    )
+
+    deps += soloud
+endif
+
 optn = ['c_std=c17', 'cpp_std=c++20']
 linkarg = ['-static-libstdc++']
 

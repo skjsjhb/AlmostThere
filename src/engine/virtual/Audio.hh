@@ -24,6 +24,12 @@ extern unsigned int vtLoadAudio(const std::string &fname);
  */
 extern void vtUnloadAudio(unsigned int sid);
 
+/**
+ * @brief Play an audio file from begin.
+ *
+ * @warning Start playing an audio already playing causes undefined behaviour.
+ * @param sid The id of the sound object.
+ */
 extern void vtPlayAudio(unsigned int sid);
 
 /**
@@ -41,6 +47,26 @@ extern void vtPauseAudio(unsigned int sid);
  */
 extern void vtResetAudio(unsigned int sid);
 
+/**
+ * @brief Deinitialize audio library and destroy audio engine.
+ */
 extern void vtCloseAudio();
+
+/**
+ * @brief Set the speed of an audio.
+ *
+ * @note The pitch will change accordingly.
+ * @param sid The id of the sound object.
+ * @param spd Target speed.
+ */
+extern void vtAudioSpeed(unsigned int sid, float spd);
+
+/**
+ * @brief Resume the play of specified audio.
+ *
+ * @warning Resuming an audio already playing causes undefined behaviour.
+ * @param sid The id of the sound object.
+ */
+extern void vtResumeAudio(unsigned int sid);
 
 #endif /* ENGINE_VIRTUAL_AUDIO */

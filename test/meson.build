@@ -10,7 +10,7 @@ testProgs = [
 ]
 
 if backend != 'headless'
-    testProgs += ['Text Render', 'HUD Render']
+    testProgs += ['Text Render', 'HUD Render', 'Audio Test']
 endif
 
 

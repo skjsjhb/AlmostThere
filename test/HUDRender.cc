@@ -45,7 +45,7 @@ int main()
             sd.draw();
             em.draw();
             emb.draw();
-            if (vtGetTime() * 3 > a)
+            if (vtGetTime() > a)
             {
                 ++a;
                 auto inv = (rand() % 10);
