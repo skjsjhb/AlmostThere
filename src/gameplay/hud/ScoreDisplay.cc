@@ -14,7 +14,7 @@ void ScoreDisplay::draw() {
     if (t - beginTime > SCORE_VARY_TIME) {
         displayScore = targetScore;
     } else {
-        auto p = (unsigned int) ((t - beginTime) / double(SCORE_VARY_TIME));
+        auto p = ((t - beginTime) / double(SCORE_VARY_TIME));
         displayScore = p * targetScore + (1 - p) * beginScore;
         alpha = 1 - 0.3 * p;
     }
