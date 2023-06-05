@@ -5,7 +5,8 @@
 
 class CatchNote : virtual public Note {
 public:
-  CatchNote(NoteType n, Game &g) : Note(n, g){};
+  CatchNote(NoteType n, Game &g) : Note(n, g) {};
+
   void performJudge() override;
 };
 

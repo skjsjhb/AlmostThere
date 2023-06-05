@@ -29,7 +29,8 @@ bool isPressed2D(const glm::vec3 origin[4], View &v, const InputBuffer &ibufs);
  * @param size Half width of the rect.
  * @param[out] output Generated points.
  */
-void createRect(const glm::vec3 &pos, const glm::vec3 &up, const glm::vec3 &norm, double sizew, double sizeh, glm::vec3 output[4]);
+void createRect(const glm::vec3 &pos, const glm::vec3 &up, const glm::vec3 &norm, double sizew, double sizeh,
+                glm::vec3 output[4]);
 
 /**
  * @brief Get the grade of time-based notes using the time and rules defined.

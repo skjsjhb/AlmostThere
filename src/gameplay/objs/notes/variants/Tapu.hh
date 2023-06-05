@@ -6,11 +6,11 @@
 
 class Tapu : public SingletonNote, public FlatNote {
 public:
-    explicit Tapu(Game &g) : Note(TAPU, g), SingletonNote(TAPU, g), FlatNote(TAPU, g) {
-        sizew = 1;
-        sizeh = 1;
-        name = "tapu";
-    };
+  explicit Tapu(Game &g) : Note(TAPU, g), SingletonNote(TAPU, g), FlatNote(TAPU, g) {
+    sizew = 1;
+    sizeh = 1;
+    name = "tapu";
+  };
 };
 
 #endif /* GAMEPLAY_OBJS_NOTES_VARIANTS_TAPU */

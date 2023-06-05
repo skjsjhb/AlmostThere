@@ -32,6 +32,7 @@ endforeach
 
 if not found
     error('No Lua found. Almost There requires Lua to run.')
+    break
 endif
 
 cc = meson.get_compiler('cpp')

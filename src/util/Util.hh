@@ -17,20 +17,20 @@ void trimStr(std::string &s);
 
 template<typename T>
 std::vector<T> strip(const std::vector<T> &src, const std::vector<unsigned int> &ind) {
-    std::vector<T> c;
-    for (auto &i: ind) {
-        c.push_back(src[i]);
-    }
-    return c;
+  std::vector<T> c;
+  for (auto &i : ind) {
+    c.push_back(src[i]);
+  }
+  return c;
 }
 
 template<typename T>
 std::vector<T> strip(const T *src, const std::vector<unsigned int> &ind) {
-    std::vector<T> c;
-    for (auto &i: ind) {
-        c.push_back(src[i]);
-    }
-    return c;
+  std::vector<T> c;
+  for (auto &i : ind) {
+    c.push_back(src[i]);
+  }
+  return c;
 }
 
 #endif /* BASE_UTIL_UTIL */

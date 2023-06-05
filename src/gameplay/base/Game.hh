@@ -15,12 +15,13 @@
 #include <unordered_set>
 #include <vector>
 #include "engine/virtual/Input.hh"
+#include "gameplay/hud/HUDManager.hh"
 
 class Player;
+
 class Account;
 
-enum GameStatus
-{
+enum GameStatus {
   RUNNING, // Player is playing
   PAUSED,  // Paused, either resting, syncing data, or playing animation
   DONE,    // Leaving
@@ -31,8 +32,7 @@ enum GameStatus
  *
  * This class stores all objects used by the game, including their name map.
  */
-struct GeneratedObjects
-{
+struct GeneratedObjects {
   /**
    * @brief Sorted pending objects buffer.
    */
@@ -52,15 +52,15 @@ struct GeneratedObjects
   // std::set<std::shared_ptr<TickObject>> unloadedObjects;
 };
 
-struct AudioStat
-{
+struct AudioStat {
   unsigned int bgmBuf = 0;
   bool bgmPlaying = false;
 };
 
-class Game
-{
+class Game {
 public:
+  Game() : hudManager(*this) {}
+
   void runMainLoop(); // Start the whole main loop, return when game completed
   void runOnce();     // Run the loop once, suitable for external calls
   void initGame(const std::string &mapId);
@@ -87,16 +87,21 @@ public:
   /**
    * @brief The id of the current active player.
    */
-  int pid;
+  int pid = -1;
   std::vector<std::shared_ptr<Player>> players;
   GeneratedObjects objects;
   GameMap map;
+
+  /**
+   * @brief The score of current player.
+   */
   ScoreRecords score;
   AudioStat audio;
   GameRules rules;
   InputBuffer inputBuf;
+  HUDManager hudManager;
 
-  DrawContext ctx3D, ctxUI;
+  DrawContext ctx3D{}, ctxUI{};
   DrawList drawList;
 };
 

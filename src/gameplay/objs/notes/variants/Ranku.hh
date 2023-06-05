@@ -5,14 +5,14 @@
 
 class Ranku : public FlatNote {
 public:
-    explicit Ranku(Game &g) : Note(RKU, g), FlatNote(RKU, g) {
-        sizew = 1.5;
-        sizeh = 0.75;
-        name = "ranku";
-    };
+  explicit Ranku(Game &g) : Note(RKU, g), FlatNote(RKU, g) {
+    sizew = 1.5;
+    sizeh = 0.75;
+    name = "ranku";
+  };
 
-    // We do not use `CatchNote` here, as we'll implement space judge
-    void performJudge() override;
+  // We do not use `CatchNote` here, as we'll implement space judge
+  void performJudge() override;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTES_VARIANTS_RANKU */

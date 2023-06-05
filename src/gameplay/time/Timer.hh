@@ -8,23 +8,23 @@ typedef std::function<double()> NativeTimerFunc;
 class Timer {
 
 public:
-    Timer();
+  Timer();
 
-    explicit Timer(NativeTimerFunc origin);
+  explicit Timer(NativeTimerFunc origin);
 
-    [[nodiscard]] double getTime() const;
+  [[nodiscard]] double getTime() const;
 
-    void pause();
+  void pause();
 
-    void update();
+  void update();
 
-    void unpause();
+  void unpause();
 
 protected:
-    double baseTimeOffset, timeBeforePause = 0;
-    double innerTime = 0;
-    bool paused = false;
-    NativeTimerFunc _nativeGetTime;
+  double baseTimeOffset, timeBeforePause = 0;
+  double innerTime = 0;
+  bool paused = false;
+  NativeTimerFunc _nativeGetTime;
 };
 
 #endif /* GAMEPLAY_TIME_TIMER */

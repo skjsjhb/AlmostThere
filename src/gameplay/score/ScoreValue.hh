@@ -3,14 +3,13 @@
 
 #include "gameplay/objs/NoteDef.hh"
 
-enum ScoreGrade
-{
-    PF,
-    AT,
-    AC,
-    MD,
-    TC,
-    LT
+enum ScoreGrade {
+  PF,
+  AT,
+  AC,
+  MD,
+  TC,
+  LT
 };
 
 #define SCORE_GRADE_SIZE 6

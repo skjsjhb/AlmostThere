@@ -6,11 +6,11 @@
 
 class Shizuku : public FlatNote, public CatchNote {
 public:
-    explicit Shizuku(Game &g) : Note(TAPU, g), FlatNote(TAPU, g), CatchNote(TAPU, g) {
-        sizew = 0.6;
-        sizeh = 0.6;
-        name = "shizuku";
-    };
+  explicit Shizuku(Game &g) : Note(TAPU, g), FlatNote(TAPU, g), CatchNote(TAPU, g) {
+    sizew = 0.6;
+    sizeh = 0.6;
+    name = "shizuku";
+  };
 };
 
 #endif /* GAMEPLAY_OBJS_NOTES_SHIZUKU */

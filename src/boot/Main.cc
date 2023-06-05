@@ -8,10 +8,9 @@
 
 #include "Boot.hh"
 
-int main()
-{
-    sysInitFull();
-    playDemoMap();
-    sysStop();
-    return 0;
+int main() {
+  sysInitFull();
+  playDemoMap();
+  sysStop();
+  return 0;
 }

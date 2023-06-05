@@ -5,10 +5,9 @@
 #include "Camera.hh"
 #include <glm/glm.hpp>
 
-struct View
-{
-    std::weak_ptr<Camera> camera;
-    glm::vec2 screenSize;
+struct View {
+  std::weak_ptr<Camera> camera;
+  glm::vec2 screenSize;
 };
 
 glm::vec3 castMouseRay(View &v, const glm::vec2 &coord);

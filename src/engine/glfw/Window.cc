@@ -18,82 +18,82 @@ static int wx = 1920, wy = 1080;
 #define ENABLE_FPS_COUNT
 
 static void adjustFramebuffer(GLFWwindow *, int x, int y) {
-    // Normalize it to 16:9
-    auto ratio = x / (double) y;
-    int dx, dy, cx, cy;
-    if (ratio > 16 / 9.0) {
-        // Clip X
-        cx = int(y / 9.0 * 16);
-        cy = y;
-        dx = (int) (x - cx) / 2;
-    } else if (ratio < 16 / 9.0) {
-        // Clip Y
-        cy = int(x / 16.0 * 9);
-        cx = x;
-        dy = (int) (y - cy) / 2;
-    }
-    glViewport(dx, dy, cx, cy);
-    wx = cx;
-    wy = cy;
+  // Normalize it to 16:9
+  auto ratio = x / (double) y;
+  int dx, dy, cx, cy;
+  if (ratio > 16 / 9.0) {
+    // Clip X
+    cx = int(y / 9.0 * 16);
+    cy = y;
+    dx = (int) (x - cx) / 2;
+  } else if (ratio < 16 / 9.0) {
+    // Clip Y
+    cy = int(x / 16.0 * 9);
+    cx = x;
+    dy = (int) (y - cy) / 2;
+  }
+  glViewport(dx, dy, cx, cy);
+  wx = cx;
+  wy = cy;
 }
 
 static void acceptWindowClose(GLFWwindow *window) {
-    glfwSetWindowShouldClose(window, GLFW_TRUE);
+  glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
 void vtInitWindow() {
-    info("Welcome to VT engine GLFW backend.");
-    info("Initializing libraries.");
-    glfwInit();
+  info("Welcome to VT engine GLFW backend.");
+  info("Initializing libraries.");
+  glfwInit();
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 4);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+  glfwWindowHint(GLFW_SAMPLES, 4);
 
-    info("GLFW: " + std::string(glfwGetVersionString()));
-    info("GLAD: " + std::string(GLAD_GENERATOR_VERSION));
-    info("Creating game window.");
-    internalWindow = glfwCreateWindow(wx, wy, "Almost There", nullptr, nullptr);
-    if (internalWindow == nullptr) {
-        critical("Unable to create game window. Is GL library corrupted, or not supported in this context?");
-        exit(1);
-    }
-    glfwMakeContextCurrent(internalWindow);
-    glfwSwapInterval(0); // Disable vsync
-    auto ver = gladLoadGL(glfwGetProcAddress);
-    if (!ver) {
-        critical("Unable to load GLAD loader. Current GLFW version might not be compatible with GLAD.");
-        exit(1);
-    }
-    info("Window created.");
-    info("OpenGL Context: " + std::to_string(GLAD_VERSION_MAJOR(ver)) + "." + std::to_string(GLAD_VERSION_MINOR(ver)));
+  info("GLFW: " + std::string(glfwGetVersionString()));
+  info("GLAD: " + std::string(GLAD_GENERATOR_VERSION));
+  info("Creating game window.");
+  internalWindow = glfwCreateWindow(wx, wy, "Almost There", nullptr, nullptr);
+  if (internalWindow == nullptr) {
+    critical("Unable to create game window. Is GL library corrupted, or not supported in this context?");
+    exit(1);
+  }
+  glfwMakeContextCurrent(internalWindow);
+  glfwSwapInterval(0); // Disable vsync
+  auto ver = gladLoadGL(glfwGetProcAddress);
+  if (!ver) {
+    critical("Unable to load GLAD loader. Current GLFW version might not be compatible with GLAD.");
+    exit(1);
+  }
+  info("Window created.");
+  info("OpenGL Context: " + std::to_string(GLAD_VERSION_MAJOR(ver)) + "." + std::to_string(GLAD_VERSION_MINOR(ver)));
 
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST);
+  glEnable(GL_MULTISAMPLE);
+  glEnable(GL_DEPTH_TEST);
 
-    glEnable(GL_DEPTH_CLAMP);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glViewport(0, 0, 1920, 1080);
+  glEnable(GL_DEPTH_CLAMP);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glViewport(0, 0, 1920, 1080);
 
-    // Setup framebuffer callback
-    glfwSetFramebufferSizeCallback(internalWindow, adjustFramebuffer);
-    glfwSetWindowCloseCallback(internalWindow, acceptWindowClose);
+  // Setup framebuffer callback
+  glfwSetFramebufferSizeCallback(internalWindow, adjustFramebuffer);
+  glfwSetWindowCloseCallback(internalWindow, acceptWindowClose);
 
-    // Setup input listeners
-    vtSetupListeners();
+  // Setup input listeners
+  vtSetupListeners();
 
 }
 
 void *vtGetWindow() {
-    return internalWindow;
+  return internalWindow;
 }
 
 void vtStopWindow() {
-    info("Closing game window.");
-    glfwDestroyWindow(internalWindow);
-    glfwTerminate();
+  info("Closing game window.");
+  glfwDestroyWindow(internalWindow);
+  glfwTerminate();
 }
 
 #ifdef ENABLE_FPS_COUNT
@@ -110,84 +110,84 @@ static double lastTickTime = 0;
 #define TPS_MINIMUM_COUNT 500
 
 static void exSleep(double dt) {
-    static constexpr std::chrono::duration<double> a(0);
-    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
-    while (std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() < dt) {
-        std::this_thread::sleep_for(a);
-    }
+  static constexpr std::chrono::duration<double> a(0);
+  std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+  while (std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - start).count() < dt) {
+    std::this_thread::sleep_for(a);
+  }
 }
 
 bool vtWindowLoop() {
-    ++frames;
-    auto currentTime = glfwGetTime();
+  ++frames;
+  auto currentTime = glfwGetTime();
 
-    if (currentTime - lastTime >= FPS_COUNT_PERIOD) {
-        auto tps = int(frames / (currentTime - lastTime));
-        info("TPS: " + std::to_string(tps));
-        if (tps < TPS_MINIMUM_COUNT) {
-            warn("Low TPS (<500) detected. Game logic might not able to run correctly.");
-        }
-        lastTime = currentTime;
-        frames = 0;
+  if (currentTime - lastTime >= FPS_COUNT_PERIOD) {
+    auto tps = int(frames / (currentTime - lastTime));
+    info("TPS: " + std::to_string(tps));
+    if (tps < TPS_MINIMUM_COUNT) {
+      warn("Low TPS (<500) detected. Game logic might not able to run correctly.");
     }
+    lastTime = currentTime;
+    frames = 0;
+  }
 
-    auto tmfs = currentTime - lastTickTime;
-    if (tmfs > 0) {
-        exSleep(spt - tmfs);
-    }
-    lastTickTime = glfwGetTime();
-    glfwPollEvents();
-    return glfwWindowShouldClose(internalWindow);
+  auto tmfs = currentTime - lastTickTime;
+  if (tmfs > 0) {
+    exSleep(spt - tmfs);
+  }
+  lastTickTime = glfwGetTime();
+  glfwPollEvents();
+  return glfwWindowShouldClose(internalWindow);
 }
 
 void vtGetWindowSize(int &x, int &y) {
-    glfwGetWindowSize(internalWindow, &x, &y);
+  glfwGetWindowSize(internalWindow, &x, &y);
 }
 
 #define VT_STDW_W 1600.0
 #define VT_STDW_H 900.0
 
 void vtGetCoord(int sx, int sy, int &rx, int &ry) {
-    rx = int(sx * wx / VT_STDW_W);
-    ry = int(sy * wy / VT_STDW_H);
-    while (rx < 0) {
-        rx += wx;
-    }
-    while (rx > wx) {
-        rx -= wx;
-    }
-    while (ry < 0) {
-        ry += wy;
-    }
-    while (ry > wy) {
-        ry -= wy;
-    }
+  rx = int(sx * wx / VT_STDW_W);
+  ry = int(sy * wy / VT_STDW_H);
+  while (rx < 0) {
+    rx += wx;
+  }
+  while (rx > wx) {
+    rx -= wx;
+  }
+  while (ry < 0) {
+    ry += wy;
+  }
+  while (ry > wy) {
+    ry -= wy;
+  }
 }
 
 void vtDeCoord(int rx, int ry, int &sx, int &sy) {
-    sx = int(rx * VT_STDW_W / wx);
-    sy = int(ry * VT_STDW_H / wy);
+  sx = int(rx * VT_STDW_W / wx);
+  sy = int(ry * VT_STDW_H / wy);
 }
 
 void vtDisplayFlip() {
-    glfwSwapBuffers(internalWindow);
-    lastFrameTime = glfwGetTime();
+  glfwSwapBuffers(internalWindow);
+  lastFrameTime = glfwGetTime();
 }
 
 void vtSetTPSCap(unsigned int tps) {
-    if (tps < TPS_MINIMUM_COUNT) {
-        warn("Target TPS (" + std::to_string(tps) + ") is too low and therefore not accepted.");
-        return;
-    }
-    info("TPS limit set to " + std::to_string(tps));
-    spt = 1.0 / tps;
+  if (tps < TPS_MINIMUM_COUNT) {
+    warn("Target TPS (" + std::to_string(tps) + ") is too low and therefore not accepted.");
+    return;
+  }
+  info("TPS limit set to " + std::to_string(tps));
+  spt = 1.0 / tps;
 }
 
 void vtSetFPSCap(unsigned int fps) {
-    info("FPS limit set to " + std::to_string(fps));
-    spf = 1.0 / fps;
+  info("FPS limit set to " + std::to_string(fps));
+  spf = 1.0 / fps;
 }
 
 bool vtShouldDraw() {
-    return glfwGetTime() - lastFrameTime >= spf;
+  return glfwGetTime() - lastFrameTime >= spf;
 }

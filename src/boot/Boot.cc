@@ -25,39 +25,39 @@
     |_|    |_| |_|  \\___| |_|     \\___|        \n================================================="
 
 void sysInitFull() {
-    spdlog::info("Initializing log module.");
-    spdlog::info("Welcome to...");
-    spdlog::info(AT_NAME_ARTWORK);
-    spdlog::info("System is setting up.");
-    // Engine init
-    vtInitWindow();
-    vtInitGraphics();
-    vtInitAudio();
+  spdlog::info("Initializing log module.");
+  spdlog::info("Welcome to...");
+  spdlog::info(AT_NAME_ARTWORK);
+  spdlog::info("System is setting up.");
+  // Engine init
+  vtInitWindow();
+  vtInitGraphics();
+  vtInitAudio();
 
-    // Support env init
-    luaInit();
-    luaSetupExt();
+  // Support env init
+  luaInit();
+  luaSetupExt();
 
-    // Map Loader
-    initMapLoader();
+  // Map Loader
+  initMapLoader();
 
-    // Controller
-    initControllerLuaExt();
+  // Controller
+  initControllerLuaExt();
 }
 
 void playDemoMap() {
-    auto demoAc = Account::createLocalProfile("Player");
-    Game g;
-    g.initGame("example");
-    g.addPlayer(demoAc, NEKO);
-    g.runMainLoop();
+  auto demoAc = Account::createLocalProfile("Player");
+  Game g;
+  g.addPlayer(demoAc, NEKO);
+  g.initGame("example");
+  g.runMainLoop();
 }
 
 void sysStop() {
-    spdlog::info("Stopping!");
-    luaClose();
-    vtCloseAudio();
-    vtDeInitGraphics();
-    vtStopWindow();
-    spdlog::info("All systems stopped. 'See you next time'!");
+  spdlog::info("Stopping!");
+  luaClose();
+  vtCloseAudio();
+  vtDeInitGraphics();
+  vtStopWindow();
+  spdlog::info("All systems stopped. 'See you next time'!");
 }

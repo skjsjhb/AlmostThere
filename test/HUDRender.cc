@@ -11,69 +11,69 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 int main() {
-    vtInitWindow();
-    vtInitGraphics();
-    vtSetFPSCap(165);
-    vtSetTPSCap(1000);
-    Game g;
-    g.ctxUI = {
-            .viewMat = glm::mat4(),
-            .projMat = glm::ortho<float>(0, 1600, 0, 900),
-    };
-    ScoreDisplay sd(g, 0);
-    HPBar b(g, HP_NORMAL, 100, 100);
+  vtInitWindow();
+  vtInitGraphics();
+  vtSetFPSCap(165);
+  vtSetTPSCap(1000);
+  Game g;
+  g.ctxUI = {
+      .viewMat = glm::mat4(),
+      .projMat = glm::ortho<float>(0, 1600, 0, 900),
+  };
+  ScoreDisplay sd(g);
+  HPBar b(g, HP_NORMAL, 100, 100);
 
-    EffectMask em(g, "ui/effect-mask", "hud/shield-effect");
-    EffectMask emb(g, "ui/effect-mask", "hud/blood-effect");
+  EffectMask em(g, "ui/effect-mask", "hud/shield-effect");
+  EffectMask emb(g, "ui/effect-mask", "hud/blood-effect");
 
-    g.mapTimer = Timer(vtGetTime);
-    unsigned int a = 1;
-    unsigned hp = 100;
-    unsigned score = 50;
-    unsigned shield = 50;
-    ShieldBar s(50, 25);
-    bool revive = false;
+  g.mapTimer = Timer(vtGetTime);
+  unsigned int a = 1;
+  unsigned hp = 100;
+  unsigned score = 50;
+  unsigned shield = 50;
+  ShieldBar s(50, 25);
+  bool revive = false;
 
-    // This task cannot be done automatically. Manually check required.
-    while (vtGetTime() < 3) {
-        if (vtShouldDraw()) {
-            g.mapTimer.update();
-            s.draw(g);
-            b.draw();
-            sd.draw();
-            em.draw();
-            emb.draw();
-            if (vtGetTime() > a) {
-                ++a;
-                auto inv = (rand() % 10); // NOLINT Test only
+  // This task cannot be done automatically. Manually check required.
+  while (vtGetTime() < 3) {
+    if (vtShouldDraw()) {
+      g.mapTimer.update();
+      s.draw(g);
+      b.draw();
+      sd.draw();
+      em.draw();
+      emb.draw();
+      if (vtGetTime() > a) {
+        ++a;
+        auto inv = (rand() % 10); // NOLINT Test only
 
-                if (shield > 0) {
-                    shield = std::max(0, int(shield) - inv);
-                    em.refresh();
-                } else {
-                    if (!revive) {
-                        hp = std::max(0, int(hp) - inv);
-                        emb.refresh();
-                    }
-                }
-
-                b.setHP(hp);
-                s.setShield(shield);
-                if (hp == 0 && !revive) {
-                    revive = true;
-                    b.setVariant(HP_LOW);
-                    hp = 50;
-                    b.setHP(50, false);
-                }
-
-                score += rand() % 1000; // NOLINT Test only
-                sd.setScore(score);
-            }
-            vtDrawList(g.drawList);
-            g.drawList.clear();
-            vtDisplayFlip();
+        if (shield > 0) {
+          shield = std::max(0, int(shield) - inv);
+          em.refresh();
+        } else {
+          if (!revive) {
+            hp = std::max(0, int(hp) - inv);
+            emb.refresh();
+          }
         }
-        vtWindowLoop();
+
+        b.setHP(hp);
+        s.setShield(shield);
+        if (hp == 0 && !revive) {
+          revive = true;
+          b.setVariant(HP_LOW);
+          hp = 50;
+          b.setHP(50, false);
+        }
+
+        score += rand() % 1000; // NOLINT Test only
+        sd.setScore(score);
+      }
+      vtDrawList(g.drawList);
+      g.drawList.clear();
+      vtDisplayFlip();
     }
-    TEND
+    vtWindowLoop();
+  }
+  TEND
 }

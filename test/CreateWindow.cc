@@ -3,8 +3,8 @@
 #include "TestTools.hh"
 
 int main() {
-    vtInitWindow();
-    WANT(vtGetWindow() != NULL);
-    vtStopWindow();
-    TEND
+  vtInitWindow();
+  WANT(vtGetWindow() != NULL);
+  vtStopWindow();
+  TEND
 }

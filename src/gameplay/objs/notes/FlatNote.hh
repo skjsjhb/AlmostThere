@@ -9,13 +9,12 @@
  * This class implements flat note draw algorithm and can be directly inherited to use
  * the defined `draw` method.
  */
-class FlatNote : virtual public Note
-{
+class FlatNote : virtual public Note {
 public:
-    FlatNote(NoteType t, Game &g) : Note(t, g) {}
+  FlatNote(NoteType t, Game &g) : Note(t, g) {}
 
 protected:
-    virtual void draw() override;
+  virtual void draw() override;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTES_FLATNOTE */

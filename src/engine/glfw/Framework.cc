@@ -2,7 +2,6 @@
 
 #include <GLFW/glfw3.h>
 
-double vtGetTime()
-{
-    return glfwGetTime();
+double vtGetTime() {
+  return glfwGetTime();
 }

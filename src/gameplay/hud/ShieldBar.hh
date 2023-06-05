@@ -5,14 +5,15 @@ class Game;
 
 class ShieldBar {
 public:
-    ShieldBar(unsigned int max = 100, unsigned int init = 100) : sMax(max), sCurrent(init) {};
+  explicit ShieldBar(unsigned int max = 100, unsigned int init = 100) : sMax(max), sCurrent(init) {};
 
-    void setShield(unsigned int s) { sCurrent = s; };
+  void setShield(unsigned int s) { sCurrent = s; }
+  void setMaxShield(unsigned int s) { sMax = s; }
 
-    void draw(Game &g) const;
+  void draw(Game &g) const;
 
 protected:
-    unsigned int sMax, sCurrent;
+  unsigned int sMax, sCurrent;
 };
 
 #endif /* GAMEPLAY_HUD_SHIELDBAR */

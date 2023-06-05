@@ -5,10 +5,9 @@
 #include <set>
 #include <list>
 
-struct InputBuffer
-{
-    std::list<glm::vec2> touchPoints;
-    std::set<unsigned int> keys;
+struct InputBuffer {
+  std::list<glm::vec2> touchPoints;
+  std::set<unsigned int> keys;
 };
 
 extern void vtSetupListeners();

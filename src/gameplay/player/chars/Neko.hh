@@ -8,18 +8,20 @@
  * @author skjsjhb
  */
 
-class NekoChar : public Player
-{
+class NekoChar : public Player {
 public:
-    NekoChar();
-    virtual void damage(unsigned int amount, bool real = false) override;
-    virtual void tick(Game &g) override;
-    virtual PlayerAssets getAssets() const override;
+  NekoChar();
+
+  virtual void damage(unsigned int amount, bool real = false) override;
+
+  virtual void tick(Game &g) override;
+
+  virtual PlayerAssets getAssets() const override;
 
 protected:
-    unsigned int lastTickScore;
-    unsigned int finalNoteCount;
-    double lastShieldCharge = 0;
+  unsigned int lastTickScore;
+  unsigned int finalNoteCount;
+  double lastShieldCharge = 0;
 };
 
 #endif /* GAMEPLAY_PLAYER_CHARS_NEKO */

@@ -4,8 +4,7 @@
 #include "../Player.hh"
 
 // Dummy implementation
-class DefaultChar : public Player
-{
+class DefaultChar : public Player {
 };
 
 #endif /* GAMEPLAY_PLAYER_CHARS_DEFAULT */

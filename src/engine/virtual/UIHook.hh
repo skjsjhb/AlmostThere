@@ -19,22 +19,21 @@ typedef std::function<void()> UIHookXT;
  * @brief A hook containing necessary data for backend to handle UI actions on
  * a certain area.
  */
-struct HookSt
-{
-    /**
-     * @brief The border parameters of the trigger area.
-     */
-    int xbegin, xend, ybegin, yend;
+struct HookSt {
+  /**
+   * @brief The border parameters of the trigger area.
+   */
+  int xbegin, xend, ybegin, yend;
 
-    /**
-     * @brief Executor (aka. callback)
-     */
-    UIHookXT xt;
+  /**
+   * @brief Executor (aka. callback)
+   */
+  UIHookXT xt;
 
-    /**
-     * @brief An internal flag to prevent duplicated event firing.
-     */
-    bool cleared = true;
+  /**
+   * @brief An internal flag to prevent duplicated event firing.
+   */
+  bool cleared = true;
 };
 
 /**

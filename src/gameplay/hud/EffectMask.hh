@@ -8,16 +8,16 @@ class Game;
 
 class EffectMask {
 public:
-    EffectMask(Game &g, std::string sd, std::string tx) : game(g), shader(std::move(sd)), texture(std::move(tx)) {};
+  EffectMask(Game &g, std::string sd, std::string tx) : game(g), shader(std::move(sd)), texture(std::move(tx)) {};
 
-    void refresh();
+  void refresh();
 
-    void draw();
+  void draw();
 
 protected:
-    Game &game;
-    std::string shader, texture;
-    double beginTime = -1;
+  Game &game;
+  std::string shader, texture;
+  double beginTime = -1;
 };
 
 #endif /* GAMEPLAY_HUD_EFFECTMASK */

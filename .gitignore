@@ -3,3 +3,4 @@ builddir
 .vscode
 headless-build
 .idea
+compile_commands.json

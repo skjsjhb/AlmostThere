@@ -6,41 +6,32 @@
 
 #define CATCH_NOTE_WINDOW 0.005
 
-void Ranku::performJudge()
-{
-    if (isFake)
-    {
-        return;
-    }
-    auto time = game.mapTimer.getTime();
-    auto &ref = controller->getReference();
-    auto stat = controller->getState();
+void Ranku::performJudge() {
+  if (isFake) {
+    return;
+  }
+  auto time = game.mapTimer.getTime();
+  auto &ref = controller->getReference();
+  auto stat = controller->getState();
 
-    switch (judgeStage)
-    {
-    case JUDGED:
-        isActive = false;
-        return;
-    default:
-        // In all other cases, check and judge
-        if (isOverlapped(ref.endTime, CATCH_NOTE_WINDOW, time, 0))
-        {
-            if (isPressed())
-            {
-                // You got it
-                // TODO: space judge
-                game.score.addRecord(NoteScoreEntry::create(typ, PF));
-                judgeStage = JUDGED;
-            }
-        }
-        else
-        {
-            if (time > ref.endTime)
-            {
-                // You failed!
-                game.score.addRecord(NoteScoreEntry::create(typ, LT));
-                judgeStage = JUDGED;
-            }
-        }
+  switch (judgeStage) {
+  case JUDGED:isActive = false;
+    return;
+  default:
+    // In all other cases, check and judge
+    if (isOverlapped(ref.endTime, CATCH_NOTE_WINDOW, time, 0)) {
+      if (isPressed()) {
+        // You got it
+        // TODO: space judge
+        game.score.addRecord(NoteScoreEntry::create(typ, PF));
+        judgeStage = JUDGED;
+      }
+    } else {
+      if (time > ref.endTime) {
+        // You failed!
+        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        judgeStage = JUDGED;
+      }
     }
+  }
 }

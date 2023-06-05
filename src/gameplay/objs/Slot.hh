@@ -11,15 +11,15 @@
 // Slot is a shape for notes to drop
 class Slot : public TickObject {
 public:
-    SlotVariant variant;
+  SlotVariant variant;
 
-    void draw();
+  void draw();
 
-    // Constructor
-    using TickObject::TickObject;
-    bool isActive = true;
+  // Constructor
+  using TickObject::TickObject;
+  bool isActive = true;
 
-    static std::shared_ptr<Slot> createSlot(const std::weak_ptr<SlotObject> &o, Game &g);
+  static std::shared_ptr<Slot> createSlot(const std::weak_ptr<SlotObject> &o, Game &g);
 };
 
 #endif /* GAMEPLAY_OBJS_SLOT */

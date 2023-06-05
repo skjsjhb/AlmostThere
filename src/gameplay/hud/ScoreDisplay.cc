@@ -9,32 +9,32 @@
 #define SCORE_SIZE 0.8
 
 void ScoreDisplay::draw() {
-    auto t = game.mapTimer.getTime();
-    double alpha = 0.7;
-    if (t - beginTime > SCORE_VARY_TIME) {
-        displayScore = targetScore;
-    } else {
-        auto p = ((t - beginTime) / double(SCORE_VARY_TIME));
-        displayScore = p * targetScore + (1 - p) * beginScore;
-        alpha = 1 - 0.3 * p;
-    }
+  auto t = game.mapTimer.getTime();
+  double alpha = 0.7;
+  if (t - beginTime > SCORE_VARY_TIME) {
+    displayScore = targetScore;
+  } else {
+    auto p = ((t - beginTime) / double(SCORE_VARY_TIME));
+    displayScore = (unsigned int) (p * targetScore + (1 - p) * beginScore);
+    alpha = 1 - 0.3 * p;
+  }
 
-    auto s = std::to_wstring(displayScore);
-    s = std::wstring(SCORE_BITS - s.size(), '0') + s;
-    if (!game.rules.enableDetailedScore) {
-        s.replace(s.size() - 2, 2, L"**");
-        s += '?';
-    }
-    DrawParam p = {
-            .ctx = game.ctxUI,
-    };
-    DisplayText text({SCORE_XBEGIN, SCORE_YBEGIN}, SCORE_SIZE, s, {1, 1, 1, alpha}, p);
-    game.drawList.add(std::make_unique<DisplayText>(text));
+  auto s = std::to_wstring(displayScore);
+  s = std::wstring(SCORE_BITS - s.size(), '0') + s;
+  if (!game.rules.enableDetailedScore) {
+    s.replace(s.size() - 2, 2, L"**");
+    s += '?';
+  }
+  DrawParam p = {
+      .ctx = game.ctxUI,
+  };
+  DisplayText text({SCORE_XBEGIN, SCORE_YBEGIN}, SCORE_SIZE, s, {1, 1, 1, alpha}, p);
+  game.drawList.add(std::make_unique<DisplayText>(text));
 }
 
 void ScoreDisplay::setScore(unsigned int s) {
-    beginScore = targetScore;
-    targetScore = s;
-    beginTime = game.mapTimer.getTime();
-    displayScore = beginScore;
+  beginScore = targetScore;
+  targetScore = s;
+  beginTime = game.mapTimer.getTime();
+  displayScore = beginScore;
 }

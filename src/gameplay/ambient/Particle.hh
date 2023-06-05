@@ -8,17 +8,17 @@ class DrawList;
 
 class Particle {
 public:
-    Particle(const glm::vec3 &initPos, const glm::vec3 &initV,
-             const glm::vec3 &g, const glm::vec3 &norm, double genTime, double lifeTime);
+  Particle(const glm::vec3 &initPos, const glm::vec3 &initV,
+           const glm::vec3 &g, const glm::vec3 &norm, double genTime, double lifeTime);
 
-    bool tick(double absTime);
+  bool tick(double absTime);
 
-    void draw(DrawList &d);
+  void draw(DrawList &d);
 
 protected:
-    glm::vec3 initPos, initV, gravity, normal;
-    glm::vec3 currentPos, currentV;
-    double genTime, lifeTime;
+  glm::vec3 initPos, initV, gravity, normal;
+  glm::vec3 currentPos, currentV;
+  double genTime, lifeTime;
 };
 
 #endif /* GAMEPLAY_AMBIENT_PARTICLE */
