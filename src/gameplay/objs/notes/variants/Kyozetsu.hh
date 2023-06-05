@@ -3,12 +3,11 @@
 
 #include "../FlatNote.hh"
 
-class Kyozetsu : public FlatNote
-{
+class Kyozetsu : public FlatNote {
 public:
     void performJudge() override;
-    Kyozetsu(Game &g) : Note(KZTU, g), FlatNote(KZTU, g)
-    {
+
+    explicit Kyozetsu(Game &g) : Note(KZTU, g), FlatNote(KZTU, g) {
         sizew = 1;
         sizeh = 1;
         name = "kyozetsu";

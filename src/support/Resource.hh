@@ -12,4 +12,4 @@ std::string getAppResource(const std::string &fileName);
 
 std::vector<std::string> getDirFiles(const std::string &dirName);
 
-#endif /* SUPPORT_RESOURCEPATH */
+#endif /* SUPPORT_RESOURCE */

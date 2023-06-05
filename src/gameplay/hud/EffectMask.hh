@@ -2,14 +2,16 @@
 #define GAMEPLAY_HUD_EFFECTMASK
 
 #include <string>
+#include <utility>
 
 class Game;
 
-class EffectMask
-{
+class EffectMask {
 public:
-    EffectMask(Game &g, const std::string &sd, const std::string &tx) : game(g), shader(sd), texture(tx){};
+    EffectMask(Game &g, std::string sd, std::string tx) : game(g), shader(std::move(sd)), texture(std::move(tx)) {};
+
     void refresh();
+
     void draw();
 
 protected:

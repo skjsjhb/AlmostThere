@@ -3,13 +3,11 @@
 
 #include "../SingletonNote.hh"
 
-class Hoshi : public SingletonNote
-{
+class Hoshi : public SingletonNote {
 public:
     void draw() override;
 
-    Hoshi(Game &g) : Note(HOSHI, g), SingletonNote(HOSHI, g)
-    {
+    explicit Hoshi(Game &g) : Note(HOSHI, g), SingletonNote(HOSHI, g) {
         sizew = 0.8;
         sizeh = 0.8;
         name = "hoshi";

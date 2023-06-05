@@ -2,8 +2,7 @@
 
 #include "ui/layout/LayoutManager.hh"
 
-int main()
-{
+int main() {
     LayoutManager lm;
     Component t1, t2;
 
@@ -34,11 +33,11 @@ int main()
     lm.compile();
     auto &r1 = t1.result;
     auto &r2 = t2.result;
-    WANT(r2.w == 20);
-    WANT(r2.h == 20);
-    WANT(r1.x == 780);
-    WANT(r1.y == 430);
-    WANT(r2.x == 780);
-    WANT(r2.y == 440);
+    WANT(r2.w == 20)
+    WANT(r2.h == 20)
+    WANT(r1.x == 780)
+    WANT(r1.y == 430)
+    WANT(r2.x == 780)
+    WANT(r2.y == 440)
     TEND;
 }

@@ -1,14 +1,12 @@
 #ifndef GAMEPLAY_RULES_GAMERULES
 #define GAMEPLAY_RULES_GAMERULES
 
-struct JudgeTimeWindow
-{
-    double range = 0.1, good = 0.08, almost = 0.04, perfect = 0.02, allowBreak;
+struct JudgeTimeWindow {
+    double range = 0.1, good = 0.08, almost = 0.04, perfect = 0.02, allowBreak = 0.01;
 };
 
 // Generated game rules
-struct GameRules
-{
+struct GameRules {
     JudgeTimeWindow judgeTimeWindow;
 
     /**

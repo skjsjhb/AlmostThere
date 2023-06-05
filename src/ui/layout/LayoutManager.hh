@@ -3,38 +3,35 @@
 
 #include <list>
 
-enum ComponentAlign
-{
+enum ComponentAlign {
     AL_BEGIN,
     AL_CENTER,
     AL_END,
 };
 
-struct ComponentCompileResult
-{
+struct ComponentCompileResult {
     bool ok = false;
     double x = 0, y = 0, w = 0, h = 0;
 };
 
-enum LengthMode
-{
+enum LengthMode {
     LM_PERCENT,
     LM_ABSOLUTE
 };
 
-class Length
-{
+class Length {
 public:
     double value;
     LengthMode mode;
 
-    Length() : value(0), mode(LM_ABSOLUTE){};
-    Length(double v) : value(v), mode(LM_ABSOLUTE){};
-    Length(double v, LengthMode m) : value(v), mode(m){};
+    Length() : value(0), mode(LM_ABSOLUTE) {};
+
+    Length(double v) : value(v), mode(LM_ABSOLUTE) {};
+
+    Length(double v, LengthMode m) : value(v), mode(m) {};
 };
 
-struct Component
-{
+struct Component {
     Length dx, dy;
     Length w, h;
     ComponentAlign baseHorz = AL_BEGIN, baseVert = AL_BEGIN, selfHorz = AL_BEGIN, selfVert = AL_BEGIN;
@@ -42,8 +39,7 @@ struct Component
     ComponentCompileResult result;
 };
 
-class LayoutManager
-{
+class LayoutManager {
 public:
     /**
      * @brief Add component into buffer for compilation.

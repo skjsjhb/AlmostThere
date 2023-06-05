@@ -5,15 +5,19 @@
 
 typedef std::function<double()> NativeTimerFunc;
 
-class Timer
-{
+class Timer {
 
 public:
     Timer();
-    Timer(NativeTimerFunc origin);
-    double getTime();
+
+    explicit Timer(NativeTimerFunc origin);
+
+    [[nodiscard]] double getTime() const;
+
     void pause();
+
     void update();
+
     void unpause();
 
 protected:

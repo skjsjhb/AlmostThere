@@ -20,14 +20,17 @@ if backend == 'glfw'
     deps += dependency('freetype')
 endif
 deps += dependency('spdlog')
+
+found = false
 foreach name : ['lua', 'lua5.4', 'lua-5.4', 'lua54']
     luaDep = dependency(name, required: false)
     if luaDep.found()
         deps += luaDep
-        break
+        found = true
     endif
 endforeach
-if not luaDep.found()
+
+if not found
     error('No Lua found. Almost There requires Lua to run.')
 endif
 
@@ -41,6 +44,8 @@ if backend == 'glfw'
 
     deps += soloud
 endif
+
+add_project_arguments('-Wno-sign-compare', language: 'cpp')
 
 optn = ['c_std=c17', 'cpp_std=c++20']
 linkarg = ['-static-libstdc++']

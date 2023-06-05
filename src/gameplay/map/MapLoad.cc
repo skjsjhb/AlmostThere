@@ -2,16 +2,14 @@
 
 #include "lua/LuaSupport.hh"
 #include "support/Resource.hh"
-#include "gameplay/objs/NoteDef.hh"
 #include "util/Util.hh"
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <map>
 #include <set>
 #include <limits>
-#include <cstdlib>
 #include "spdlog/spdlog.h"
+
 using namespace spdlog;
 
 #define CHART_FILE "chart.lua"
@@ -22,7 +20,7 @@ using namespace spdlog;
 
 // The first number index of the slot
 #define NOTE_SLOT_TYPE_SPLIT 8
-#define TYPE_CAMERA -1
+#define TYPE_CAMERA (-1)
 #define SUPPORT_VERSIONS \
     {                    \
         1                \
@@ -30,42 +28,35 @@ using namespace spdlog;
 
 static std::shared_ptr<MapObject> activeObjectBuffer = std::make_shared<MapObject>();
 
-static bool hasCircularRef(const std::weak_ptr<MapObject> &om)
-{
+static bool hasCircularRef(const std::weak_ptr<MapObject> &om) {
     std::set<std::weak_ptr<MapObject>, std::owner_less<std::weak_ptr<MapObject>>> paths;
     auto cref = om;
-    while (!cref.expired())
-    {
+    while (!cref.expired()) {
         paths.insert(cref);
         cref = cref.lock()->relTarget;
-        if (paths.contains(cref))
-        {
+        if (paths.contains(cref)) {
             return true; // Circular
         }
     }
     return false; // All checked
 }
 
-static int objectRegistry(lua_State *l)
-{
+static int objectRegistry(lua_State *l) {
     // Sig: __native_objreg(type, id, player, genTime, endTime, bindObj, length)
     double length = lua_tonumber(l, -1);
     std::string bindObj = lua_tostring(l, -2);
     double endTime = lua_tonumber(l, -3);
     double genTime = lua_tonumber(l, -4);
-    if (genTime < 0)
-    {
+    if (genTime < 0) {
         genTime = 0;
     }
-    if (endTime < 0)
-    {
+    if (endTime < 0) {
         endTime = std::numeric_limits<double>::max();
     }
     int player = lua_tointeger(l, -5);
     std::string id = lua_tostring(l, -6);
     int type = lua_tointeger(l, -7);
-    if (type == TYPE_CAMERA)
-    {
+    if (type == TYPE_CAMERA) {
         // Create camera
         auto c = std::make_shared<CameraObject>();
         c->genTime = genTime;
@@ -75,9 +66,7 @@ static int objectRegistry(lua_State *l)
         c->type = CAMERA;
         c->relTargetName = bindObj;
         activeObjectBuffer = c;
-    }
-    else if (type >= NOTE_SLOT_TYPE_SPLIT)
-    {
+    } else if (type >= NOTE_SLOT_TYPE_SPLIT) {
         // Create slot
         auto m = std::make_shared<SlotObject>();
         m->genTime = genTime;
@@ -86,11 +75,9 @@ static int objectRegistry(lua_State *l)
         m->id = id;
         m->type = SLOT;
         m->relTargetName = bindObj;
-        m->slotType = (SlotVariant)(type - NOTE_SLOT_TYPE_SPLIT);
+        m->slotType = (SlotVariant) (type - NOTE_SLOT_TYPE_SPLIT);
         activeObjectBuffer = m;
-    }
-    else
-    {
+    } else {
         // Create note
         auto n = std::make_shared<NoteObject>();
         n->length = length;
@@ -99,28 +86,25 @@ static int objectRegistry(lua_State *l)
         n->player = player;
         n->id = id;
         n->type = NOTE;
-        n->noteType = (NoteType)type;
+        n->noteType = (NoteType) type;
         n->relTargetName = bindObj; // Low-level links are not done here.
         activeObjectBuffer = n;
     }
     return 1;
 }
 
-bool verifyMap(const GameMap &map)
-{
+bool verifyMap(const GameMap &map) {
     // TODO: verify map
     return true;
 }
 
 #define UNNAMED_OBJ_PREFIX "_UN_"
 
-GameMap loadMap(const std::string &mapId)
-{
+GameMap loadMap(const std::string &mapId) {
     GameMap m;
-    std::ifstream chartFile(getMapResource(mapId, "chart.lua"));
+    std::ifstream chartFile(getMapResource(mapId, CHART_FILE));
 
-    if (chartFile.fail())
-    {
+    if (chartFile.fail()) {
         error("Cannot load map '" + mapId + "'. Either the chart file is missing, or it's not readable.");
         return m;
     }
@@ -130,8 +114,7 @@ GameMap loadMap(const std::string &mapId)
     std::string content = ss.str();
 
     auto metaBody = splitStr(content, META_SEC_DELM, 2);
-    if (metaBody.size() != 2)
-    {
+    if (metaBody.size() != 2) {
         error("The structure of map '" + mapId + "' is corrupted. Either meta section or body is missing.");
         return m;
     }
@@ -145,8 +128,7 @@ GameMap loadMap(const std::string &mapId)
     auto mapVersion = luaGetInt("MapVersion");
     std::set<int> supportVs(SUPPORT_VERSIONS);
 
-    if (!supportVs.contains(mapVersion))
-    {
+    if (!supportVs.contains(mapVersion)) {
         error("Unsupported map version " + std::to_string(mapVersion));
         return m;
     }
@@ -167,66 +149,53 @@ GameMap loadMap(const std::string &mapId)
     auto objSrcs = splitStr(metaBody[1], OBJ_SEC_DELM);
 
     int unnamedCounter = 0;
-    for (auto &os : objSrcs)
-    {
+    for (auto &os: objSrcs) {
         auto objSecs = splitStr(os, OBJ_HEAD_BODY_DELM, 2);
 
-        if (objSecs.size() != 2)
-        {
+        if (objSecs.size() != 2) {
             // Invalid
             warn("Incomplete object detected. Missing either head or body.");
             continue;
         }
 
         // Init section
-        activeObjectBuffer = nullptr;
         luaRun(objSecs[0]); // Register
 
-        if (activeObjectBuffer == nullptr)
-        {
+        if (activeObjectBuffer == nullptr) {
             // Not registered, no mem allocated
             warn("Object without registry detected. An object won't run without registering. Skipped.");
             continue;
         }
         auto pm = activeObjectBuffer;
         pm->tickScript = luaPrecompile(objSecs[1]);
-        if (pm->tickScript == LUA_NOREF)
-        {
+        if (pm->tickScript == LUA_NOREF) {
             warn("Invalid object ticking script detected. Removed.");
             continue;
         }
-        if (pm->id != "")
-        {
+        if (!pm->id.empty()) {
             m.namedObjects[pm->id] = pm;
-        }
-        else
-        {
+        } else {
             // Assign a random one and do not put it into named objects
             pm->id += UNNAMED_OBJ_PREFIX + std::to_string(unnamedCounter);
             unnamedCounter++;
         }
         m.objects.push_back(pm);
+        activeObjectBuffer = nullptr;
     }
 
     // Link objects
-    for (auto &o : m.objects)
-    {
-        if (o->relTargetName != "")
-        {
-            if (m.namedObjects.contains(o->relTargetName))
-            {
+    for (auto &o: m.objects) {
+        if (!o->relTargetName.empty()) {
+            if (m.namedObjects.contains(o->relTargetName)) {
                 o->relTarget = m.namedObjects[o->relTargetName];
             }
         }
     }
 
     // Check for circulars
-    for (auto &o : m.objects)
-    {
-        if (!o->relTarget.expired())
-        {
-            if (hasCircularRef(o))
-            {
+    for (auto &o: m.objects) {
+        if (!o->relTarget.expired()) {
+            if (hasCircularRef(o)) {
                 warn("Circular reference detected and blocked for object '" + o->id + "'. Check your map.");
                 o->relTarget.reset();
             }
@@ -236,7 +205,6 @@ GameMap loadMap(const std::string &mapId)
     return m;
 }
 
-void initMapLoader()
-{
+void initMapLoader() {
     luaBind("__native_objreg", objectRegistry);
 }

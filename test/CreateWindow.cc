@@ -1,10 +1,10 @@
 #include "engine/virtual/Window.hh"
 
 #include "TestTools.hh"
-int main()
-{
+
+int main() {
     vtInitWindow();
     WANT(vtGetWindow() != NULL);
     vtStopWindow();
-    TEND;
+    TEND
 }

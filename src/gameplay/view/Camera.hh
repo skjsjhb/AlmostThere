@@ -5,18 +5,25 @@
 #include <glm/glm.hpp>
 
 class CameraObject;
+
 class Game;
 
-class Camera : public TickObject
-{
+class Camera : public TickObject {
 public:
     glm::mat4 getViewMatrix();
+
     glm::mat4 getViewMatrixInv();
+
     glm::mat4 getProjectionMatrix();
+
     glm::mat4 getProjectionMatrixInv();
+
     void setState(glm::vec3 pos, glm::vec3 direction, glm::vec3 up, double fov, double aspect);
+
     glm::vec3 getPosition();
+
     glm::vec3 getDir();
+
     void tick() override;
 
     // Constructor
@@ -27,7 +34,7 @@ public:
 
     virtual double getTickTime() const override { return 0; };
 
-    static std::shared_ptr<Camera> createCamera(std::weak_ptr<CameraObject> o, Game &g);
+    static std::shared_ptr<Camera> createCamera(const std::weak_ptr<CameraObject> &o, Game &g);
 
 protected:
     glm::vec3 pos;

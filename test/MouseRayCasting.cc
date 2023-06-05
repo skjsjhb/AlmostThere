@@ -3,13 +3,11 @@
 #include "gameplay/view/View.hh"
 #include "gameplay/base/Game.hh"
 #include <memory>
-#include <glm/glm.hpp>
 #include <glm/gtx/string_cast.hpp>
 
 using namespace glm;
 
-int main()
-{
+int main() {
     // Game obj
     Game g;
     // Create a camera looking 'down' towards -z
@@ -26,31 +24,28 @@ int main()
     // In this case -z
     vec2 coord = {50, 50};
     auto ray = castMouseRay(v, coord);
-    for (int i = 0; i < 3; i++)
-    {
-        WANT(ray[i] == e[i]);
+    for (int i = 0; i < 3; i++) {
+        WANT(ray[i] == e[i])
     }
 
     // When mouse is at the top center, ray should have a component in +x direction
-    // In this case FOV is 90 so it should be x = sqrt(2) / 2 and z = -sqrt(2) / 2
+    // In this case FOV is 90, so it should be x = sqrt(2) / 2 and z = -sqrt(2) / 2
     coord[1] = 0;
     ray = castMouseRay(v, coord);
     vec3 e2 = {float(sqrt(2) / 2), 0, 0};
     e2[2] = -e2[0];
-    for (int i = 0; i < 3; i++)
-    {
-        WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e2[i] * 10000));
+    for (int i = 0; i < 3; i++) {
+        WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e2[i] * 10000))
     }
 
-    // When mouse is at the top left corner, ray should also have a component in +y direction
+    // When mouse is in the top left corner, ray should also have a component in +y direction
     // In this case all 3 axes should have the same length, i.e. sqrt(3) / 3
     coord[0] = 0;
     ray = castMouseRay(v, coord);
     vec3 e3 = {0, 0, float(-sqrt(3) / 3)};
     e3[0] = e3[1] = -e3[2];
-    for (int i = 0; i < 3; i++)
-    {
-        WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e3[i] * 10000));
+    for (int i = 0; i < 3; i++) {
+        WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e3[i] * 10000))
     }
 
     // Let's also check the view matrix and projection matrix
@@ -62,15 +57,13 @@ int main()
     auto ivv = v.camera.lock()->getViewMatrixInv();
     vec4 o = {0, 0, -1, 0};
     o = glm::normalize(p * xv * o);
-    WANT(o[0] == 0 && o[1] == 0);
+    WANT(o[0] == 0 && o[1] == 0)
     auto pd = glm::inverse(p);
     auto vd = glm::inverse(xv);
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            WANT(pd[i][j] == ivp[i][j] && vd[i][j] == ivv[i][j]);
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            WANT(pd[i][j] == ivp[i][j] && vd[i][j] == ivv[i][j])
         }
     }
-    TEND;
+    TEND
 }

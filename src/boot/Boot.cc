@@ -9,7 +9,6 @@
 #include "gameplay/control/Controller.hh"
 #include "gameplay/base/Game.hh"
 #include "user/Account.hh"
-#include "gameplay/player/chars/CharList.hh"
 #include "spdlog/spdlog.h"
 
 #define AT_NAME_ARTWORK "\n=================================================\n             _                             _\n\
@@ -25,8 +24,7 @@
     | |    | | | | |  __/ | |    |  __/\n\
     |_|    |_| |_|  \\___| |_|     \\___|        \n================================================="
 
-void sysInitFull()
-{
+void sysInitFull() {
     spdlog::info("Initializing log module.");
     spdlog::info("Welcome to...");
     spdlog::info(AT_NAME_ARTWORK);
@@ -47,8 +45,7 @@ void sysInitFull()
     initControllerLuaExt();
 }
 
-void playDemoMap()
-{
+void playDemoMap() {
     auto demoAc = Account::createLocalProfile("Player");
     Game g;
     g.initGame("example");
@@ -56,8 +53,7 @@ void playDemoMap()
     g.runMainLoop();
 }
 
-void sysStop()
-{
+void sysStop() {
     spdlog::info("Stopping!");
     luaClose();
     vtCloseAudio();

@@ -3,14 +3,13 @@
 
 #include "../../Note.hh"
 
-class Hashi : public Note
-{
+class Hashi : public Note {
 public:
     void performJudge() override;
+
     void draw() override;
 
-    Hashi(Game &g) : Note(HASHI, g)
-    {
+    explicit Hashi(Game &g) : Note(HASHI, g) {
         sizew = 0.6;
         sizeh = 0.6;
         name = "hashi";

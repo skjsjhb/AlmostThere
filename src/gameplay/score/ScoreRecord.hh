@@ -17,8 +17,7 @@
 
 class ScoreRecords;
 
-class ScoreEntry
-{
+class ScoreEntry {
 public:
     /**
      * @brief Apply changes to the specified score records object.
@@ -27,20 +26,22 @@ public:
      */
     virtual void apply(ScoreRecords &sr) const = 0;
 
+    // Destructor
+    virtual ~ScoreEntry() = default;
+
 protected:
     /**
      * @brief The time this entry is generated.
      */
-    double scTime;
+    double scTime = 0;
 
     /**
      * @brief Base score of this entry.
      */
-    unsigned int value;
+    unsigned int value = 0;
 };
 
-class ScoreRecords
-{
+class ScoreRecords {
 public:
     /**
      * @brief Insert a record.
@@ -94,17 +95,15 @@ protected:
     std::map<unsigned int, std::unique_ptr<ScoreEntry>> entries;
 };
 
-class NoteScoreEntry : public ScoreEntry
-{
+class NoteScoreEntry : public ScoreEntry {
 public:
-    NoteScoreEntry(NoteType n, ScoreGrade g) : nt(n), gd(g){};
+    NoteScoreEntry(NoteType n, ScoreGrade g) : nt(n), gd(g) {};
 
-    static std::unique_ptr<NoteScoreEntry> create(NoteType tp, ScoreGrade g)
-    {
+    static std::unique_ptr<NoteScoreEntry> create(NoteType tp, ScoreGrade g) {
         return std::make_unique<NoteScoreEntry>(tp, g);
     };
-    virtual void apply(ScoreRecords &sr) const override
-    {
+
+    void apply(ScoreRecords &sr) const override {
         sr.addScore(NOTE_SCORE_VALUE[nt][gd]);
     };
 
@@ -113,8 +112,7 @@ protected:
     ScoreGrade gd;
 };
 
-class ComboScoreEntry : public ScoreEntry
-{
+class ComboScoreEntry : public ScoreEntry {
     // TODO: impl
 };
 

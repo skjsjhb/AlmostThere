@@ -4,19 +4,21 @@
 #include <list>
 
 class DrawList;
+
 class Game;
 
-enum HPBarVariant
-{
+enum HPBarVariant {
     HP_NORMAL,
     HP_LOW,
 };
-class HPDrainSection
-{
+
+class HPDrainSection {
 public:
     HPDrainSection(double valueBegin, double valuePct, double t, HPBarVariant va);
+
     void draw(Game &g, double absTime);
-    bool shouldUnload(double absTime);
+
+    bool shouldUnload(double absTime) const;
 
 protected:
     unsigned int xbegin, xend;
@@ -24,10 +26,11 @@ protected:
     HPBarVariant variant;
 };
 
-class HPBar
-{
+class HPBar {
 public:
-    HPBar(Game &g, HPBarVariant va = HP_NORMAL, unsigned int max = 100, unsigned int cur = 100) : game(g), variant(va), hpCurrent(cur), hpMax(max){};
+    HPBar(Game &g, HPBarVariant va = HP_NORMAL, unsigned int max = 100, unsigned int cur = 100) : game(g), variant(va),
+                                                                                                  hpCurrent(cur),
+                                                                                                  hpMax(max) {};
 
     /**
      * @brief Sets the new HP value.
@@ -35,7 +38,9 @@ public:
      * @param nv New HP value.
      */
     void setHP(unsigned int nv, bool animation = true);
+
     void setVariant(HPBarVariant v) { variant = v; };
+
     void draw();
 
 protected:

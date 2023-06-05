@@ -13,48 +13,49 @@
 #include "NoteDef.hh"
 #include "TickObject.hh"
 
-enum JudgeStage
-{
-  BUSY,   // The area is not cleared, other inputs may be present (for previous
-          // notes)
-  CLEAR,  // Zone cleared, but not yet able to judge (turn to busy if input
-          // detected)
-  ACTIVE, // Now accepting input (any input detected will start the judge)
-  JUDGED, // Judge finished, either missed or completed
+enum JudgeStage {
+    BUSY,   // The area is not cleared, other inputs may be present (for previous
+    // notes)
+    CLEAR,  // Zone cleared, but not yet able to judge (turn to busy if input
+    // detected)
+    ACTIVE, // Now accepting input (any input detected will start the judge)
+    JUDGED, // Judge finished, either missed or completed
 };
 
 class Game;
+
 struct NoteObject;
 
 // Represents a loaded note
-class Note : public TickObject
-{
+class Note : public TickObject {
 public:
-  virtual void tick() override;
-  Note(NoteType tp, Game &g) : TickObject(g), typ(tp){};
+    void tick() override;
 
-  static std::shared_ptr<Note> createNote(std::weak_ptr<NoteObject> obj,
-                                          Game &g);
+    Note(NoteType tp, Game &g) : TickObject(g), typ(tp) {};
+
+    static std::shared_ptr<Note> createNote(const std::weak_ptr<NoteObject> &obj,
+                                            Game &g);
 
 protected:
-  /**
-   * @brief Reserved judge method for compatibility with existing structure.
-   */
-  virtual void performJudge() = 0;
-  bool isPressed();
+    /**
+     * @brief Reserved judge method for compatibility with existing structure.
+     */
+    virtual void performJudge() = 0;
 
-  NoteType typ;
-  JudgeStage judgeStage = BUSY;
-  // Fake notes are not judged but will be ticked
-  bool isFake = false;
-  bool isActive = true;
+    bool isPressed();
 
-  double sizew = 0, sizeh = 0;
-  std::string name;
-  bool use3DJudge = false;
+    NoteType typ;
+    JudgeStage judgeStage = BUSY;
+    // Fake notes are not judged but will be ticked
+    bool isFake = false;
+    bool isActive = true;
 
-  // Reserved
-  // NoteElementType element;
+    double sizew = 0, sizeh = 0;
+    std::string name;
+    bool use3DJudge = false;
+
+    // Reserved
+    // NoteElementType element;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTE */

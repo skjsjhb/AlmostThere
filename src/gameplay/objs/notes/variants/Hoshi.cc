@@ -2,12 +2,9 @@
 
 #include "gameplay/base/Game.hh"
 #include "util/Util.hh"
-#include <glm/glm.hpp>
 
-void Hoshi::draw()
-{
-    if (!isActive)
-    {
+void Hoshi::draw() {
+    if (!isActive) {
         return;
     }
 
@@ -34,9 +31,9 @@ void Hoshi::draw()
     points[5] = {stat.pos + upVec, {0, 0}};
 
     DrawParam p = {
-        .shader = "3d/mesh",
-        .texture = "hoshi",
-        .ctx = game.ctx3D,
+            .shader = "3d/mesh",
+            .texture = "hoshi",
+            .ctx = game.ctx3D,
     };
 
     TriangleStrip fts(strip(points, {4, 3, 0, 4, 0, 2, 4, 2, 1, 4, 1, 3}), p);

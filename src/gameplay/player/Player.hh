@@ -8,44 +8,48 @@ class Player;
 #include <string>
 #include <memory>
 
-enum SkillType
-{
+enum SkillType {
     SK_PASSIVE,
     SK_AUX,
     SK_FINAL,
 };
 
-enum PlayerStat
-{
+enum PlayerStat {
     NORMAL,
     DOWNED,
     KILLED
 };
 
-struct PlayerAssets
-{
+struct PlayerAssets {
     std::string auxTex, finalTex;
 };
 
-class Player
-{
+class Player {
 public:
     virtual ~Player() = default;
 
-    unsigned int getUID() const;
-    unsigned int getPID() const;
+    [[nodiscard]] unsigned int getUID() const;
 
-    std::string getPlayerName() const;
-    std::string getCharName() const;
-    std::string getSkillName(SkillType st) const;
+    [[nodiscard]] unsigned int getPID() const;
 
-    PlayerStat getPlayerStat() const;
+    [[nodiscard]] std::string getPlayerName() const;
 
-    double getHealthRate() const;
-    double getShieldRate() const;
+    [[nodiscard]] std::string getCharName() const;
+
+    [[nodiscard]] std::string getSkillName(SkillType st) const;
+
+    [[nodiscard]] PlayerStat getPlayerStat() const;
+
+    [[nodiscard]] double getHealthRate() const;
+
+    [[nodiscard]] double getShieldRate() const;
 
     // Try to damage the player
-    virtual void damage(unsigned int amount, bool real = false);
+    virtual void damage(unsigned int amount, bool real);
+
+    virtual void damage(unsigned int amount) {
+        damage(amount, true);
+    }
 
     // Try to heal the player
     virtual void heal(unsigned int amount);
@@ -64,7 +68,7 @@ public:
      * @return A number represents the status. -1 for disabled, 2 for active (some
      * long-lasting finals), 0-1 for cooldown status.
      */
-    virtual double getSkillStat(SkillType st) const;
+    [[nodiscard]] virtual double getSkillStat(SkillType st) const;
 
     // Apply modifiers to the game and update self status
     // The display value of some stat like HP and shield are automatically synced
@@ -88,10 +92,11 @@ public:
      * @param isDummy Whether this player is not controller by user, but a copy of a remote teammate.
      * @return A pointer to the newly created player instance.
      */
-    static std::shared_ptr<Player> createPlayer(CharID ch, const std::string &playerName, unsigned int uid, unsigned int pid, bool isDummy);
+    static std::shared_ptr<Player>
+    createPlayer(CharID ch, const std::string &playerName, unsigned int uid, unsigned int pid, bool isDummy);
 
     // Gets skill name
-    virtual PlayerAssets getAssets() const;
+    [[nodiscard]] virtual PlayerAssets getAssets() const;
 
 protected:
     unsigned int health, maxHealth;

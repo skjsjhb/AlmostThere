@@ -3,12 +3,13 @@
 
 class Game;
 
-class ShieldBar
-{
+class ShieldBar {
 public:
-    ShieldBar(unsigned int max = 100, unsigned int init = 100) : sMax(max), sCurrent(init){};
+    ShieldBar(unsigned int max = 100, unsigned int init = 100) : sMax(max), sCurrent(init) {};
+
     void setShield(unsigned int s) { sCurrent = s; };
-    void draw(Game &g);
+
+    void draw(Game &g) const;
 
 protected:
     unsigned int sMax, sCurrent;

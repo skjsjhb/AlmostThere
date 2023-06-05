@@ -3,16 +3,16 @@
 #include "engine/virtual/Audio.hh"
 #include <unistd.h>
 
-int main()
-{
+int main() {
+    // This test is not done automatically. Manually check required.
     vtInitAudio();
     auto a = vtLoadAudio("test.flac");
     vtPlayAudio(a);
-    sleep(2);
+    sleep(1);
     vtPauseAudio(a);
-    sleep(2);
+    sleep(1);
     vtResumeAudio(a);
-    sleep(2);
+    sleep(1);
     vtCloseAudio();
-    TEND;
+    TEND
 }

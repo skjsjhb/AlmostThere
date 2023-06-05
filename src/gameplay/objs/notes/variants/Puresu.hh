@@ -3,18 +3,17 @@
 
 #include "../../Note.hh"
 
-class Puresu : public Note
-{
+class Puresu : public Note {
 public:
-    Puresu(Game &g) : Note(PRSU, g)
-    {
+    explicit Puresu(Game &g) : Note(PRSU, g) {
         sizew = 1.0;
         sizeh = 1.0;
         name = "puresu";
     };
 
-    void performJudge();
-    void draw();
+    void performJudge() override;
+
+    void draw() override;
 
 protected:
     double lastSuccJudge = -1; // Timestamp of the last successful judgement.

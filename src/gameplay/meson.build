@@ -1,3 +1,4 @@
+subdir('ambient')
 subdir('base')
 subdir('rules')
 subdir('objs')

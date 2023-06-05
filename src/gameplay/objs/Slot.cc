@@ -3,16 +3,12 @@
 
 #include "gameplay/base/Game.hh"
 
-#include <cstdlib>
-
 #define SLOT_SIZE 1.2
 
 static std::vector<std::string> slotTexName = {"circle", "eureka", "line"};
 
-void Slot::draw()
-{
-    if (!isActive)
-    {
+void Slot::draw() {
+    if (!isActive) {
         return;
     }
     auto stat = controller->getState();
@@ -32,8 +28,7 @@ void Slot::draw()
     game.drawList.add(std::make_unique<Rect>(r));
 }
 
-std::shared_ptr<Slot> Slot::createSlot(std::weak_ptr<SlotObject> o, Game &g)
-{
+std::shared_ptr<Slot> Slot::createSlot(const std::weak_ptr<SlotObject> &o, Game &g) {
     auto st = std::make_shared<Slot>(g);
     auto opt = o.lock();
     st->controller = std::make_shared<ObjController>(*opt);

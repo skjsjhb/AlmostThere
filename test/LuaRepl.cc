@@ -3,22 +3,17 @@
 #include "lua/LuaSupport.hh"
 #include "lua/LuaExt.hh"
 
-static bool isAround(double v1, double v2, double allowDiff)
-{
+static bool isAround(double v1, double v2, double allowDiff) {
     auto diff = std::abs(v2 - v1);
     auto varm = std::max(std::abs(v1), std::abs(v2));
-    if (varm <= allowDiff)
-    {
+    if (varm <= allowDiff) {
         return diff <= allowDiff;
-    }
-    else
-    {
+    } else {
         return diff / varm < allowDiff;
     }
 }
 
-int main()
-{
+int main() {
     luaInit();
     luaSetupExt();
     luaSet("a", 1);
