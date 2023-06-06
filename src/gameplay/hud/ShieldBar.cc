@@ -8,7 +8,7 @@
 #define SD_BAR_VALUE 5
 #define SD_BAR_YBEGIN 810
 
-void ShieldBar::draw(Game &g) const {
+void ShieldBar::draw() const {
   unsigned int numActive = sCurrent / SD_BAR_VALUE;
   unsigned int numTotal = sMax / SD_BAR_VALUE;
 
@@ -22,22 +22,25 @@ void ShieldBar::draw(Game &g) const {
       DrawParam p = {
           .shader = "ui/shield-bar",
           .texture = "hud/shield-block-active",
-          .ctx = g.ctxUI,
+          .ctx = game.ctxUI,
       };
       Rect r(Point({xbegin, yend, 0}, {0, 1}), Point({xbegin, ybegin, 0}, {0, 0}), Point({xend, yend, 0}, {1,
                                                                                                            1}),
              Point({xend, ybegin, 0}, {1, 0}), p);
-      g.drawList.add(std::make_unique<Rect>(r));
+      game.drawList.add(std::make_unique<Rect>(r));
     } else {
       DrawParam p = {
           .shader = "ui/shield-bar",
           .texture = "hud/shield-block-empty",
-          .ctx = g.ctxUI,
+          .ctx = game.ctxUI,
       };
       Rect r(Point({xbegin, yend, 0}, {0, 1}), Point({xbegin, ybegin, 0}, {0, 0}), Point({xend, yend, 0}, {1,
                                                                                                            1}),
              Point({xend, ybegin, 0}, {1, 0}), p);
-      g.drawList.add(std::make_unique<Rect>(r));
+      game.drawList.add(std::make_unique<Rect>(r));
     }
+
   }
+
+  em.draw();
 }

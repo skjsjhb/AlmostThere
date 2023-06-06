@@ -33,6 +33,10 @@ void ScoreDisplay::draw() {
 }
 
 void ScoreDisplay::setScore(unsigned int s) {
+  if (s == targetScore) {
+    // Avoid duplicated reset
+    return;
+  }
   beginScore = targetScore;
   targetScore = s;
   beginTime = game.mapTimer.getTime();

@@ -19,7 +19,7 @@ void HUDManager::draw() {
   score.setScore(game.score.exportScore());
 
   // Draw
-  shield.draw(game);
+  shield.draw();
   hp.draw();
   score.draw();
 }

@@ -4,7 +4,7 @@
 
 int main() {
   vtInitWindow();
-  WANT(vtGetWindow() != NULL);
+  WANT(vtGetWindow() != nullptr);
   vtStopWindow();
   TEND
 }

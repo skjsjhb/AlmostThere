@@ -13,6 +13,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <set>
 #include <vector>
 #include "engine/virtual/Input.hh"
 #include "gameplay/hud/HUDManager.hh"
@@ -41,7 +42,7 @@ struct GeneratedObjects {
   /**
    * @brief Active objects for updating on each tick.
    */
-  std::unordered_set<std::shared_ptr<TickObject>> activeObjects;
+  std::set<std::shared_ptr<TickObject>> activeObjects;
 
   /**
    * @brief Objects for name indexing.

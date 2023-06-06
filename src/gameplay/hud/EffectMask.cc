@@ -9,7 +9,7 @@ void EffectMask::refresh() {
   beginTime = game.mapTimer.getTime();
 }
 
-void EffectMask::draw() {
+void EffectMask::draw() const {
   auto t = game.mapTimer.getTime();
   if (t > beginTime + MASK_PERSIST_TIME + MASK_FADE_TIME) {
     return;

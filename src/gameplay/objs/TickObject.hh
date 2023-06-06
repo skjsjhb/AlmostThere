@@ -12,9 +12,9 @@ class Game;
 
 class TickObject {
 public:
-  virtual bool shouldTick() const;
+  [[nodiscard]] virtual bool shouldTick() const;
 
-  virtual double getTickTime() const { return controller->getReference().genTime; };
+  [[nodiscard]] virtual double getTickTime() const { return controller->getReference().genTime; };
 
   /**
    * @brief Main tick method for any tickable object.
@@ -35,7 +35,7 @@ public:
   virtual ~TickObject() = default;
 
   // Constructor
-  TickObject(Game &g) : game(g) {};
+  explicit TickObject(Game &g) : game(g) {};
 
   /**
    * @brief Object draw method.

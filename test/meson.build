@@ -7,6 +7,7 @@ testProgs = [
     'Map Load',
     'Note Tools Test',
     'Layout Test',
+    'Event System',
 ]
 
 if backend != 'headless'

@@ -27,12 +27,12 @@ foreach name : ['lua', 'lua5.4', 'lua-5.4', 'lua54']
     if luaDep.found()
         deps += luaDep
         found = true
+        break
     endif
 endforeach
 
 if not found
     error('No Lua found. Almost There requires Lua to run.')
-    break
 endif
 
 cc = meson.get_compiler('cpp')

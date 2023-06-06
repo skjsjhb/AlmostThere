@@ -42,7 +42,7 @@ static void acceptWindowClose(GLFWwindow *window) {
 }
 
 void vtInitWindow() {
-  info("Welcome to VT engine GLFW backend.");
+  info("Welcome to Almost There VMC Turbo Engine! (GLFW Backend)");
   info("Initializing libraries.");
   glfwInit();
 

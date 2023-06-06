@@ -1,29 +1,313 @@
 MapVersion = 1
-Duration = 15
--- Song = "youraudio.flac"
+Duration = 12.5
+Song = "test.mp3"
 Background = "test.png"
 use("at")
 use("atm")
 -----
 make_ { CAMERA, id = "cam" }
 ---
-out(POS, { 0, 0, 50 })
+out(MODE, { ABS, ABS, ABS })
+out(POS, { 0, 2, 25 })
 out(UP, { 0, 1, 0 })
 out(NORM, { 0, 0, -1 })
 usecam("cam")
-
 ----
-make_ { TAPU, 0, 2, player = 1, len = 1 }
+make_ { CAMERA, id = "base" }
 ---
-pos = {0, 10, 0}
-move_ {pos, {0, -5, 0}}
-out(POS, pos)
-out(UP, {0, 1, 0})
+local t = inc(ATIME) / 3;
+out(MODE, { ABS, ABS, ABS })
+out(POS, { 0, 0, 0 })
+out(UP, { math.cos(t), math.sin(t), 0 })
+out(NORM, { 0, 0, 1 })
+----
+make_ { EUREKA, 0, 12.5, id = "1", rel = "base" }
+---
+out(MODE, { PSP, RPJ, ABS })
+out(POS, { 0, 6, 0 })
+out(UP, { 0, -1, 0 })
+out(NORM, { 0, 0, 1 })
+----
+make_ { EUREKA, 0, 12.5, id = "2", rel = "base" }
+---
+out(MODE, { PSP, RPJ, ABS })
+out(POS, { -6, 0, 0 })
+out(UP, { 1, 0, 0 })
+out(NORM, { 0, 0, 1 })
+----
+make_ { EUREKA, 0, 12.5, id = "3", rel = "base" }
+---
+out(MODE, { PSP, RPJ, ABS })
+out(POS, { 0, -6, 0 })
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+----
+make_ { EUREKA, 0, 12.5, id = "4", rel = "base" }
+---
+out(MODE, { PSP, RPJ, ABS })
+out(POS, { 6, 0, 0 })
+out(UP, { -1, 0, 0 })
 out(NORM, { 0, 0, 1 })
 
 ----
-make_ { EUREKA, 0, 15 }
+make_ { TAPU, 0.636, 1.636, player = 1, rel = "1" }
 ---
-out(POS, {0, -5, 0})
-out(UP, {0, 1, 0})
-out(NORM, {0, 0, 1})
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+make_ { TAPU, 1.988, 2.988, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+make_ { TAPU, 3.341, 4.341, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+make_ { TAPU, 4.693, 5.693, player = 1, rel = "4" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.045
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.215
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.384
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.553
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.722
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.891
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 8.060
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 8.229
+b = 1.353
+make_ { RANKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.045 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.215 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.384 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.553 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.722 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 7.891 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 8.060 + b
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 8.229 + b
+b = nil
+make_ { RANKU, a - 1, a, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 9.750
+make_ { SHIZUKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+----
+local a = 10.257
+make_ { SHIZUKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+----
+local a = 10.765
+make_ { SHIZUKU, a - 1, a, player = 1, rel = "2" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+----
+make_ { PURESU, 10.103, 11.103, len = 0.5, player = 1, rel = "3" }
+---
+pos = { 0, 30, 0 }
+move_ { pos, { 0, 0, 0 } }
+out(MODE, { PSP, RPJ, ABS });
+out(POS, pos)
+out(UP, { 0, 1, 0 })
+out(NORM, { 0, 0, 1 })
+
+
+
+

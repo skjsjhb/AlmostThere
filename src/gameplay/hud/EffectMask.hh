@@ -12,7 +12,7 @@ public:
 
   void refresh();
 
-  void draw();
+  void draw() const;
 
 protected:
   Game &game;

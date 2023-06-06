@@ -140,8 +140,10 @@ void Game::addPlayer(const Account &account, CharID selectedChar) {
 void Game::runOnce() {
   if (status == RUNNING && !audio.bgmPlaying && audio.bgmBuf != 0) {
     vtPlayAudio(audio.bgmBuf);
-  } else if (audio.bgmPlaying && audio.bgmBuf != 0) {
+    audio.bgmPlaying = true;
+  } else if (status != RUNNING && audio.bgmPlaying && audio.bgmBuf != 0) {
     vtPauseAudio(audio.bgmBuf);
+    audio.bgmPlaying = false;
   }
 
   mapTimer.update();
@@ -197,6 +199,7 @@ void Game::runOnce() {
     ctxUI.projMat = glm::ortho(0.0f, 1600.0f, 0.0f, 900.0f); // Constant projection matrix
 
     // Draw objects
+
     for (auto &s : objects.activeObjects) {
       s->draw();
     }

@@ -12,6 +12,7 @@
 #define IDF_NORMAL "NORMAL"
 #define IDF_PCT "PCT"
 #define IDF_TIME "TIME"
+#define IDF_ATIME "ATIME"
 #define IDF_OBJID "OBJID"
 #define IDF_ALPHA "ALPHA"
 
@@ -71,6 +72,7 @@ static int outImpl(lua_State *l) {
 
 static void readVec3(const std::string &outName, glm::vec3 &d) {
   if (!outValuePool.contains(outName)) {
+    d = {0, 0, 0};
     return;
   }
   auto t = outValuePool[outName];
@@ -167,6 +169,7 @@ void ObjController::tick(double absTime) { // NOLINT Recursion is necessary here
   // Setup variables
   inValuePool[IDF_PCT] = std::pair(NUMBER, std::any(pct));
   inValuePool[IDF_TIME] = std::pair(NUMBER, std::any(time));
+  inValuePool[IDF_ATIME] = std::pair(NUMBER, std::any(absTime));
   inValuePool[IDF_OBJID] = std::pair(STRING, std::any(objRef.id));
 
   // Eval script
@@ -220,6 +223,14 @@ void ObjController::tick(double absTime) { // NOLINT Recursion is necessary here
 
   // Cleanup output
   outValuePool.clear();
+}
+ObjController::ObjController(const MapObject &o) : objRef(o) {
+  if (o.type == NOTE) {
+    priority = 1;
+  }
+  if (o.type == SLOT) {
+    priority = 2;
+  }
 }
 
 ObjMinimalRef::ObjMinimalRef(const MapObject &m) {

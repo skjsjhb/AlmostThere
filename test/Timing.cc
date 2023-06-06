@@ -11,7 +11,7 @@ double implGetTime() {
 }
 
 void timeChange() {
-  virtualTime += rand() % 0xfffff;
+  virtualTime += rand() % 0xfffff; // NOLINT Test only
 }
 
 int main() {

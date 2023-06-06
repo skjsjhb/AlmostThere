@@ -30,7 +30,7 @@ public:
   int player = 0;
   double genTime = 0, endTime = 0;
   double length = 0; // The real length (in seconds), for duration notes only.
-  ObjMinimalRef(const MapObject &m);
+  explicit ObjMinimalRef(const MapObject &m);
 };
 
 /**
@@ -71,7 +71,7 @@ public:
    *
    * @param o The object to be used for initialization.
    */
-  explicit ObjController(const MapObject &o) : objRef(o) {};
+  explicit ObjController(const MapObject &o);
 
   /**
    * @brief Get the evaluated state.
@@ -80,7 +80,7 @@ public:
    *
    * @return A copy of the state object.
    */
-  ObjState getState() const;
+  [[nodiscard]] ObjState getState() const;
 
   /**
    * @brief Get the reference values of this controllers.
@@ -90,16 +90,19 @@ public:
    *
    * @return A const reference of the ref obejct.
    */
-  const ObjMinimalRef &getReference() const;
+  [[nodiscard]] const ObjMinimalRef &getReference() const;
 
   /**
    * @brief Set the controller this controller ref to.
    * @param cr Target ptr to be referenced.
    */
-  void setRel(std::weak_ptr<ObjController> cr) { rel = cr; };
+  void setRel(std::weak_ptr<ObjController> cr) { rel = std::move(cr); };
 
   // Virtual destructor
   virtual ~ObjController() = default;
+
+  // Getter of priority
+  int getPriority() const { return priority; }
 
 protected:
   /**
@@ -126,6 +129,9 @@ protected:
 
   // Internal value, defining last time synced
   double lastTickTime = -1;
+
+  // Controller with higher priority runs first
+  int priority = 0;
 };
 
 /**

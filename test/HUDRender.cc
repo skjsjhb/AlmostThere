@@ -31,14 +31,14 @@ int main() {
   unsigned hp = 100;
   unsigned score = 50;
   unsigned shield = 50;
-  ShieldBar s(50, 25);
+  ShieldBar s(g, 50, 25);
   bool revive = false;
 
   // This task cannot be done automatically. Manually check required.
   while (vtGetTime() < 3) {
     if (vtShouldDraw()) {
       g.mapTimer.update();
-      s.draw(g);
+      s.draw();
       b.draw();
       sd.draw();
       em.draw();

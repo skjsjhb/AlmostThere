@@ -28,11 +28,8 @@ protected:
 
 class HPBar {
 public:
-  explicit HPBar(Game &g, HPBarVariant va = HP_NORMAL, unsigned int max = 100, unsigned int cur = 100) : game(g),
-                                                                                                         variant(va),
-                                                                                                         hpCurrent(
-                                                                                                             cur),
-                                                                                                         hpMax(max) {};
+  explicit HPBar(Game &g, HPBarVariant va = HP_NORMAL, unsigned int max = 100, unsigned int cur = 100) :
+      game(g), variant(va), hpCurrent(cur), hpMax(max) {};
 
   /**
    * @brief Sets the new HP value.

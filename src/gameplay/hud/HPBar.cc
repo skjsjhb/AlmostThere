@@ -45,6 +45,9 @@ bool HPDrainSection::shouldUnload(double absTime) const {
 }
 
 void HPBar::setHP(unsigned int nv, bool animation) {
+  if (nv == hpCurrent) {
+    return;
+  }
   auto t = game.mapTimer.getTime();
 
   if (nv < hpCurrent && animation) {

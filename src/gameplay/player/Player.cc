@@ -149,7 +149,6 @@ void Player::activateSkill(SkillType st) {
   if (st == SK_FINAL) {
     finalShouldActivate = true;
   }
-  return;
 }
 
 std::shared_ptr<Player> Player::createPlayer(CharID ch, const std::string &n, unsigned int u, unsigned int p, bool d) {

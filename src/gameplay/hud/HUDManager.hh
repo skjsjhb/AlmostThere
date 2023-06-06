@@ -10,14 +10,14 @@ class DrawList;
 
 class HUDManager {
 public:
-  explicit HUDManager(Game &g) : game(g), hp(g), score(g) {}
+  explicit HUDManager(Game &g) : game(g), hp(g), shield(g), score(g) {}
 
   void draw();
 
 protected:
   Game &game;
   HPBar hp;
-  ShieldBar shield{};
+  ShieldBar shield;
   ScoreDisplay score;
 };
 
