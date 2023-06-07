@@ -11,6 +11,7 @@
 #include <list>
 #include <spdlog/spdlog.h>
 #include <fstream>
+#include <sstream>
 #include <utility>
 #include <any>
 
