@@ -4,6 +4,10 @@ A 3D multiplayer rhythm game from scratch, with character skills.
 
 Currently only in an early stage.
 
+## We are looking for collaborators!
+
+If you have interest in rhythm games, and are willing to join and create a new world together with us, then please contact me via skjsjhb@outlook.com ;) We appreciate any form of help!
+
 ## Credits
 
 We would like to thank the authors/vendors of the following softwares, services or libraries, Almost There won't be here
