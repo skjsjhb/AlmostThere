@@ -39,8 +39,5 @@ void ShieldBar::draw() const {
              Point({xend, ybegin, 0}, {1, 0}), p);
       game.drawList.add(std::make_unique<Rect>(r));
     }
-
   }
-
-  em.draw();
 }

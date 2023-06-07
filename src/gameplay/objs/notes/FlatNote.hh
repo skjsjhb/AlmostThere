@@ -14,7 +14,7 @@ public:
   FlatNote(NoteType t, Game &g) : Note(t, g) {}
 
 protected:
-  virtual void draw() override;
+  void draw() override;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTES_FLATNOTE */

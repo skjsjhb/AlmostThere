@@ -5,11 +5,10 @@
 #include "engine/virtual/Audio.hh"
 #include "lua/LuaSupport.hh"
 #include "lua/LuaExt.hh"
-#include "gameplay/map/MapLoad.hh"
-#include "gameplay/control/Controller.hh"
 #include "gameplay/base/Game.hh"
 #include "user/Account.hh"
 #include "spdlog/spdlog.h"
+#include "gameplay/map/luamap/LuaMapGen.hh"
 
 #define AT_NAME_ARTWORK "\n=================================================\n             _                             _\n\
      /\\     | |                           | |\n\
@@ -38,11 +37,11 @@ void sysInitFull() {
   luaInit();
   luaSetupExt();
 
-  // Map Loader
-  initMapLoader();
+  // Lua Map Loader
+  initLuaMapLoader();
 
   // Controller
-  initControllerLuaExt();
+  // initControllerLuaExt();
 }
 
 void playDemoMap() {

@@ -1,11 +1,11 @@
 MapVersion = 1
 Duration = 12.5
-Song = "test.mp3"
+Audio = "test.mp3"
 Background = "test.png"
 use("at")
 use("atm")
 -----
-make_ { CAMERA, id = "cam" }
+make_ { CAMERA, 0, 12.5, id = "cam" }
 ---
 out(MODE, { ABS, ABS, ABS })
 out(POS, { 0, 2, 25 })
@@ -13,7 +13,7 @@ out(UP, { 0, 1, 0 })
 out(NORM, { 0, 0, -1 })
 usecam("cam")
 ----
-make_ { CAMERA, id = "base" }
+make_ { CAMERA, 0, 12.5, id = "base" }
 ---
 local t = inc(ATIME) / 3;
 out(MODE, { ABS, ABS, ABS })

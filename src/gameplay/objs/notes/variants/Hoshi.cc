@@ -16,19 +16,19 @@ void Hoshi::draw() {
 
   Point points[6]; // NS, LR, FB
 
-  auto stat = controller->getState();
-  auto rightVec = glm::normalize(glm::cross(stat.up, stat.normal)) * float(sizew);
+  auto output = controller->getOutput();
+  auto rightVec = glm::normalize(glm::cross(output.up, output.norm)) * float(sizew);
 
-  auto upVec = stat.up * float(sizew);
-  auto normVec = stat.normal * float(sizew);
+  auto upVec = output.up * float(sizew);
+  auto normVec = output.norm * float(sizew);
 
-  points[0] = {stat.pos + normVec, {0, 1}};
-  points[1] = {stat.pos - normVec, {0, 1}};
+  points[0] = {output.pos + normVec, {0, 1}};
+  points[1] = {output.pos - normVec, {0, 1}};
 
-  points[2] = {stat.pos - rightVec, {1, 0}};
-  points[3] = {stat.pos + rightVec, {1, 0}};
-  points[4] = {stat.pos - upVec, {0, 0}};
-  points[5] = {stat.pos + upVec, {0, 0}};
+  points[2] = {output.pos - rightVec, {1, 0}};
+  points[3] = {output.pos + rightVec, {1, 0}};
+  points[4] = {output.pos - upVec, {0, 0}};
+  points[5] = {output.pos + upVec, {0, 0}};
 
   DrawParam p = {
       .shader = "3d/mesh",

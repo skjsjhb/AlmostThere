@@ -174,7 +174,7 @@ end
 
 
 -- Constants
-
+atlib.NONE = -2
 atlib.TAPU = 0
 atlib.PURESU = 1
 atlib.SHIZUKU = 2
@@ -211,13 +211,13 @@ atlib.OFS = 3
 local objReg = __native_objreg;
 __native_objreg = nil;
 
-atlib.make = function(tp, gen, hit, id, player, rel, len)
-    objReg(tp, id, player, gen, hit, rel, len)
+atlib.make = function(tp, gen, hit, id, player, rel, len, fak)
+    objReg(tp, id, player, gen, hit, rel, len, fak)
 end
 
 atlib.make_ = function(ina)
     atlib.make(ina.tp or ina[1], ina.gen or ina[2], ina.hit or ina[3], ina.id or ina[4] or "", ina.player or ina[5] or 0,
-            ina.rel or ina[6] or "", ina.len or ina[7] or 0)
+            ina.rel or ina[6] or "", ina.len or ina[7] or 0, ina.fake or ina[8] or false)
 end
 
 local lcUseCam = __native_use_cam

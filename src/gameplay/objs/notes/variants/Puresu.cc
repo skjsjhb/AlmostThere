@@ -16,8 +16,7 @@ void Puresu::performJudge() {
   auto range = game.rules.judgeTimeWindow.range;
   auto almost = game.rules.judgeTimeWindow.almost;
   auto good = game.rules.judgeTimeWindow.good;
-
-  auto &ref = controller->getReference();
+  auto lifeTime = controller->getLifeTime();
 
   switch (judgeStage) {
   case JUDGED:
@@ -27,24 +26,24 @@ void Puresu::performJudge() {
     if (!isPressed()) {
       judgeStage = CLEAR;
     }
-    if (!isOverlapped(ref.endTime, range, time, 0) &&
-        time > ref.endTime) {
+    if (!isOverlapped(lifeTime.hitTime, range, time, 0) &&
+        time > lifeTime.hitTime) {
       // Lost
-      game.score.addRecord(NoteScoreEntry::create(PRSU, LT));
+      game.score.addRecord(NoteScoreEntry::create(typ, LT));
       judgeStage = JUDGED;
     }
     break;
   case CLEAR:
     // Accepting judge
-    if (isOverlapped(ref.endTime, good, time, 0) &&
+    if (isOverlapped(lifeTime.hitTime, good, time, 0) &&
         isPressed()) {
       // Turn to active, keep pressing!
       judgeStage = ACTIVE;
     } else {
-      if (time > ref.endTime &&
-          !isOverlapped(ref.endTime, range, time, 0)) {
+      if (time > lifeTime.hitTime &&
+          !isOverlapped(lifeTime.hitTime, range, time, 0)) {
         // Lost
-        game.score.addRecord(NoteScoreEntry::create(PRSU, LT));
+        game.score.addRecord(NoteScoreEntry::create(typ, LT));
         judgeStage = JUDGED;
       } else if (isPressed()) {
         // Too early
@@ -53,25 +52,25 @@ void Puresu::performJudge() {
     }
     break;
   case ACTIVE:
-    if (time >= ref.endTime + ref.length) {
+    if (time >= lifeTime.hitTime + lifeTime.length) {
       // Well done!
-      game.score.addRecord(NoteScoreEntry::create(PRSU, PF));
+      game.score.addRecord(NoteScoreEntry::create(typ, PF));
       judgeStage = JUDGED;
       return;
     }
     if (!isPressed()) {
-      if (isOverlapped((ref.endTime + ref.length), almost, time, 0)) {
+      if (isOverlapped((lifeTime.hitTime + lifeTime.length), almost, time, 0)) {
         // AT
-        game.score.addRecord(NoteScoreEntry::create(PRSU, AT));
+        game.score.addRecord(NoteScoreEntry::create(typ, AT));
         judgeStage = JUDGED;
         return;
-      } else if (isOverlapped((ref.endTime + ref.length), good, time, 0)) {
+      } else if (isOverlapped((lifeTime.hitTime + lifeTime.length), good, time, 0)) {
         // AC
-        game.score.addRecord(NoteScoreEntry::create(PRSU, AC));
+        game.score.addRecord(NoteScoreEntry::create(typ, AC));
         judgeStage = JUDGED;
         return;
       }
-      // Do not refresh time
+      // Do not lifeTimeresh time
     } else {
       lastSuccJudge = time; // Refresh time
     }
@@ -80,11 +79,11 @@ void Puresu::performJudge() {
     }
     if (lastSuccJudge != -1 &&
         time - lastSuccJudge > game.rules.judgeTimeWindow.allowBreak) {
-      if (lastSuccJudge - ref.endTime > 0.5 * ref.length) {
-        game.score.addRecord(NoteScoreEntry::create(PRSU, MD));
+      if (lastSuccJudge - lifeTime.hitTime > 0.5 * lifeTime.length) {
+        game.score.addRecord(NoteScoreEntry::create(typ, MD));
       } else {
         // At least you've got to ACTIVE
-        game.score.addRecord(NoteScoreEntry::create(PRSU, TC));
+        game.score.addRecord(NoteScoreEntry::create(typ, TC));
       }
       judgeStage = JUDGED;
     }
@@ -94,18 +93,18 @@ void Puresu::performJudge() {
 }
 
 void Puresu::draw() {
-  auto stat = controller->getState();
+  auto output = controller->getOutput();
 
-  if (!isActive || stat.len <= 0) {
+  if (!isActive || output.len <= 0) {
     return;
   }
 
   sizeh /= 2.0; // Temporarily shift
-  auto upLen = stat.up * float(sizeh);
-  auto ctr = stat.pos - upLen;
+  auto upLen = output.up * float(sizeh);
+  auto ctr = output.pos - upLen;
 
   glm::vec3 pts[4];
-  createRect(ctr, stat.up, stat.normal, sizew, sizeh, pts);
+  createRect(ctr, output.up, output.norm, sizew, sizeh, pts);
 
   DrawParam headPar = {
       .shader = "3d/mesh",
@@ -115,11 +114,11 @@ void Puresu::draw() {
 
   Rect head({pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, headPar);
 
-  auto scaleFac = stat.len * PURESU_LENGTH_SCALE * 0.5;
-  auto centerMove = stat.up * float(scaleFac);
-  auto bCenter = stat.pos + centerMove;
+  auto scaleFac = output.len * PURESU_LENGTH_SCALE * 0.5;
+  auto centerMove = output.up * float(scaleFac);
+  auto bCenter = output.pos + centerMove;
 
-  createRect(bCenter, stat.up, stat.normal, sizew, scaleFac, pts);
+  createRect(bCenter, output.up, output.norm, sizew, scaleFac, pts);
 
   DrawParam bodyPar = {
       .shader = "3d/mesh",
@@ -131,7 +130,7 @@ void Puresu::draw() {
 
   auto tCenter = bCenter + centerMove + upLen;
 
-  createRect(tCenter, stat.up, stat.normal, sizew, sizeh, pts);
+  createRect(tCenter, output.up, output.norm, sizew, sizeh, pts);
   DrawParam tailPar = {
       .shader = "3d/mesh",
       .texture = "puresu-tail",

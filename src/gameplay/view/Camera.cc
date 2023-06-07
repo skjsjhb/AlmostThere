@@ -1,8 +1,8 @@
 #include "Camera.hh"
 
-#include "gameplay/map/MapDef.hh"
 #include "engine/virtual/Window.hh"
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 #define PERSPECTIVE_NEAR 0.1f
 #define PERSPECTIVE_FAR 100.0f
@@ -23,16 +23,16 @@ void Camera::setState(glm::vec3 pos_, glm::vec3 direction_, glm::vec3 up_, doubl
 
 void Camera::tick() {
   TickObject::tick();
-  auto stat = controller->getState();
+  auto output = controller->getOutput();
   int wx, wy;
   vtGetWindowSize(wx, wy);
 
-  setState(stat.pos, stat.normal, stat.up, fov, wx / (double) wy);
+  setState(output.pos, output.norm, output.up, fov, wx / (double) wy);
 }
 
-std::shared_ptr<Camera> Camera::createCamera(const std::weak_ptr<CameraObject> &o, Game &g) {
+std::shared_ptr<Camera> Camera::create(Game &g, std::shared_ptr<Controller> ct) {
   auto pt = std::make_shared<Camera>(g);
-  pt->controller = std::make_shared<ObjController>(*o.lock());
+  pt->controller = std::move(ct);
   return pt;
 }
 

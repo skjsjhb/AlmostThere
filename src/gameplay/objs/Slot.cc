@@ -1,3 +1,5 @@
+#include <utility>
+
 #include "Slot.hh"
 #include "Note.hh"
 
@@ -11,9 +13,9 @@ void Slot::draw() {
   if (!isActive) {
     return;
   }
-  auto stat = controller->getState();
+  auto stat = controller->getOutput();
 
-  auto dw = glm::normalize(glm::cross(stat.up, stat.normal)) * float(SLOT_SIZE);
+  auto dw = glm::normalize(glm::cross(stat.up, stat.norm)) * float(SLOT_SIZE);
   auto dh = stat.up * float(variant == CIRCLE ? SLOT_SIZE : SLOT_SIZE / 2);
   auto ctr = stat.pos - dh;
 
@@ -27,11 +29,9 @@ void Slot::draw() {
   Rect r = {ltp, lbp, rtp, rbp, p};
   game.drawList.add(std::make_unique<Rect>(r));
 }
-
-std::shared_ptr<Slot> Slot::createSlot(const std::weak_ptr<SlotObject> &o, Game &g) {
+std::shared_ptr<Slot> Slot::create(SlotVariant va, Game &g, std::shared_ptr<Controller> ct) {
   auto st = std::make_shared<Slot>(g);
-  auto opt = o.lock();
-  st->controller = std::make_shared<ObjController>(*opt);
-  st->variant = opt->slotType;
+  st->controller = std::move(ct);
+  st->variant = va;
   return st;
 }

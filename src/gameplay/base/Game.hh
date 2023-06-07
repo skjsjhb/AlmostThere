@@ -3,12 +3,12 @@
 
 #include "engine/virtual/Audio.hh"
 #include "engine/virtual/Graphics.hh"
-#include "gameplay/map/MapDef.hh"
 #include "gameplay/player/chars/CharList.hh"
 #include "gameplay/rules/GameRules.hh"
 #include "gameplay/score/ScoreRecord.hh"
 #include "gameplay/time/Timer.hh"
 #include "gameplay/view/View.hh"
+#include "gameplay/map/MapGen.hh"
 #include <list>
 #include <map>
 #include <string>
@@ -28,37 +28,12 @@ enum GameStatus {
   DONE,    // Leaving
 };
 
-/**
- * @brief Generated objects from map.
- *
- * This class stores all objects used by the game, including their name map.
- */
-struct GeneratedObjects {
-  /**
-   * @brief Sorted pending objects buffer.
-   */
-  std::list<std::shared_ptr<TickObject>> bufferedObjects;
-
-  /**
-   * @brief Active objects for updating on each tick.
-   */
-  std::set<std::shared_ptr<TickObject>> activeObjects;
-
-  /**
-   * @brief Objects for name indexing.
-   */
-  std::map<std::string, std::weak_ptr<TickObject>> namedObjects;
-
-  // This buffer is not used yet
-  // std::set<std::shared_ptr<TickObject>> unloadedObjects;
-};
-
 struct AudioStat {
   unsigned int bgmBuf = 0;
   bool bgmPlaying = false;
 };
 
-class Game {
+class Game final {
 public:
   Game() : hudManager(*this) {}
 
@@ -90,8 +65,12 @@ public:
    */
   int pid = -1;
   std::vector<std::shared_ptr<Player>> players;
-  GeneratedObjects objects;
-  GameMap map;
+
+  MapData mapData;
+  decltype(mapData.content.objects.begin()) mapObjectPtr;
+
+  // Internal variable to process only active objects
+  std::set<std::shared_ptr<TickObject>> activeObjects;
 
   /**
    * @brief The score of current player.

@@ -1,7 +1,7 @@
 #ifndef GAMEPLAY_OBJS_TICKOBJECT
 #define GAMEPLAY_OBJS_TICKOBJECT
 
-#include "gameplay/control/Controller.hh"
+#include "gameplay/map/Controller.hh"
 #include <memory>
 
 #define OBJ_UNLOAD_DELAY 1
@@ -14,7 +14,7 @@ class TickObject {
 public:
   [[nodiscard]] virtual bool shouldTick() const;
 
-  [[nodiscard]] virtual double getTickTime() const { return controller->getReference().genTime; };
+  [[nodiscard]] virtual double getGenTime() const { return controller->getLifeTime().genTime; };
 
   /**
    * @brief Main tick method for any tickable object.
@@ -52,12 +52,12 @@ public:
    * manually might cause potential desync.
    * @return A weak ptr to the controller object.
    */
-  std::weak_ptr<ObjController> getController() {
+  std::weak_ptr<Controller> getController() {
     return controller;
   };
 
 protected:
-  std::shared_ptr<ObjController> controller;
+  std::shared_ptr<Controller> controller;
 
   // Game reference
   Game &game;

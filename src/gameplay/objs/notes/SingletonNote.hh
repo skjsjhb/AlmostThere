@@ -20,7 +20,7 @@ protected:
    * This function judges the note according to its state and input buffer. If a judge
    * completed, a score might be pushed into the score record set.
    */
-  virtual void performJudge() override;
+  void performJudge() override;
 };
 
 #endif /* GAMEPLAY_OBJS_NOTES_SINGLETONNOTE */

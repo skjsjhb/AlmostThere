@@ -6,7 +6,7 @@
 
 class Tapu : public SingletonNote, public FlatNote {
 public:
-  explicit Tapu(Game &g) : Note(TAPU, g), SingletonNote(TAPU, g), FlatNote(TAPU, g) {
+  explicit Tapu(Game &g) : Note(NoteType::TAPU, g), SingletonNote(NoteType::TAPU, g), FlatNote(NoteType::TAPU, g) {
     sizew = 1;
     sizeh = 1;
     name = "tapu";

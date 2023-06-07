@@ -7,7 +7,7 @@ class Hoshi : public SingletonNote {
 public:
   void draw() override;
 
-  explicit Hoshi(Game &g) : Note(HOSHI, g), SingletonNote(HOSHI, g) {
+  explicit Hoshi(Game &g) : Note(NoteType::HOSHI, g), SingletonNote(NoteType::HOSHI, g) {
     sizew = 0.8;
     sizeh = 0.8;
     name = "hoshi";

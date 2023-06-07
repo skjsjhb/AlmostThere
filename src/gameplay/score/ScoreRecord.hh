@@ -104,7 +104,7 @@ public:
   };
 
   void apply(ScoreRecords &sr) const override {
-    sr.addScore(NOTE_SCORE_VALUE[nt][gd]);
+    sr.addScore(NOTE_SCORE_VALUE[int(nt)][gd]);
   };
 
 protected:

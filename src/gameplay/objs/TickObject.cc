@@ -4,8 +4,8 @@
 
 bool TickObject::shouldTick() const {
   auto t = game.mapTimer.getTime();
-  auto ref = controller->getReference();
-  return t >= ref.genTime && t <= ref.endTime + ref.length + OBJ_UNLOAD_DELAY;
+  auto ref = controller->getLifeTime();
+  return t >= ref.genTime && t <= ref.unloadTime;
 }
 
 void TickObject::tick() {

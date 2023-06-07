@@ -7,7 +7,7 @@ class Kyozetsu : public FlatNote {
 public:
   void performJudge() override;
 
-  explicit Kyozetsu(Game &g) : Note(KZTU, g), FlatNote(KZTU, g) {
+  explicit Kyozetsu(Game &g) : Note(NoteType::KZTU, g), FlatNote(NoteType::KZTU, g) {
     sizew = 1;
     sizeh = 1;
     name = "kyozetsu";

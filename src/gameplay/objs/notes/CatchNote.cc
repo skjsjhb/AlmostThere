@@ -11,21 +11,21 @@ void CatchNote::performJudge() {
     return;
   }
   auto time = game.mapTimer.getTime();
-  auto &ref = controller->getReference();
+  auto lifeTime = controller->getLifeTime();
 
   switch (judgeStage) {
   case JUDGED:isActive = false;
     return;
   default:
     // In all other cases, check and judge
-    if (isOverlapped(ref.endTime, CATCH_NOTE_WINDOW, time, 0)) {
+    if (isOverlapped(lifeTime.hitTime, CATCH_NOTE_WINDOW, time, 0)) {
       if (isPressed()) {
         // You got it
         game.score.addRecord(NoteScoreEntry::create(typ, PF));
         judgeStage = JUDGED;
       }
     } else {
-      if (time > ref.endTime) {
+      if (time > lifeTime.hitTime) {
         // You failed!
         game.score.addRecord(NoteScoreEntry::create(typ, LT));
         judgeStage = JUDGED;

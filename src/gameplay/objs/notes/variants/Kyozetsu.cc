@@ -8,7 +8,7 @@ void Kyozetsu::performJudge() {
     return;
   }
 
-  auto &ref = controller->getReference();
+  auto lifeTime = controller->getLifeTime();
   auto time = game.mapTimer.getTime();
 
   switch (judgeStage) {
@@ -16,16 +16,16 @@ void Kyozetsu::performJudge() {
     return;
   default:
     // In all other cases, check and judge
-    if (isOverlapped(ref.endTime, game.rules.judgeTimeWindow.good, time, 0)) {
+    if (isOverlapped(lifeTime.hitTime, game.rules.judgeTimeWindow.good, time, 0)) {
       if (isPressed()) {
         // You touched the zone!
-        game.score.addRecord(NoteScoreEntry::create(KZTU, LT));
+        game.score.addRecord(NoteScoreEntry::create(typ, LT));
         judgeStage = JUDGED;
       }
     } else {
-      if (time > ref.endTime + game.rules.judgeTimeWindow.good) {
+      if (time > lifeTime.hitTime + game.rules.judgeTimeWindow.good) {
         // OK very well!
-        game.score.addRecord(NoteScoreEntry::create(KZTU, LT));
+        game.score.addRecord(NoteScoreEntry::create(typ, LT));
         judgeStage = JUDGED;
       }
     }

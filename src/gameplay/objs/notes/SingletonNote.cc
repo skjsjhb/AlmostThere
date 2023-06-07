@@ -13,7 +13,7 @@ void SingletonNote::performJudge() {
   }
   auto range = game.rules.judgeTimeWindow.range;
 
-  auto &ref = controller->getReference();
+  auto lifeTime = controller->getLifeTime();
 
   switch (judgeStage) {
   case BUSY:
@@ -24,7 +24,7 @@ void SingletonNote::performJudge() {
       judgeStage = CLEAR;
     }
     // If it's too late...
-    if (time > ref.endTime + range) {
+    if (time > lifeTime.hitTime + range) {
       game.score.addRecord(NoteScoreEntry::create(typ, LT));
       judgeStage = JUDGED;
     }
@@ -32,11 +32,11 @@ void SingletonNote::performJudge() {
   case CLEAR:
     // The note position is cleared, but the note is not in its judge window yet.
     // If it went into its window and can be judged, activate it.
-    if (isOverlapped(ref.endTime, range, time, 0)) {
+    if (isOverlapped(lifeTime.hitTime, range, time, 0)) {
       judgeStage = ACTIVE;
     } else {
       // If it's already too late...
-      if (time > ref.endTime + range) {
+      if (time > lifeTime.hitTime + range) {
         game.score.addRecord(NoteScoreEntry::create(typ, LT));
         judgeStage = JUDGED;
       }
@@ -51,9 +51,9 @@ void SingletonNote::performJudge() {
     // Now in judge window
     if (isPressed()) {
       judgeStage = JUDGED;
-      auto scr = getTimingGrade(time, ref.endTime, game.rules);
+      auto scr = getTimingGrade(time, lifeTime.hitTime, game.rules);
       game.score.addRecord(NoteScoreEntry::create(typ, scr));
-    } else if (!isOverlapped(ref.endTime, range, time, 0)) {
+    } else if (!isOverlapped(lifeTime.hitTime, range, time, 0)) {
       // Already too late. Ready to lost
       judgeStage = CLEAR;
     }

@@ -30,11 +30,11 @@ public:
   using TickObject::TickObject;
 
   // A camera is an always-loaded object
-  virtual bool shouldTick() const override { return true; };
+  [[nodiscard]] bool shouldTick() const override { return true; };
 
-  virtual double getTickTime() const override { return 0; };
+  [[nodiscard]] double getGenTime() const override { return 0; };
 
-  static std::shared_ptr<Camera> createCamera(const std::weak_ptr<CameraObject> &o, Game &g);
+  static std::shared_ptr<Camera> create(Game &g, std::shared_ptr<Controller> ct);
 
 protected:
   glm::vec3 pos;

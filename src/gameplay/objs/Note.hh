@@ -14,10 +14,8 @@
 #include "TickObject.hh"
 
 enum JudgeStage {
-  BUSY,   // The area is not cleared, other inputs may be present (for previous
-  // notes)
-  CLEAR,  // Zone cleared, but not yet able to judge (turn to busy if input
-  // detected)
+  BUSY,   // The area is not cleared, other inputs may be present (for previous notes)
+  CLEAR,  // Zone cleared, but not yet able to judge (turn to busy if input detected)
   ACTIVE, // Now accepting input (any input detected will start the judge)
   JUDGED, // Judge finished, either missed or completed
 };
@@ -33,8 +31,7 @@ public:
 
   Note(NoteType tp, Game &g) : TickObject(g), typ(tp) {};
 
-  static std::shared_ptr<Note> createNote(const std::weak_ptr<NoteObject> &obj,
-                                          Game &g);
+  static std::shared_ptr<Note> create(NoteType tp, Game &g, std::shared_ptr<Controller> ct, bool isFake);
 
 protected:
   /**

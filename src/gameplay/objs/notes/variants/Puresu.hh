@@ -5,7 +5,7 @@
 
 class Puresu : public Note {
 public:
-  explicit Puresu(Game &g) : Note(PRSU, g) {
+  explicit Puresu(Game &g) : Note(NoteType::PRSU, g) {
     sizew = 1.0;
     sizeh = 1.0;
     name = "puresu";

@@ -1,5 +1,6 @@
 MapVersion = 1
 Duration = 15
+ID = "mapload"
 use("at")
 -----
 make_ { EUREKA, 0, 15, "test", 0 }

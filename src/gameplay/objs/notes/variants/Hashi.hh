@@ -9,7 +9,7 @@ public:
 
   void draw() override;
 
-  explicit Hashi(Game &g) : Note(HASHI, g) {
+  explicit Hashi(Game &g) : Note(NoteType::HASHI, g) {
     sizew = 0.6;
     sizeh = 0.6;
     name = "hashi";

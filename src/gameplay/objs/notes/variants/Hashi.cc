@@ -11,12 +11,14 @@ void Hashi::performJudge() {
     return;
   }
   auto time = game.mapTimer.getTime();
-  auto &ref = controller->getReference();
+
+  auto ref = controller->getLifeTime();
+
   switch (judgeStage) {
   case JUDGED:isActive = false;
     return;
   default:
-    if (time > ref.endTime && time < ref.endTime + ref.length) {
+    if (time > ref.hitTime && time < ref.hitTime + ref.length) {
       if (lastSuccJudge == -1) {
         lastSuccJudge = time;
         return;
@@ -25,32 +27,32 @@ void Hashi::performJudge() {
         judgedLength += (time - lastSuccJudge);
       }
       lastSuccJudge = time;
-    } else if (time > ref.endTime + ref.length) {
+    } else if (time > ref.hitTime + ref.length) {
       judgeStage = JUDGED;
       auto comRate = judgedLength / ref.length;
       if (comRate > 0.95) {
-        game.score.addRecord(NoteScoreEntry::create(HASHI, PF));
+        game.score.addRecord(NoteScoreEntry::create(typ, PF));
       } else if (comRate > 0.85) {
-        game.score.addRecord(NoteScoreEntry::create(HASHI, AT));
+        game.score.addRecord(NoteScoreEntry::create(typ, AT));
       } else if (comRate > 0.70) {
-        game.score.addRecord(NoteScoreEntry::create(HASHI, AC));
+        game.score.addRecord(NoteScoreEntry::create(typ, AC));
       } else if (comRate > 0.45) {
-        game.score.addRecord(NoteScoreEntry::create(HASHI, MD));
+        game.score.addRecord(NoteScoreEntry::create(typ, MD));
       } else if (comRate > 0) {
-        game.score.addRecord(NoteScoreEntry::create(HASHI, TC));
+        game.score.addRecord(NoteScoreEntry::create(typ, TC));
       } else {
-        game.score.addRecord(NoteScoreEntry::create(HASHI, LT));
+        game.score.addRecord(NoteScoreEntry::create(typ, LT));
       }
     }
   }
 }
 
 void Hashi::draw() {
-  auto stat = controller->getState();
-  if (!isActive || stat.len <= 0) {
+  auto output = controller->getOutput();
+  if (!isActive || output.len <= 0) {
     return;
   }
-  auto right = glm::normalize(glm::cross(stat.up, stat.normal)) * float(sizew);
+  auto right = glm::normalize(glm::cross(output.up, output.norm)) * float(sizew);
 
   Point btmPoints[6], headPoints[6];
 
@@ -64,12 +66,12 @@ void Hashi::draw() {
   for (int i = 0; i < 6; i++) {
     auto ang = glm::radians(float(i) * 60.0f);
     btmPoints[i] = {
-        stat.pos + glm::rotate(right, ang, stat.normal), // Pos Coord
+        output.pos + glm::rotate(right, ang, output.norm), // Pos Coord
         glm::vec2(0.5, 0.5) + glm::rotate(glm::vec2({0.5, 0}), ang),
     };
   }
 
-  auto upLength = glm::normalize(stat.normal) * float(stat.len * HASHI_LENGTH_SCALE);
+  auto upLength = glm::normalize(output.norm) * float(output.len * HASHI_LENGTH_SCALE);
 
   // In the past, long Hashi notes requires cutting in order to render them
   // correctly. Now Hashi are opaque and there is no need to calculate this

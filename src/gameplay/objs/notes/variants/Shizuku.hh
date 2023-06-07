@@ -6,7 +6,7 @@
 
 class Shizuku : public FlatNote, public CatchNote {
 public:
-  explicit Shizuku(Game &g) : Note(TAPU, g), FlatNote(TAPU, g), CatchNote(TAPU, g) {
+  explicit Shizuku(Game &g) : Note(NoteType::SZKU, g), FlatNote(NoteType::SZKU, g), CatchNote(NoteType::SZKU, g) {
     sizew = 0.6;
     sizeh = 0.6;
     name = "shizuku";

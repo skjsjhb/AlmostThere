@@ -7,7 +7,8 @@ void FlatNote::draw() {
   if (!isActive) {
     return;
   }
-  auto stat = controller->getState();
+
+  auto output = controller->getOutput();
 
   DrawParam p = {
       .shader = "3d/mesh",
@@ -16,7 +17,7 @@ void FlatNote::draw() {
   };
 
   glm::vec3 pts[4];
-  createRect(stat.pos, stat.up, stat.normal, sizew, sizeh, pts);
+  createRect(output.pos, output.up, output.norm, sizew, sizeh, pts);
 
   Rect r = {{pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, p};
 

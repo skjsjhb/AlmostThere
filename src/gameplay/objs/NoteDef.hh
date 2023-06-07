@@ -1,7 +1,7 @@
 #ifndef GAMEPLAY_OBJS_NOTEDEF
 #define GAMEPLAY_OBJS_NOTEDEF
 
-enum NoteType {
+enum class NoteType {
   TAPU,  // Tapu
   PRSU,  // Puresu
   SZKU,  // Shizuku

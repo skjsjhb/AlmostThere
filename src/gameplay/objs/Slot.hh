@@ -3,8 +3,7 @@
 
 #include "TickObject.hh"
 #include "engine/virtual/Graphics.hh"
-#include "gameplay/control/Controller.hh"
-#include "gameplay/map/MapDef.hh"
+#include "NoteDef.hh"
 #include <memory>
 #include <set>
 
@@ -13,13 +12,13 @@ class Slot : public TickObject {
 public:
   SlotVariant variant;
 
-  void draw();
+  void draw() override;
 
   // Constructor
   using TickObject::TickObject;
   bool isActive = true;
 
-  static std::shared_ptr<Slot> createSlot(const std::weak_ptr<SlotObject> &o, Game &g);
+  static std::shared_ptr<Slot> create(SlotVariant va, Game &g, std::shared_ptr<Controller> ct);
 };
 
 #endif /* GAMEPLAY_OBJS_SLOT */
