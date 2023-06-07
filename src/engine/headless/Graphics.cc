@@ -6,7 +6,7 @@ void vtDeInitGraphics() {}
 
 int vtGetGraphicsError() { return 0; }
 
-void vtSetBufferSize(int w, int h) {}
+void vtSetBufferSize(int, int) {}
 
 void vtSetBackground(const std::string &img) {}
 

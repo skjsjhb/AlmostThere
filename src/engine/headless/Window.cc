@@ -26,10 +26,10 @@ void vtGetCoord(int sx, int sy, int &rx, int &ry) {
   ry = sy;
 }
 
-void vtSetFPSCap(unsigned int fps) {}
+void vtSetFPSCap(unsigned int) {}
 
 bool vtShouldDraw() { return true; }
 
 void vtDisplayFlip() {}
 
-void vtSetTPSCap(unsigned int tps) {}
+void vtSetTPSCap(unsigned int) {}

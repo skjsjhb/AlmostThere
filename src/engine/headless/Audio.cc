@@ -2,18 +2,18 @@
 
 void vtInitAudio() {}
 
-unsigned int vtLoadAudio(const std::string &fname) { return 1; }
+unsigned int vtLoadAudio(const std::string &) { return 1; }
 
-void vtUnloadAudio(unsigned int sid) {}
+void vtUnloadAudio(unsigned int) {}
 
-void vtPlayAudio(unsigned int sid) {}
+void vtPlayAudio(unsigned int) {}
 
-void vtPauseAudio(unsigned int sid) {}
+void vtPauseAudio(unsigned int) {}
 
-void vtResetAudio(unsigned int sid) {}
+void vtResetAudio(unsigned int) {}
 
 void vtCloseAudio() {}
 
-void vtAudioSpeed(unsigned int sid, float spd) {}
+void vtAudioSpeed(unsigned int, float) {}
 
-void vtResumeAudio(unsigned int sid) {}
+void vtResumeAudio(unsigned int) {}

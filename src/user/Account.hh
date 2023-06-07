@@ -20,13 +20,13 @@ public:
    * @brief Gets the uid of the user.
    * @return The uid number.
    */
-  unsigned int getUID() const;
+  [[nodiscard]] unsigned int getUID() const;
 
   /**
    * @brief Gets the username.
    * @return The name of the user.
    */
-  std::string getUserName() const;
+  [[nodiscard]] std::string getUserName() const;
 
   /**
    * @brief Create a local profile for playing locally.
@@ -41,7 +41,7 @@ public:
    * @brief Gets the account type.
    * @return The type of the account.
    */
-  AccountType getAccountType() const;
+  [[nodiscard]] AccountType getAccountType() const;
 
 protected:
   unsigned int uid;

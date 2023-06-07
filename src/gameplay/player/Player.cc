@@ -142,7 +142,7 @@ void Player::activateSkill(SkillType st) {
   if (sr != 1) {
     // Note ready
     return;
-  };
+  }
   if (st == SK_AUX) {
     auxShouldActivate = true;
   }

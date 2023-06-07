@@ -26,7 +26,7 @@ public:
 
   Length() : value(0), mode(LM_ABSOLUTE) {};
 
-  Length(double v) : value(v), mode(LM_ABSOLUTE) {};
+  explicit Length(double v) : value(v), mode(LM_ABSOLUTE) {};
 
   Length(double v, LengthMode m) : value(v), mode(m) {};
 };

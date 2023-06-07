@@ -4,6 +4,6 @@ unsigned int vtAddUIHook(HookSt st) {
   return 0;
 }
 
-void vtDeUIHook(unsigned int hid) {}
+void vtDeUIHook(unsigned int) {}
 
 void vtNotifyUIHooks(const InputBuffer &ibuf) {}
