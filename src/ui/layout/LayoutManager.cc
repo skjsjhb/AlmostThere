@@ -3,10 +3,10 @@
 #include <spdlog/spdlog.h>
 
 static Component rootComp = {
-    .dx = 0,
+    .dx =  0,
     .dy = 0,
     .w = 1600,
-    .h = 900,
+    .h =  900,
     .baseHorz = AL_BEGIN,
     .baseVert = AL_BEGIN,
     .selfHorz = AL_BEGIN,
