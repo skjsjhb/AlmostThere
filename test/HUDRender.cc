@@ -35,7 +35,7 @@ int main() {
   bool revive = false;
 
   // This task cannot be done automatically. Manually check required.
-  while (vtGetTime() < 3) {
+  while (vtGetTime() < 300) {
     if (vtShouldDraw()) {
       g.mapTimer.update();
       s.draw();

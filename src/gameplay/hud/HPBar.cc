@@ -4,8 +4,8 @@
 
 #define HP_BAR_WIDTH 800
 #define HP_BAR_XBEGIN 400
-#define HP_BAR_YBEGIN 770
-#define HP_BAR_HEIGHT 25
+#define HP_BAR_YBEGIN 840
+#define HP_BAR_HEIGHT 18
 
 #define HP_DRAIN_ADDH 20
 #define HP_DRAIN_TIME 0.3
@@ -37,7 +37,7 @@ void HPDrainSection::draw(Game &g, double absTime) {
   };
 
   Rect r(Point({xbegin, y2, 0}), Point({xbegin, y1, 0}), Point({xend, y2, 0}), Point({xend, y1, 0}), p);
-  g.drawList.add(std::make_unique<Rect>(r));
+  g.drawList.add(r);
 }
 
 bool HPDrainSection::shouldUnload(double absTime) const {
@@ -122,8 +122,8 @@ void HPBar::draw() {
   };
   Rect hpl(pts[0], pts[1], pts[2], pts[3], parLeft);
   Rect hpr(pts[2], pts[3], pts[4], pts[5], parRight);
-  game.drawList.add(std::make_unique<Rect>(hpl));
-  game.drawList.add(std::make_unique<Rect>(hpr));
+  game.drawList.add(hpl);
+  game.drawList.add(hpr);
 
   auto i = hpDrainEffects.begin();
   while (i != hpDrainEffects.end()) {
