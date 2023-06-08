@@ -91,8 +91,8 @@ void Hashi::draw() {
   TriangleStrip tsb = {strip(btmPoints, ptInd), hat};
   TriangleStrip tsp = {strip(headPoints, ptInd), hat};
 
-  game.drawList.add(std::make_unique<TriangleStrip>(tsb));
-  game.drawList.add(std::make_unique<TriangleStrip>(tsp));
+  game.drawList.add(tsb);
+  game.drawList.add(tsp);
 
   DrawParam side = {
       .shader = "3d/mesh",
@@ -107,6 +107,6 @@ void Hashi::draw() {
         {headPoints[i + 1].getPosition(), {1, 1}},
         {btmPoints[i + 1].getPosition(), {1, 0}},
         side);
-    game.drawList.add(std::make_unique<Rect>(r));
+    game.drawList.add(r);
   }
 }

@@ -23,10 +23,10 @@ int main() {
   DrawList d;
   Game g;
   auto xpt = std::make_shared<Camera>(g);
-  d.add(std::make_unique<DisplayText>(t1));
-  d.add(std::make_unique<DisplayText>(t2));
-  d.add(std::make_unique<DisplayText>(t3));
-  d.add(std::make_unique<DisplayText>(t4));
+  d.add(t1);
+  d.add(t2);
+  d.add(t3);
+  d.add(t4);
   vtDrawList(d);
   vtDisplayFlip();
   vtWindowLoop(); // Run once

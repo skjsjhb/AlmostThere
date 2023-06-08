@@ -29,7 +29,7 @@ void ScoreDisplay::draw() {
       .ctx = game.ctxUI,
   };
   DisplayText text({SCORE_XBEGIN, SCORE_YBEGIN}, SCORE_SIZE, s, {1, 1, 1, alpha}, p);
-  game.drawList.add(std::make_unique<DisplayText>(text));
+  game.drawList.add(text);
 }
 
 void ScoreDisplay::setScore(unsigned int s) {

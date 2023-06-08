@@ -1,8 +1,6 @@
-#include <utility>
-
 #include "Slot.hh"
-#include "Note.hh"
 
+#include "Note.hh"
 #include "gameplay/base/Game.hh"
 
 #define SLOT_SIZE 1.2
@@ -27,7 +25,7 @@ void Slot::draw() {
   Point ltp = {lt, {0, 1}}, lbp = {lb, {0, 0}}, rtp = {rt, {1, 1}}, rbp = {rb, {1, 0}};
   DrawParam p = {.shader = "3d/mesh", .texture = slotTexName[variant], .ctx = game.ctx3D};
   Rect r = {ltp, lbp, rtp, rbp, p};
-  game.drawList.add(std::make_unique<Rect>(r));
+  game.drawList.add(r);
 }
 std::shared_ptr<Slot> Slot::create(SlotVariant va, Game &g, std::shared_ptr<Controller> ct) {
   auto st = std::make_shared<Slot>(g);

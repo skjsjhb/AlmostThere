@@ -2,7 +2,7 @@
 
 #include "gameplay/base/Game.hh"
 
-#define MASK_PERSIST_TIME 0.1
+#define MASK_PERSIST_TIME 0.2
 #define MASK_FADE_TIME 0.4
 
 void EffectMask::refresh() {
@@ -28,5 +28,5 @@ void EffectMask::draw() const {
   };
   Rect r(Point({0, 900, 0}, {0, 1}), Point({0, 0, 0}, {0, 0}), Point({1600, 900, 0}, {1, 1}),
          Point({1600, 0, 0}, {1, 0}), p);
-  game.drawList.add(std::make_unique<Rect>(r));
+  game.drawList.add(r);
 }

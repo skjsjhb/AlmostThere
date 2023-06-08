@@ -21,5 +21,5 @@ void FlatNote::draw() {
 
   Rect r = {{pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, p};
 
-  game.drawList.add(std::make_unique<Rect>(r));
+  game.drawList.add(r);
 }

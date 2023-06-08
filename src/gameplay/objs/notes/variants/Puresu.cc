@@ -139,9 +139,9 @@ void Puresu::draw() {
 
   Rect tail({pts[0], {0, 1}}, {pts[1], {0, 0}}, {pts[2], {1, 1}}, {pts[3], {1, 0}}, tailPar);
 
-  game.drawList.add(std::make_unique<Rect>(head));
-  game.drawList.add(std::make_unique<Rect>(body));
-  game.drawList.add(std::make_unique<Rect>(tail));
+  game.drawList.add(head);
+  game.drawList.add(body);
+  game.drawList.add(tail);
 
   sizeh *= 2.0;
 }

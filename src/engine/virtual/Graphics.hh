@@ -117,7 +117,9 @@ class DrawList {
 public:
   std::list<std::unique_ptr<DrawObject>> objects;
 
-  void add(std::unique_ptr<DrawObject> &&objs) { objects.push_back(std::move(objs)); }
+  // Generic add method
+  template<typename T>
+  void add(const T &o) { objects.push_back(std::make_unique<T>(o)); }
 
   void clear() { objects.clear(); };
 };

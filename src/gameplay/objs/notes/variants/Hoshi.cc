@@ -39,6 +39,6 @@ void Hoshi::draw() {
   TriangleStrip fts(strip(points, {4, 3, 0, 4, 0, 2, 4, 2, 1, 4, 1, 3}), p);
   TriangleStrip bts(strip(points, {5, 2, 0, 5, 0, 3, 5, 3, 1, 5, 1, 2}), p);
 
-  game.drawList.add(std::make_unique<TriangleStrip>(fts));
-  game.drawList.add(std::make_unique<TriangleStrip>(bts));
+  game.drawList.add(fts);
+  game.drawList.add(bts);
 }
