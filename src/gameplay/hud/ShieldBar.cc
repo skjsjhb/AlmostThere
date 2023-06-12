@@ -24,7 +24,7 @@ void ShieldBar::draw() const {
 
     if (i < numActive) {
       DrawParam p = {
-          .shader = "ui/shield-bar",
+          .shader = "hud/shield-bar",
           .texture = "hud/shield-block-active",
           .ctx = game.ctxUI,
       };
@@ -36,7 +36,7 @@ void ShieldBar::draw() const {
       game.drawList.add(r);
     } else {
       DrawParam p = {
-          .shader = "ui/shield-bar",
+          .shader = "hud/shield-bar",
           .texture = "hud/shield-block-empty",
           .ctx = game.ctxUI,
       };

@@ -23,8 +23,8 @@ int main() {
   ScoreDisplay sd(g);
   HPBar b(g, HP_NORMAL, 100, 100);
 
-  EffectMask em(g, "ui/effect-mask", "hud/shield-effect");
-  EffectMask emb(g, "ui/effect-mask", "hud/blood-effect");
+  EffectMask em(g, "hud/effect-mask", "hud/shield-effect");
+  EffectMask emb(g, "hud/effect-mask", "hud/blood-effect");
 
   g.mapTimer = Timer(vtGetTime);
   unsigned int a = 1;
@@ -35,7 +35,7 @@ int main() {
   bool revive = false;
 
   // This task cannot be done automatically. Manually check required.
-  while (vtGetTime() < 300) {
+  while (vtGetTime() < 3) {
     if (vtShouldDraw()) {
       g.mapTimer.update();
       s.draw();
@@ -72,6 +72,7 @@ int main() {
       vtDrawList(g.drawList);
       g.drawList.clear();
       vtDisplayFlip();
+      WANT(vtGetGraphicsError() == 0);
     }
     vtWindowLoop();
   }

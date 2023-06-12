@@ -1,1 +1,1 @@
-src += files('LayoutManager.cc')
+src += files('Layout.cc')

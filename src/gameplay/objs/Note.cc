@@ -1,11 +1,11 @@
-#include <utility>
-
 #include "Note.hh"
+
 #include "engine/virtual/Input.hh"
 #include "gameplay/base/Game.hh"
 #include "spdlog/spdlog.h"
 #include "util/Util.hh"
 
+#include <utility>
 #include "notes/NoteTools.hh"
 
 // Note variants

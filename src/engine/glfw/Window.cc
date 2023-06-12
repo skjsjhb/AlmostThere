@@ -81,9 +81,6 @@ void vtInitWindow() {
   glfwSetFramebufferSizeCallback(internalWindow, adjustFramebuffer);
   glfwSetWindowCloseCallback(internalWindow, acceptWindowClose);
 
-  // Setup input listeners
-  vtSetupListeners();
-
 }
 
 void *vtGetWindow() {
@@ -166,7 +163,7 @@ void vtGetCoord(int sx, int sy, int &rx, int &ry) {
 
 void vtDeCoord(int rx, int ry, int &sx, int &sy) {
   sx = int(rx * VT_STDW_W / wx);
-  sy = int(ry * VT_STDW_H / wy);
+  sy = VT_STDW_H - int(ry * VT_STDW_H / wy); // Reverse-Y
 }
 
 void vtDisplayFlip() {

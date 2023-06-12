@@ -7,7 +7,7 @@
  * @brief A flat note interface which implements flat note drawing.
  *
  * This class implements flat note draw algorithm and can be directly inherited to use
- * the defined `draw` method.
+ * the defined \c draw method.
  */
 class FlatNote : virtual public Note {
 public:

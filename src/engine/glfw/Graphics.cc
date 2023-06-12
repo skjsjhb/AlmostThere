@@ -1,7 +1,9 @@
 #include "engine/virtual/Graphics.hh"
+#include "glm/gtx/string_cast.hpp"
 #include "support/Resource.hh"
 #include "util/Util.hh"
 #include <glad/gl.h>
+#include <stdio.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -320,7 +322,7 @@ static void drawBg() {
     return;
   }
 
-  auto sd = loadShader(getAppResource("shaders/ui/background"));
+  auto sd = loadShader(getAppResource("shaders/hud/background"));
   glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
   glBindVertexArray(bgVAO);
   glUseProgram(sd);
@@ -332,8 +334,10 @@ static void drawBg() {
   glBindVertexArray(0);
 }
 
+static int lastErr = 0;
+
 int vtGetGraphicsError() {
-  return glGetError();
+  return lastErr;
 }
 
 void Triangle::draw() const {
@@ -396,7 +400,7 @@ void TriangleStrip::draw() const {
 }
 
 void DisplayText::draw() const {
-  auto sd = loadShader(getAppResource("shaders/ui/text"));
+  auto sd = loadShader(getAppResource("shaders/hud/text"));
   glUseProgram(sd);
   glUniform4f(glGetUniformLocation(sd, SHADER_VAR_COLOR), color.r, color.g, color.b, color.a);
   glActiveTexture(GL_TEXTURE1); // Use another texture
@@ -446,5 +450,10 @@ void vtDrawList(DrawList &buf) {
   glClear(GL_DEPTH_BUFFER_BIT); // Background depth reset
   for (auto &b : buf.objects) {
     b->draw();
+  }
+  int e;
+  if ((e = glGetError()) != 0) {
+    lastErr = e;
+    warn("GL error detected: " + std::to_string(e));
   }
 }

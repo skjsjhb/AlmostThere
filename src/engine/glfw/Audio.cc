@@ -4,6 +4,7 @@
 #include <string>
 #include "spdlog/spdlog.h"
 #include <memory>
+#include <utility>
 #include "soloud/soloud_wav.h"
 
 using namespace spdlog;

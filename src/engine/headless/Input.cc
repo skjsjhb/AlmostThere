@@ -1,7 +1,11 @@
 #include "engine/virtual/Input.hh"
 
-static InputBuffer ibuf;
+EVENT_HANDLERS_BODY(InputPressEvent)
+EVENT_HANDLERS_BODY(InputReleaseEvent)
+EVENT_HANDLERS_BODY(InputMoveEvent)
+EVENT_HANDLERS_BODY(InputDragEvent)
+EVENT_HANDLERS_BODY(InputClickEvent)
 
-void vtSetupListeners() {}
+void vtInitInput() {}
 
-const InputBuffer &vtGetInputBuffer() { return ibuf; }
+std::list<const InputPoint *> vtGetInputPoints() { return {}; }

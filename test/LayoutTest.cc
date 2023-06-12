@@ -1,10 +1,10 @@
 #include "TestTools.hh"
 
-#include "ui/layout/LayoutManager.hh"
+#include "ui/layout/Layout.hh"
+#include <stdio.h>
 
 int main() {
-  LayoutManager lm;
-  Component t1, t2;
+  LayoutUnit t1, t2;
 
   /*
   ... screen (center)
@@ -17,20 +17,17 @@ int main() {
   |-----------| ... screen (center)
   */
 
-  t1.baseHorz = t1.baseVert = t1.selfHorz = t1.selfVert = AL_CENTER;
+  t1.baseHorz = t1.baseVert = t1.selfHorz = t1.selfVert = Align::CENTER;
   t1.dx = t2.dx = 0;
   t1.w = t1.h = 40;
   t2.parent = &t1;
-  t2.baseHorz = t2.baseVert = AL_BEGIN;
-  t2.selfHorz = t2.selfVert = AL_BEGIN;
   t2.dx = 0;
   t2.dy = 10;
-  t2.w = {0.5, LM_PERCENT};
-  t2.h = {0.5, LM_PERCENT};
+  t2.w = {0.5, LengthMode::PERCENT};
+  t2.h = std::string("50%");
 
-  lm.addComponent(&t1);
-  lm.addComponent(&t2);
-  lm.compile();
+  computeLayoutUnit(&t1);
+  computeLayoutUnit(&t2);
   auto &r1 = t1.result;
   auto &r2 = t2.result;
   WANT(r2.w == 20)

@@ -46,7 +46,7 @@ public:
   /**
    * @brief Insert a record.
    *
-   * @see `ScoreEntry`
+   * @see \c ScoreEntry
    * @param se The entry object.
    * @return An identifier of this record, for potential necessity of removing
    * it.

@@ -12,35 +12,46 @@ class Game;
 
 class TickObject {
 public:
+  /**
+   * @brief Consider whether this object still needs to be ticked.
+   * @return \c true if this object should be ticked.
+   */
   [[nodiscard]] virtual bool shouldTick() const;
 
+  /**
+   * @brief Get the generate time (first tick time) of the object.
+   *
+   * The value returned are used for objects sorting. It's not required to return the accurate generate time (although
+   * this impl does). In fact, even returing a proper pre-defined <tt>unsigned int</tt> indexes will work.
+   *
+   * \b However, the order have to be precise. i.e. if an object generates before another, then the former one \b MUST
+   * return a value smaller than the latter one does.
+   *
+   * @return The generate time, or other index telling the order of the objects.
+   */
   [[nodiscard]] virtual double getGenTime() const { return controller->getLifeTime().genTime; };
 
   /**
    * @brief Main tick method for any tickable object.
    *
-   * Tickable objects will update their state on every 'tick'. In default sceneraio a 'tick' has
-   * the same period as a frame (when drawing), as the tick is limited by `vtWindowLoop`, considering
-   * the latter one will call functions like `glfwSwapBuffers`. However, the tick speed can be
-   * limited by the game loop for system stability.
+   * Tickable objects will update their state on every tick. The speed of ticking is unstable and non-predictable, so
+   * the use of timer is necessary to keep animation running at a preset speed.
    *
    * Call this method to update the state of the object.
    *
-   * @note Passing `absTime` in a non-increasing order is considered a bad practice, as objects
-   * which implements this might not always be able to handle reversed timeline correctly.
+   * @note Passing \c absTime in a non-increasing order is considered a bad practice, as objects
+   * might not always be able to handle reversed timeline correctly.
    */
   virtual void tick();
 
-  // Virtual plain destructor
   virtual ~TickObject() = default;
 
-  // Constructor
   explicit TickObject(Game &g) : game(g) {};
 
   /**
    * @brief Object draw method.
    *
-   * This method draw the object to the draw context using the current status.
+   * This method draw the object to the draw context of the bound game using the current status.
    * The context will be used by the engine to render it to the screen.
    */
   virtual void draw() {};
@@ -50,7 +61,7 @@ public:
    *
    * @note A controller should be fully managed by the owner in most cases. Modifying a controller
    * manually might cause potential desync.
-   * @return A weak ptr to the controller object.
+   * @return A reference-pointer to the controller object.
    */
   std::weak_ptr<Controller> getController() {
     return controller;

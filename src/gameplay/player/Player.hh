@@ -86,10 +86,6 @@ public:
   /**
    * @brief Generate a player instance.
    *
-   * @note The pointer returned is allocated using `new` and the caller is fully
-   * responsible for freeing the memory. The class `Player` has already defined a
-   * virtual destructor, therefore, a simple `delete` will do the trick.
-   *
    * @param ch The id of the character.
    * @param playerName The name of the player.
    * @param uid The user id of the account.

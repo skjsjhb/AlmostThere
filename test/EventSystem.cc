@@ -1,35 +1,47 @@
 #include "TestTools.hh"
-#include "gameplay/event/Event.hh"
+#include "event/Event.hh"
 
 class TestEvent : public Event {
+EVENT_HANDLERS(TestEvent)
+EVENT_DISPATCH
+
 public:
   explicit TestEvent(int data) : dat(data) {};
-  static HandlerList<TestEvent> &getHandlers() { return handlers; };
-  static HandlerList<TestEvent> handlers;
   [[nodiscard]] int getData() const { return dat; }
 protected:
   int dat;
 };
 
-HandlerList<TestEvent> TestEvent::handlers;
+class TestChildEvent : public TestEvent {
+EVENT_HANDLERS(TestChildEvent)
+EVENT_MIXED_DISPATCH(TestEvent)
 
-bool got = false;
+public:
+  explicit TestChildEvent(int data) : TestEvent(data) {};
+  [[nodiscard]] int getDataMore() const { return dat + 1; };
+};
+
+EVENT_HANDLERS_BODY(TestEvent)
+EVENT_HANDLERS_BODY(TestChildEvent)
+
+int got = 0;
 
 void testEventListener(TestEvent &e) {
   WANT(e.getData() == 1)
-  got = true;
+  got++;
 }
 
-void gbEventListener(Event &) {
-  got = false;
+void testChildEventListener(TestChildEvent &e) {
+  WANT(e.getDataMore() == 2)
+  got++;
 }
 
 int main() {
   addEventListener<TestEvent>(testEventListener);
-  addEventListener<Event>(gbEventListener);
+  addEventListener<TestChildEvent>(testChildEventListener);
 
-  TestEvent evt(1);
-  dispatchEvent(evt);
-  WANT(got)
+  TestChildEvent evt(1);
+  evt.dispatch();
+  WANT(got == 2)
   TEND
 }

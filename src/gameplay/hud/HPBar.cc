@@ -31,7 +31,7 @@ void HPDrainSection::draw(Game &g, double absTime) {
     color = {1, 1, 1, alpha};
   }
   DrawParam p = {
-      .shader = "ui/hp-bar-drain",
+      .shader = "hud/hp-bar-drain",
       .args = color,
       .ctx = g.ctxUI,
   };
@@ -109,13 +109,13 @@ void HPBar::draw() {
   }
 
   DrawParam parLeft = {
-      .shader = "ui/hp-bar",
+      .shader = "hud/hp-bar",
       .texture = tex + "-fill",
       .args = {colorAmplifier[0], colorAmplifier[1], colorAmplifier[2], colorAmplifier[3]},
       .ctx = game.ctxUI,
   };
   DrawParam parRight = {
-      .shader = "ui/hp-bar",
+      .shader = "hud/hp-bar",
       .texture = tex + "-empty",
       .args = {colorAmplifier[0], colorAmplifier[1], colorAmplifier[2], colorAmplifier[3]},
       .ctx = game.ctxUI,

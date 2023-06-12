@@ -1,5 +1,6 @@
 subdir('gameplay')
 subdir('engine')
+subdir('event')
 subdir('util')
 subdir('lua')
 subdir('support')

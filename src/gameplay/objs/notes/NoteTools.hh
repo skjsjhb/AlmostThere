@@ -1,12 +1,14 @@
 #ifndef GAMEPLAY_OBJS_NOTES_NOTETOOLS
 #define GAMEPLAY_OBJS_NOTES_NOTETOOLS
 
+#include "engine/virtual/Input.hh"
 #include "gameplay/score/ScoreValue.hh"
 #include <glm/glm.hpp>
 
 struct View;
 struct GameRules;
-struct InputBuffer;
+
+using InputBuffer = std::list<const InputPoint *>;
 
 /**
  * @brief Verify whether a note has been pressed in 3D space.
@@ -16,7 +18,7 @@ struct InputBuffer;
  */
 bool isPressed3D(const glm::vec3 &pos, View &v, const InputBuffer &ibuf);
 
-bool isPressed2D(const glm::vec3 origin[4], View &v, const InputBuffer &ibufs);
+bool isPressed2D(const glm::vec3 origin[4], View &v, const InputBuffer &ibuf);
 
 /**
  * @brief Generate 4 corner points using given position and size.

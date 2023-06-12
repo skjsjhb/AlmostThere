@@ -1,6 +1,7 @@
 #include "ScoreRecord.hh"
 
 #include <cmath>
+#include <utility>
 
 unsigned int ScoreRecords::addRecord(std::unique_ptr<ScoreEntry> se) {
   entries[eid] = std::move(se);

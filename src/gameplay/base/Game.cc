@@ -1,11 +1,13 @@
 #include "Game.hh"
 
+#include "engine/virtual/Input.hh"
 #include "gameplay/map/MapLoad.hh"
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
 #include "gameplay/player/Player.hh"
 #include "user/Account.hh"
 #include <glm/gtc/matrix_transform.hpp>
+#include <stdio.h>
 #include "lua/LuaSupport.hh"
 #include "spdlog/spdlog.h"
 #include "support/Resource.hh"
@@ -65,7 +67,7 @@ void Game::initGame(const std::string &mapId) {
 
   mapObjectPtr = mapData.content.objects.begin();
 
-  // Bind globals for `useCam`
+  // Bind globals for useCam
   activeView = &view;
   activeGame = this;
 
@@ -115,8 +117,11 @@ void Game::runOnce() {
     return;
   } // TODO: end when squad eliminated
 
-  // Handle events
-  inputBuf = vtGetInputBuffer();
+
+  // Poll inputs
+  inputBuf = vtGetInputPoints();
+  auto pt = *inputBuf.begin();
+  printf("XY: %f, %f | Pressed: %d\n", pt->x, pt->y, pt->pressed);
 
   // Load and unload objects
   while (mapObjectPtr != mapData.content.objects.end()) {

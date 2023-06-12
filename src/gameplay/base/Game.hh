@@ -48,7 +48,7 @@ public:
    * has been determined. The stat of the players will be initialized and the
    * game is ready to begin.
    *
-   * @note It's invalid to add two or more `ONLINE` or `LOCAL` account into the
+   * @note It's invalid to add two or more \c ONLINE or \c LOCAL account into the
    * game. The active account is unique and is setup for current player.
    *
    * @param account The account used for this player.
@@ -78,9 +78,8 @@ public:
   ScoreRecords score;
   AudioStat audio;
   GameRules rules;
-  InputBuffer inputBuf;
   HUDManager hudManager;
-
+  std::list<const InputPoint *> inputBuf;
   DrawContext ctx3D{}, ctxUI{};
   DrawList drawList;
 };

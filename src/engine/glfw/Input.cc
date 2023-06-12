@@ -1,48 +1,79 @@
 #include "engine/virtual/Input.hh"
 #include "engine/virtual/Window.hh"
-#include "engine/virtual/UIHook.hh"
+
 #include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
 
 using namespace spdlog;
 
-static InputBuffer ibuf;
 
-static glm::vec2 mousePos;
-static int mouseCount = 0;
+// Input event handlers def
+EVENT_HANDLERS_BODY(InputPressEvent)
+EVENT_HANDLERS_BODY(InputReleaseEvent)
+EVENT_HANDLERS_BODY(InputMoveEvent)
+EVENT_HANDLERS_BODY(InputDragEvent)
+EVENT_HANDLERS_BODY(InputClickEvent)
 
-static void updateMouseStatus() {
-  ibuf.touchPoints.clear();
-  if (mouseCount > 0) {
-    ibuf.touchPoints.push_back(mousePos);
-  }
-  vtNotifyUIHooks(ibuf);
-}
+static InputPoint cursor = {.id = 1}; // On PC there is only one input point.
 
-// On PC there is only one touch point.
-static inline void internalMousePosCallback(GLFWwindow *, double x, double y) {
-  mousePos[0] = float(x);
-  mousePos[1] = float(y);
-  updateMouseStatus();
-}
+static unsigned int btnCount = 0;
 
-static void internalMouseBtnCallback(GLFWwindow *, int, int act, int) {
+static bool cursorMovedDuringPress = true;
+
+static void mouseBtnCallback(GLFWwindow *, int, int act, int) {
+
   if (act == GLFW_RELEASE) {
-    mouseCount--;
+    --btnCount;
+    if (btnCount == 0) {
+      // Released
+      cursor.pressed = false;
+      InputReleaseEvent rel(cursor);
+      rel.dispatch();
+      if (!cursorMovedDuringPress) {
+        InputClickEvent cli(cursor);
+        cli.dispatch();
+        cursorMovedDuringPress = true;
+      }
+    }
   } else if (act == GLFW_PRESS) {
-    mouseCount++;
+    if (btnCount == 0) {
+      // Pressed
+      cursorMovedDuringPress = false;
+      cursor.pressed = true;
+      InputPressEvent pre(cursor);
+      pre.dispatch();
+    }
+    ++btnCount;
   }
-  updateMouseStatus();
 }
 
-void vtSetupListeners() {
-  info("Setting up input listeners.");
+static void cursorPosCallback(GLFWwindow *, double ex, double ey) {
+  int x, y;
+  vtDeCoord(int(ex), int(ey), x, y); // Coords correction
+  if (cursor.pressed) {
+    cursorMovedDuringPress = true;
+  }
+  // Trigger events
+  if (cursor.pressed) {
+    InputDragEvent e(cursor, x, y);
+    e.dispatch();
+  } else {
+    InputMoveEvent e(cursor, x, y);
+    e.dispatch();
+  }
+
+  // Update status
+  cursor.x = x;
+  cursor.y = y;
+}
+
+void vtInitInput() {
+  info("Initializing input system.");
   auto w = static_cast<GLFWwindow *>(vtGetWindow());
-  glfwSetCursorPosCallback(w, internalMousePosCallback);
-
-  glfwSetMouseButtonCallback(w, internalMouseBtnCallback);
+  glfwSetCursorPosCallback(w, cursorPosCallback);
+  glfwSetMouseButtonCallback(w, mouseBtnCallback);
 }
 
-const InputBuffer &vtGetInputBuffer() {
-  return ibuf;
+extern std::list<const InputPoint *> vtGetInputPoints() {
+  return {&cursor};
 }

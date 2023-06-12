@@ -13,7 +13,7 @@ struct GameRules {
    * @brief The maximum angle diff accepted for ray casting.
    *
    * The note is judged as 'touched', if the casted touch ray has an angle smaller than specified
-   * angle. This value is `1-cos(maxAngle)`, a small number near 0.
+   * angle. This value is \c 1-cos(maxAngle), a small number near 0.
    */
   double judgeRayAngle = 0.015;
 

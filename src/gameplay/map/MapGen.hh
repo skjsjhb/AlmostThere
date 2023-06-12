@@ -2,7 +2,6 @@
  * @brief Map generator module.
  *
  * Map generators are responsible for loading the map file and generate corresponding objects.
- * This is designed to replace the old `MapDef` and `MapLoad` system.
  *
  * @author skjsjhb
  */

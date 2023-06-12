@@ -16,12 +16,14 @@ bool isPressed3D(const glm::vec3 &pos, View &v, const InputBuffer &ibuf) {
   auto cPos = v.camera.lock()->getPosition();
   auto dir = glm::normalize(pos - cPos);
 
-  for (auto &i : ibuf.touchPoints) {
-    glm::vec2 posx = {i[0], i[1]};
-    auto ray = castMouseRay(v, posx);
-    auto ang = glm::dot(ray, dir);
-    if (ang >= CAST_ANGLE_THRESHOLD) {
-      return true;
+  for (auto &i : ibuf) {
+    if (i->pressed) {
+      glm::vec2 posx = {i->x, i->y};
+      auto ray = castMouseRay(v, posx);
+      auto ang = glm::dot(ray, dir);
+      if (ang >= CAST_ANGLE_THRESHOLD) {
+        return true;
+      }
     }
   }
   return false;
@@ -56,10 +58,10 @@ bool isPressed2D(const glm::vec3 origin[4], View &v, const InputBuffer &ibuf) {
     ptsc[i][1] = cr[1] / cr[3];
   }
 
-  for (auto &i : ibuf.touchPoints) {
+  for (auto &i : ibuf) {
     glm::vec2 ndc;
-    ndc[0] = (2.0f * i[0]) / v.screenSize[0] - 1.0f;
-    ndc[1] = 1 - (2.0f * i[1]) / v.screenSize[1];
+    ndc[0] = float(2 * i->x) / 1600.0f - 1.0f;
+    ndc[1] = float(2 * i->y) / 900.0f - 1.0f;
     if (isInTriangle(ndc, ptsc[0], ptsc[1], ptsc[2]))
       return true;
     if (isInTriangle(ndc, ptsc[0], ptsc[1], ptsc[3]))

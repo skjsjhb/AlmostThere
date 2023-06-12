@@ -3,12 +3,13 @@
 #include "engine/virtual/Window.hh"
 #include "engine/virtual/Graphics.hh"
 #include "engine/virtual/Audio.hh"
+#include "engine/virtual/Input.hh"
+#include "gameplay/map/MapLoad.hh"
 #include "lua/LuaSupport.hh"
 #include "lua/LuaExt.hh"
 #include "gameplay/base/Game.hh"
 #include "user/Account.hh"
 #include "spdlog/spdlog.h"
-#include "gameplay/map/luamap/LuaMapGen.hh"
 
 #define AT_NAME_ARTWORK "\n=================================================\n             _                             _\n\
      /\\     | |                           | |\n\
@@ -32,16 +33,14 @@ void sysInitFull() {
   vtInitWindow();
   vtInitGraphics();
   vtInitAudio();
+  vtInitInput();
 
   // Support env init
   luaInit();
   luaSetupExt();
 
-  // Lua Map Loader
-  initLuaMapLoader();
-
-  // Controller
-  // initControllerLuaExt();
+  // Map loaders
+  initMapLoaders();
 }
 
 void playDemoMap() {

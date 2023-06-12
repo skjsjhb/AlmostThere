@@ -1,1 +1,1 @@
-src += files(['Input.cc', 'Window.cc', 'Graphics.cc', 'Framework.cc', 'UIHook.cc', 'Audio.cc'])
+src += files(['Input.cc', 'Window.cc', 'Graphics.cc', 'Framework.cc', 'Audio.cc'])

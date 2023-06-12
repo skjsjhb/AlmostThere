@@ -14,7 +14,7 @@ class Point {
 public:
   Point() : p(0.0f), st(0.0f) {};
 
-  explicit Point(const glm::vec3 &x) : p(x), st(0.0f) {};
+  Point(const glm::vec3 &x) : p(x), st(0.0f) {}; // NOLINT
 
   Point(const glm::vec3 &x, const glm::vec2 &s) : p(x), st(s) {};
 

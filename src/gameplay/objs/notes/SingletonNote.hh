@@ -7,7 +7,7 @@
  * @brief A singleton note interface which implements singleton note judging.
  *
  * This class implements snigleton note judge algorithm and can be directly inherited to use
- * the defined `performJudge` method.
+ * the defined \c performJudge method.
  */
 class SingletonNote : virtual public Note {
 public:
