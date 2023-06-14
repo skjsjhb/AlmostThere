@@ -21,6 +21,11 @@ V X = "x";
 V Y = "y";
 V Background = "background";
 V Visible = "visible";
+V Text = "text";
+V Size = "size";
+V Color = "color";
+V XAlign = "xalign";
+V YAlign = "yalign";
 };
 
 class Component {
@@ -89,5 +94,9 @@ protected:
 };
 
 DrawContext &getDefaultDrawContext();
+
+Align inferAlignMethod(const std::string &al);
+
+void applyLayoutParams(ComponentProps props, LayoutUnit &layout);
 
 #endif // ALMOSTTHERE_SRC_UI_COMP_COMPONENT_HH

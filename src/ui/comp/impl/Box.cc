@@ -1,11 +1,9 @@
 #include "Box.hh"
 #include "engine/virtual/Graphics.hh"
+#include "ui/comp/Component.hh"
 
 Box::Box(ComponentProps props) : Component(props) {
-  layout.w = props[Props::Width];
-  layout.h = props[Props::Height];
-  layout.dx = props[Props::X];
-  layout.dy = props[Props::Y];
+  applyLayoutParams(props, layout);
   background = props[Props::Background];
   visible = props[Props::Visible] == "1";
 }

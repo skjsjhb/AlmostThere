@@ -1,0 +1,41 @@
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec2 aTexCoord;
+
+out vec2 texCoord;
+
+uniform mat4 aProj;
+
+void main() {
+    gl_Position = aProj * vec4(aPos, 1.0);
+    gl_Position.z = -0.9;
+    texCoord = aTexCoord;
+}
+
+// ---
+
+#version 330 core
+in vec2 texCoord;
+out vec4 color;
+
+uniform sampler2D aTex;
+uniform float args[5]; // State, RGBA
+
+void main () {
+    float state = args[0];
+    color = texture(aTex, texCoord);
+
+    if(color.a == 0) {
+        discard;
+    }
+
+    if(state == 1) { // Disabled
+        float g = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+        color = vec4(g, g, g, color.a);
+    } else if (state == 2) { // Hover
+        color *= 1.25;
+    } else if (state == 3) { // Pressed
+        color *= 0.9;
+    }
+    color *= vec4(args[1], args[2], args[3], args[4]);
+}

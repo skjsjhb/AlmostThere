@@ -9,10 +9,22 @@
 #include <spdlog/spdlog.h>
 
 #include "../comp/impl/Box.hh"
+#include "../comp/impl/Button.hh"
+#include "ui/comp/impl/Label.hh"
+#include "ui/comp/impl/TextArea.hh"
 
 static std::shared_ptr<Component> createTypedComponent(const std::string &type, const ComponentProps &props) {
   if (type == "box" || type == "root") {
     return std::make_shared<Box>(props);
+  }
+  if (type == "button") {
+    return std::make_shared<Button>(props);
+  }
+  if (type == "label") {
+    return std::make_shared<Label>(props);
+  }
+  if (type == "text") {
+    return std::make_shared<TextArea>(props);
   }
   spdlog::warn("Unknown UI component type '" + type + "'");
   return nullptr;
@@ -42,10 +54,12 @@ static std::shared_ptr<Component> constructComponent(cJSON *st) { // NOLINT
   if (cJSON_IsObject(stProps)) {
     cJSON *p;
     cJSON_ArrayForEach(p, stProps) {
-      auto k = p->string;
-      auto v = cJSON_GetStringValue(p);
-      if (k && v) {
-        props[k] = v;
+      if (p) {
+        auto k = p->string;
+        auto v = cJSON_GetStringValue(p);
+        if (k && v) {
+          props[k] = v;
+        }
       }
     }
   }

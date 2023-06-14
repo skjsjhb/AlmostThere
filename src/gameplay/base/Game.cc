@@ -120,9 +120,7 @@ void Game::runOnce() {
 
   // Poll inputs
   inputBuf = vtGetInputPoints();
-  auto pt = *inputBuf.begin();
-  printf("XY: %f, %f | Pressed: %d\n", pt->x, pt->y, pt->pressed);
-
+  
   // Load and unload objects
   while (mapObjectPtr != mapData.content.objects.end()) {
     auto n = *mapObjectPtr;

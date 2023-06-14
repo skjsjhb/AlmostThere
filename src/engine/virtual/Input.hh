@@ -23,7 +23,7 @@ struct InputPoint {
 /**
  * @brief Base event class, triggered when input btn state changed.
  */
-class InputEvent : Event {
+class InputEvent : public Event {
 public:
   explicit InputEvent(const InputPoint &i) : inputPoint(i) {}
 
@@ -39,7 +39,7 @@ protected:
 /**
  * @brief Triggered when an input point is pressed.
  */
-class InputPressEvent : InputEvent {
+class InputPressEvent : public InputEvent {
 EVENT_HANDLERS(InputPressEvent)
 EVENT_DISPATCH
 
@@ -50,7 +50,7 @@ public:
 /**
  * @brief Triggered when an input point is released.
  */
-class InputReleaseEvent : InputEvent {
+class InputReleaseEvent : public InputEvent {
 EVENT_HANDLERS(InputReleaseEvent)
 EVENT_DISPATCH
 
@@ -63,7 +63,7 @@ public:
  *
  * @note This should be used for UI clicks, but not in gameplay, as players are likely to reposition while clicking.
  */
-class InputClickEvent : InputEvent {
+class InputClickEvent : public InputEvent {
 EVENT_HANDLERS(InputClickEvent)
 EVENT_DISPATCH
 
@@ -74,7 +74,7 @@ public:
 /**
  * @brief Triggered when the input points moves, regardless of its btn state.
  */
-class InputMoveEvent : InputEvent {
+class InputMoveEvent : public InputEvent {
 EVENT_HANDLERS(InputMoveEvent)
 EVENT_DISPATCH
 
@@ -95,7 +95,7 @@ protected:
 /**
  * @brief Triggered when the input points moves while pressed. Useful cor creating dragging handlers.
  */
-class InputDragEvent : InputMoveEvent {
+class InputDragEvent : public InputMoveEvent {
 EVENT_HANDLERS(InputDragEvent)
 EVENT_MIXED_DISPATCH(InputMoveEvent)
 

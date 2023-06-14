@@ -1,5 +1,4 @@
 #include "engine/virtual/Graphics.hh"
-#include "glm/gtx/string_cast.hpp"
 #include "support/Resource.hh"
 #include "util/Util.hh"
 #include <glad/gl.h>
@@ -35,11 +34,13 @@ struct Glyph {
 
 static std::vector<std::string> faces = {"en.ttf", "zh.otf", "jp.ttf"};
 static std::vector<FT_Face> alterFaces;
-static std::unordered_map<wchar_t, Glyph> glyphBuf;
+static std::unordered_map<unsigned int, std::unordered_map<wchar_t, Glyph>> glyphBuf; // Size -> (Char -> Glyph)
 static std::set<wchar_t> missingChar;
 static FT_Library ftlib;
 
 static unsigned int bgTex = 0;
+
+#define CHAR_BASE_SIZE 96
 
 /**
  * @brief Loads the glyph of specified character.
@@ -49,17 +50,19 @@ static unsigned int bgTex = 0;
  * inserted into the glyph buffer.
  *
  * @param c The character to load glyph for.
+ * @param size The size of the character.
  * @return Whether the glyph is successfully loaded.
  */
-static bool loadCharGlyph(wchar_t c) {
+static bool loadCharGlyph(wchar_t c, unsigned int size) {
   if (missingChar.contains(c)) {
     return false;
   }
-  if (glyphBuf.contains(c)) {
+  if (glyphBuf.contains(size) && glyphBuf[size].contains(c)) {
     return true;
   } else {
     // Generate a new glyph
     for (auto &f : alterFaces) {
+      FT_Set_Pixel_Sizes(f, 0, size);
       if (FT_Load_Glyph(f, FT_Get_Char_Index(f, c), FT_LOAD_RENDER) || f->glyph->glyph_index == 0) {
         // Try next
         continue;
@@ -91,7 +94,7 @@ static bool loadCharGlyph(wchar_t c) {
       gp.bearing[0] = float(f->glyph->bitmap_left);
       gp.bearing[1] = float(f->glyph->bitmap_top);
       gp.advance = f->glyph->advance.x;
-      glyphBuf[c] = gp;
+      glyphBuf[size][c] = gp; // Cache
       return true;
     }
     warn("Missing font for char unicode " + std::to_string((long) c) + ". Check font files.");
@@ -112,14 +115,16 @@ static void loadFont() {
       return;
     }
     info("Loaded font file '" + f + "'");
-    FT_Set_Pixel_Sizes(face, 0, 48);
+    FT_Set_Pixel_Sizes(face, 0, 96);
     alterFaces.push_back(face);
   }
 }
 
 static void cleanFont() {
   for (auto &p : glyphBuf) {
-    glDeleteTextures(1, &p.second.texID);
+    for (auto &r : p.second) {
+      glDeleteTextures(1, &r.second.texID);
+    }
   }
   for (auto &f : alterFaces) {
     FT_Done_Face(f);
@@ -323,6 +328,8 @@ static void drawBg() {
   }
 
   auto sd = loadShader(getAppResource("shaders/hud/background"));
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glBindBuffer(GL_ARRAY_BUFFER, bgVBO);
   glBindVertexArray(bgVAO);
   glUseProgram(sd);
@@ -332,6 +339,7 @@ static void drawBg() {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glDrawArrays(GL_TRIANGLES, 0, 6);
   glBindVertexArray(0);
+  glDisable(GL_BLEND);
 }
 
 static int lastErr = 0;
@@ -412,16 +420,16 @@ void DisplayText::draw() const {
   // Coord Correction is no longer necessary
   auto x = pos.x;
   auto y = pos.y;
+  unsigned int tSize = CHAR_BASE_SIZE * fSize;
   for (auto gp : text) {
-    if (!loadCharGlyph(gp)) {
-      warn("Missing font glyph for char id " + std::to_string(int(gp)));
-      continue;
+    if (!loadCharGlyph(gp, tSize)) {
+      continue; // The warning has already been given
     }
-    Glyph &g = glyphBuf[gp];
-    float w = g.size[0] * fSize;
-    float h = g.size[1] * fSize;
-    float xpos = x + g.bearing[0] * fSize;
-    float ypos = y - (g.size[1] - g.bearing[1]) * fSize;
+    Glyph &g = glyphBuf[tSize][gp];
+    float w = g.size[0];
+    float h = g.size[1];
+    float xpos = x + g.bearing[0];
+    float ypos = y - (g.size[1] - g.bearing[1]);
     float vertices[6][4] = {
         {xpos, ypos + h, 0.0f, 0.0f},
         {xpos, ypos, 0.0f, 1.0f},
@@ -436,7 +444,7 @@ void DisplayText::draw() const {
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    x += float(g.advance >> 6) * fSize;
+    x += float(g.advance >> 6);
   }
   glBindVertexArray(0);
   glBindTexture(GL_TEXTURE_2D, 0);
@@ -445,15 +453,43 @@ void DisplayText::draw() const {
 void vtDrawList(DrawList &buf) {
   glGetError(); // Dispose previous
   glClearColor(0, 0, 0, 1);
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   drawBg();
   glClear(GL_DEPTH_BUFFER_BIT); // Background depth reset
+
+  // Opaque objects
   for (auto &b : buf.objects) {
-    b->draw();
+    if (!b->isTransparent()) {
+      b->draw();
+    }
   }
+
+  // Transparent objects
+  glDepthMask(GL_FALSE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  for (auto &b : buf.objects) {
+    if (b->isTransparent()) {
+      b->draw();
+    }
+  }
+  glDisable(GL_BLEND);
+  glDepthMask(GL_TRUE);
   int e;
   if ((e = glGetError()) != 0) {
     lastErr = e;
     warn("GL error detected: " + std::to_string(e));
   }
+}
+
+void vtGetCharSize(wchar_t c, float &w, float &h) {
+  auto g = loadCharGlyph(c, CHAR_BASE_SIZE);
+  if (!g) {
+    w = h = 0;
+    return;
+  }
+  auto gl = glyphBuf[CHAR_BASE_SIZE][c];
+  w = float(gl.advance >> 6);
+  h = gl.size[1];
 }

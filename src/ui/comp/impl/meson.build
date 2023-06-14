@@ -1,1 +1,1 @@
-src += files(['Box.cc'])
+src += files(['Box.cc', 'Button.cc', 'Label.cc', 'TextArea.cc'])

@@ -1,11 +1,36 @@
 #include "Util.hh"
 
-#include <cmath>
 #include <algorithm>
 #include <functional>
 #include <cctype>
-#include <iconv.h>
+#include <codecvt>
+#include <locale>
 
+glm::vec4 parseColorStr(const std::string &colorIn) {
+  if (colorIn.empty()) {
+    return {1, 1, 1, 1};
+  }
+  auto cs = splitStr(colorIn, ",");
+  if (cs.size() == 1) {
+    auto gray = std::stof(cs[0]);
+    return {gray, gray, gray, 1};
+  }
+  glm::vec4 cl = {1, 1, 1, 1};
+  if (cs.size() == 3) {
+    cs.emplace_back("255"); // Alpha
+  }
+  if (cs.size() == 4) {
+    for (int i = 0; i < 4; ++i) {
+      cl[i] = std::stof(cs[i]) / 255.0f;
+    }
+  }
+  return cl;
+}
+
+std::wstring unicode2wstring(const std::string &str) {
+  std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+  return conv.from_bytes(str);
+}
 bool isOverlapped(double p1, double r1, double p2, double r2) {
   return std::abs(p2 - p1) <= std::abs(r1) + std::abs(r2);
 }

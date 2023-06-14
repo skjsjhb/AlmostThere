@@ -44,6 +44,7 @@ struct DrawParam {
   std::string shader;
   std::string texture;
   bool external = false; // Whether the specified assets shoule be intepreted as external assets
+  bool transparent = false; // Transparent objects will be drawn above all other objects with blending on
 
   // Arguments for shaders
   std::vector<float> args;
@@ -59,6 +60,8 @@ public:
   virtual ~DrawObject() = default;
 
   virtual void draw() const {};
+
+  [[nodiscard]] bool isTransparent() const { return params.transparent; }
 
 protected:
   DrawParam params;
@@ -123,6 +126,14 @@ public:
 
   void clear() { objects.clear(); };
 };
+
+/**
+ * @brief Get the width of a char glyph.
+ * @param c The char id.
+ * @param[out] w A reference to the width.
+ * @param[out] h A reference to the height.
+ */
+extern void vtGetCharSize(wchar_t c, float &w, float &h);
 
 extern void vtInitGraphics();
 

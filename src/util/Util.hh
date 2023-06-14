@@ -4,6 +4,11 @@
 #include <vector>
 #include <string>
 #include <climits>
+#include <glm/glm.hpp>
+
+glm::vec4 parseColorStr(const std::string &colorIn);
+
+std::wstring unicode2wstring(const std::string &str);
 
 bool isOverlapped(double p1, double r1, double p2, double r2);
 

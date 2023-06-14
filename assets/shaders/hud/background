@@ -17,7 +17,8 @@ out vec4 color;
 uniform sampler2D aTex;
 
 void main () {
-    color = texture(aTex, texCoord) * vec4(0.2, 0.2, 0.2, 1);
+    float dim = 0.35;
+    color = texture(aTex, texCoord) * vec4(dim, dim, dim, 1);
     if(color.a == 0) {
         discard;
     }

@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include "spdlog/spdlog.h"
 #include "engine/virtual/Input.hh"
+#include <string>
 #include <thread>
 #include <chrono>
 #include <iostream>
@@ -66,15 +67,12 @@ void vtInitWindow() {
     critical("Unable to load GLAD loader. Current GLFW version might not be compatible with GLAD.");
     exit(1);
   }
-  info("Window created.");
-  info("OpenGL Context: " + std::to_string(GLAD_VERSION_MAJOR(ver)) + "." + std::to_string(GLAD_VERSION_MINOR(ver)));
+  info("Created window with OpenGL context: " + std::to_string(GLAD_VERSION_MAJOR(ver)) + "."
+           + std::to_string(GLAD_VERSION_MINOR(ver)));
 
   glEnable(GL_MULTISAMPLE);
   glEnable(GL_DEPTH_TEST);
-
   glEnable(GL_DEPTH_CLAMP);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glViewport(0, 0, 1920, 1080);
 
   // Setup framebuffer callback
@@ -122,7 +120,7 @@ bool vtWindowLoop() {
     auto tps = int(frames / (currentTime - lastTime));
     info("TPS: " + std::to_string(tps));
     if (tps < TPS_MINIMUM_COUNT) {
-      warn("Low TPS (<500) detected. Game logic might not able to run correctly.");
+      warn("Low TPS (<" + std::to_string(TPS_MINIMUM_COUNT) + ") detected. Game tick might delay.");
     }
     lastTime = currentTime;
     frames = 0;

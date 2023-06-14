@@ -13,7 +13,7 @@ int main() {
   auto cam = std::make_shared<Camera>(g);
   v.camera = cam;
   vec3 pos = {0, 0, 5}, dir = {0, 0, -1}, up = {0, 1, 0};
-  v.camera.lock()->setState(pos, dir, up, 90.0, 1);
+  v.camera.lock()->setState(pos, dir, up, 90.0, 16.0 / 9.0);
   vec3 origin[4] = {{-1, -1, 0},
                     {1, -1, 0},
                     {1, 1, 0},
@@ -21,8 +21,8 @@ int main() {
   InputBuffer ip;
   InputPoint p = {
       .id = 1,
-      .x = 50,
-      .y = 50,
+      .x = 800,
+      .y = 450,
       .pressed = true,
   };
   ip.push_back(&p);

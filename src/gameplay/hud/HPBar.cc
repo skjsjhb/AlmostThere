@@ -32,6 +32,7 @@ void HPDrainSection::draw(Game &g, double absTime) {
   }
   DrawParam p = {
       .shader = "hud/hp-bar-drain",
+      .transparent = true,
       .args = color,
       .ctx = g.ctxUI,
   };

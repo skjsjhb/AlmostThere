@@ -4,6 +4,7 @@
 #include "gameplay/base/Game.hh"
 #include <memory>
 #include <glm/gtx/string_cast.hpp>
+#include <stdio.h>
 
 using namespace glm;
 
@@ -14,39 +15,31 @@ int main() {
   View v;
   vec3 e = {0, 0, -1};
   vec3 pos = {0, 0, 1}, d = {0, 0, -1}, u = {1, 0, 0};
-  v.screenSize[0] = 100;
-  v.screenSize[1] = 100;
   auto c = std::make_shared<Camera>(g);
   v.camera = c;
-  v.camera.lock()->setState(pos, d, u, 90.0f, v.screenSize[0] / v.screenSize[1]);
+  v.camera.lock()->setState(pos, d, u, 90.0f, 16.0 / 9.0);
 
   // When mouse is at the center, ray should be the same as camera direction
   // In this case -z
-  vec2 coord = {50, 50};
+  // Update: input buffers will now automatically correct the coords, the coord passed-in is based on 1600x900
+  vec2 coord = {800, 450};
   auto ray = castMouseRay(v, coord);
-  for (int i = 0; i < 3; i++) {
-    WANT(ray[i] == e[i])
-  }
+  WANT(ray == e)
 
   // When mouse is at the top center, ray should have a component in +x direction
   // In this case FOV is 90, so it should be x = sqrt(2) / 2 and z = -sqrt(2) / 2
-  coord[1] = 0;
+  coord[1] = 900; // Top: 900
   ray = castMouseRay(v, coord);
-  vec3 e2 = {float(sqrt(2) / 2), 0, 0};
-  e2[2] = -e2[0];
-  for (int i = 0; i < 3; i++) {
-    WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e2[i] * 10000))
-  }
+  vec3 e2 = {float(sqrt(2) / 2), 0, -float(sqrt(2) / 2)};
+  WANT(ray == e2);
 
-  // When mouse is in the top left corner, ray should also have a component in +y direction
+  // When mouse is in the top left corner (of a square), ray should also have a component in +y direction
   // In this case all 3 axes should have the same length, i.e. sqrt(3) / 3
-  coord[0] = 0;
+  coord[0] = 350;
   ray = castMouseRay(v, coord);
   vec3 e3 = {0, 0, float(-sqrt(3) / 3)};
   e3[0] = e3[1] = -e3[2];
-  for (int i = 0; i < 3; i++) {
-    WANT(static_cast<int>(ray[i] * 10000) == static_cast<int>(e3[i] * 10000))
-  }
+  WANT(ray == e3);
 
   // Let's also check the view matrix and projection matrix
   // Since if all above have passed the inv matrix should be OK

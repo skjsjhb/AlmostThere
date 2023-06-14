@@ -8,12 +8,13 @@
 
 #include <functional>
 #include <list>
+#include <map>
 
 template<typename T>
 using EventHandler = std::function<void(T &)>;
 
 template<typename T>
-using HandlerList = std::list<EventHandler<T>>;
+using HandlerList = std::map<unsigned int, EventHandler<T>>;
 
 #define EVENT_HANDLERS(type) public: static HandlerList<type> &getHandlers() { return handlers; }; \
 protected: static HandlerList<type> handlers;
@@ -65,19 +66,23 @@ template<typename T>
 void dispatchEvent(T &e) {
   HandlerList<T> handlers = T::getHandlers();
   for (auto &f : handlers) {
-    f(e);
+    f.second(e);
   }
 }
 
+extern unsigned int evid;
+
 template<typename T>
-void addEventListener(EventHandler<T> f) {
-  T::getHandlers().push_back(std::move(f));
+unsigned int addEventListener(EventHandler<T> f) {
+  ++evid;
+  auto &hd = T::getHandlers();
+  hd[evid] = std::move(f);
+  return evid;
 }
 
 template<typename T>
-void removeEventListener(EventHandler<T> f) {
-  auto &l = T::getHandlers();
-  l.remove(f);
+void removeEventListener(unsigned int id) {
+  T::getHandlers().erase(id);
 }
 
 #endif // ALMOSTTHERE_SRC_GAMEPLAY_EVENT_EVENT_HH

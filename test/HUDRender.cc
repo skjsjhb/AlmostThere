@@ -3,11 +3,7 @@
 #include "engine/virtual/Graphics.hh"
 #include "engine/virtual/Window.hh"
 #include "gameplay/base/Game.hh"
-#include "gameplay/hud/HPBar.hh"
-#include "gameplay/hud/ShieldBar.hh"
-#include "gameplay/hud/EffectMask.hh"
 #include "engine/virtual/Framework.hh"
-#include "gameplay/hud/ScoreDisplay.hh"
 #include <glm/gtc/matrix_transform.hpp>
 
 int main() {

@@ -22,8 +22,6 @@ enum JudgeStage {
 
 class Game;
 
-struct NoteObject;
-
 // Represents a loaded note
 class Note : public TickObject {
 public:

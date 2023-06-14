@@ -7,24 +7,97 @@
     "y": "0"
   },
   "children": {
-    "blood": {
-      "type": "box",
+    "Title": {
+      "type": "label",
       "props": {
-        "visible": "1",
-        "width": "50%",
-        "height": "50%",
-        "background": "hud/blood-effect"
+        "text": "The World Changes With N-AI",
+        "x": "0",
+        "y": "70%",
+        "xalign": "center,center",
+        "width": "0",
+        "height": "10%",
+        "color": "140,255,251",
+        "size": "0.6"
       }
     },
-    "shield": {
-      "type": "box",
+    "Subtitle": {
+      "type": "label",
       "props": {
-        "visible": "1",
-        "x": "50%",
-        "y": "50%",
-        "width": "50%",
-        "height": "50%",
-        "background": "hud/shield-effect"
+        "text": "The Subtitle Changes With Its Size",
+        "x": "0",
+        "y": "60%",
+        "height": "10%",
+        "xalign": "center,center",
+        "width": "0",
+        "color": "231,231,231",
+        "size": "0.4"
+      }
+    },
+    "Desc": {
+      "type": "text",
+      "props": {
+        "text": "VMC UI System For Almost There\n\nAn an N-AI stores its characters in its memory, while auto line-breaking whenever necessary.",
+        "x": "0",
+        "y": "35%",
+        "height": "20%",
+        "xalign": "center,center",
+        "width": "40%",
+        "color": "201,201,201",
+        "size": "0.3"
+      }
+    },
+    "ButtonLike": {
+      "type": "button",
+      "props": {
+        "x": "-30",
+        "y": "15%",
+        "height": "124",
+        "xalign": "end,center",
+        "width": "200",
+        "color": "255,182,220"
+      },
+      "children": {
+        "ButtonLikeText": {
+          "type": "label",
+          "props": {
+            "text": "LIKE",
+            "x": "0",
+            "y": "0",
+            "xalign": "center,center",
+            "yalign": "center,center",
+            "width": "0",
+            "height": "0",
+            "color": "255,182,220",
+            "size": "0.3"
+          }
+        }
+      }
+    },
+    "ButtonClose": {
+      "type": "button",
+      "props": {
+        "x": "30",
+        "y": "15%",
+        "height": "124",
+        "xalign": "begin,center",
+        "width": "200",
+        "color": "255,166,24"
+      },
+      "children": {
+        "ButtonLikeText": {
+          "type": "label",
+          "props": {
+            "text": "CLOSE",
+            "x": "0",
+            "y": "0",
+            "xalign": "center,center",
+            "yalign": "center,center",
+            "width": "0",
+            "height": "0",
+            "color": "255,166,24",
+            "size": "0.3"
+          }
+        }
       }
     }
   }

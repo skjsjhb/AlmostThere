@@ -19,3 +19,5 @@ void Triangle::draw() const {}
 void TriangleStrip::draw() const {}
 
 void DisplayText::draw() const {}
+
+void vtGetCharSize(wchar_t, float &, float &) {}
