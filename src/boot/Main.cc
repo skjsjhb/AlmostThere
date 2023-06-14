@@ -7,8 +7,17 @@
  */
 
 #include "Boot.hh"
+#include <csignal>
+#include <unistd.h>
+#include <spdlog/spdlog.h>
+
+void interruptCallback(int) {
+  spdlog::warn("Interrupt signal received. VMC will try to terminate immediately. This is considered dangerous!");
+  exit(0);
+}
 
 int main() {
+  signal(SIGINT, interruptCallback); // Exit immediately
   sysInitFull();
   playDemoMap();
   sysStop();
