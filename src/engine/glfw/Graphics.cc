@@ -2,7 +2,6 @@
 #include "support/Resource.hh"
 #include "util/Util.hh"
 #include <glad/gl.h>
-#include <stdio.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -201,7 +200,8 @@ loadShader(const std::string &name) {
   return prog;
 }
 
-static GLuint loadTexture(const std::string &name) {
+static GLuint loadTexture(const TextureOptn &optn) {
+  auto name = optn.external ? optn.path : getAppResource("textures/" + optn.path + ".png");
   if (name.empty()) {
     return 0;
   }
@@ -220,15 +220,38 @@ static GLuint loadTexture(const std::string &name) {
     error("Could not load texture '" + name + "'. Is this file missing, or is stb_image corrupted?");
     return 0;
   }
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  if (optn.repeat) {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  } else {
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  }
+
+  if (optn.linear) {
+    if (optn.mipmap) {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    } else {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  } else {
+    if (optn.mipmap) {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+    } else {
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+
   if (nrChannels == 3) {
     // Sample as vec4 (RGBA)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
   } else {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  }
+  if (optn.mipmap) {
+    glGenerateMipmap(GL_TEXTURE_2D);
   }
   glBindTexture(GL_TEXTURE_2D, 0);
   stbi_image_free(data);
@@ -319,7 +342,7 @@ void vtSetBackground(const std::string &img) {
     return;
   }
   // Update texture
-  bgTex = loadTexture(img);
+  bgTex = loadTexture({.path = img, .external = true});
 }
 
 static void drawBg() {
@@ -358,7 +381,7 @@ void Triangle::draw() const {
       vertex[5 * i + j] = p[j];
     }
   }
-  auto sd = loadShader(params.external ? params.shader : getAppResource("shaders/" + params.shader));
+  auto sd = loadShader(getAppResource("shaders/" + params.shader));
   if (sd == 0) {
     warn("Invalid shader usage detected. Object might fail to draw.");
   }
@@ -367,8 +390,8 @@ void Triangle::draw() const {
   glUniformMatrix4fv(glGetUniformLocation(sd, SHADER_VAR_PROJ), 1, GL_FALSE, glm::value_ptr(params.ctx.projMat));
 
   unsigned int tx = 0;
-  if (!params.texture.empty()) {
-    tx = loadTexture(params.external ? params.texture : getAppResource("textures/" + params.texture + ".png"));
+  if (!params.texture.path.empty()) {
+    tx = loadTexture(params.texture);
   }
   if (tx != 0) {
     glActiveTexture(GL_TEXTURE0);

@@ -25,7 +25,7 @@ void ShieldBar::draw() const {
     if (i < numActive) {
       DrawParam p = {
           .shader = "hud/shield-bar",
-          .texture = "hud/shield-block-active",
+          .texture = {"hud/shield-block-active"},
           .ctx = game.ctxUI,
       };
       Rect r(Point({xbegin + float(i == 0 ? 0 : SD_BAR_SHIFT), yend, 0}, {0, 1}),
@@ -37,7 +37,7 @@ void ShieldBar::draw() const {
     } else {
       DrawParam p = {
           .shader = "hud/shield-bar",
-          .texture = "hud/shield-block-empty",
+          .texture = {"hud/shield-block-empty"},
           .ctx = game.ctxUI,
       };
       Rect r(Point({xbegin + float(i == 0 ? 0 : SD_BAR_SHIFT), yend, 0}, {0, 1}),

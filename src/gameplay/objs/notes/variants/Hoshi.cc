@@ -32,7 +32,7 @@ void Hoshi::draw() {
 
   DrawParam p = {
       .shader = "3d/mesh",
-      .texture = "hoshi",
+      .texture = {"hoshi"},
       .ctx = game.ctx3D,
   };
 

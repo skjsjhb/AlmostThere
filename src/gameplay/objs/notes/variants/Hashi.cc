@@ -84,7 +84,7 @@ void Hashi::draw() {
 
   DrawParam hat = {
       .shader = "3d/mesh",
-      .texture = "hashi-hat",
+      .texture = {"hashi-hat"},
       .ctx = game.ctx3D,
   };
   std::vector<unsigned int> ptInd = {5, 0, 1, 5, 1, 2, 5, 2, 3, 5, 3, 4};
@@ -96,7 +96,7 @@ void Hashi::draw() {
 
   DrawParam side = {
       .shader = "3d/mesh",
-      .texture = "hashi-side",
+      .texture = {"hashi-side"},
       .ctx = game.ctx3D,
   };
 

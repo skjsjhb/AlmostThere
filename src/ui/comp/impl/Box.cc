@@ -1,6 +1,5 @@
 #include "Box.hh"
 #include "engine/virtual/Graphics.hh"
-#include "ui/comp/Component.hh"
 
 Box::Box(ComponentProps props) : Component(props) {
   applyLayoutParams(props, layout);
@@ -13,7 +12,7 @@ void Box::draw(DrawList &d) {
     auto c = getDefaultDrawContext();
     DrawParam p = {
         .shader = "ui/box",
-        .texture = background,
+        .texture = {background},
         .ctx = c,
     };
     auto x = layout.result.x;

@@ -12,7 +12,7 @@ void FlatNote::draw() {
 
   DrawParam p = {
       .shader = "3d/mesh",
-      .texture = name,
+      .texture = {name},
       .ctx = game.ctx3D,
   };
 

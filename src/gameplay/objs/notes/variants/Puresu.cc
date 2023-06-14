@@ -108,7 +108,7 @@ void Puresu::draw() {
 
   DrawParam headPar = {
       .shader = "3d/mesh",
-      .texture = "puresu-head",
+      .texture = {"puresu-head"},
       .ctx = game.ctx3D,
   };
 
@@ -122,7 +122,7 @@ void Puresu::draw() {
 
   DrawParam bodyPar = {
       .shader = "3d/mesh",
-      .texture = "puresu-body",
+      .texture = {"puresu-body"},
       .ctx = game.ctx3D,
   };
 
@@ -133,7 +133,7 @@ void Puresu::draw() {
   createRect(tCenter, output.up, output.norm, sizew, sizeh, pts);
   DrawParam tailPar = {
       .shader = "3d/mesh",
-      .texture = "puresu-tail",
+      .texture = {"puresu-tail"},
       .ctx = game.ctx3D,
   };
 

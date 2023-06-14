@@ -23,7 +23,7 @@ void Slot::draw() {
   auto rb = ctr + dw - dh;
 
   Point ltp = {lt, {0, 1}}, lbp = {lb, {0, 0}}, rtp = {rt, {1, 1}}, rbp = {rb, {1, 0}};
-  DrawParam p = {.shader = "3d/mesh", .texture = slotTexName[variant], .ctx = game.ctx3D};
+  DrawParam p = {.shader = "3d/mesh", .texture = {slotTexName[variant]}, .ctx = game.ctx3D};
   Rect r = {ltp, lbp, rtp, rbp, p};
   game.drawList.add(r);
 }

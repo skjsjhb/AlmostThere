@@ -22,7 +22,7 @@ void EffectMask::draw() const {
   }
   DrawParam p = {
       .shader = shader,
-      .texture = texture,
+      .texture = {texture},
       .transparent = true,
       .args = {alpha},
       .ctx = game.ctxUI,

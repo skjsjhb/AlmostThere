@@ -24,7 +24,7 @@ void Button::draw(DrawList &d) {
   auto colvec = parseColorStr(color);
   DrawParam p = {
       .shader = "ui/button",
-      .texture = background,
+      .texture = {background},
       .transparent = true,
       .args = {statArg, colvec[0], colvec[1], colvec[2], colvec[3]},
       .ctx = c,

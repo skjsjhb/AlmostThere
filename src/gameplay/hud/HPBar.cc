@@ -111,13 +111,13 @@ void HPBar::draw() {
 
   DrawParam parLeft = {
       .shader = "hud/hp-bar",
-      .texture = tex + "-fill",
+      .texture = {.path = tex + "-fill", .repeat = true},
       .args = {colorAmplifier[0], colorAmplifier[1], colorAmplifier[2], colorAmplifier[3]},
       .ctx = game.ctxUI,
   };
   DrawParam parRight = {
       .shader = "hud/hp-bar",
-      .texture = tex + "-empty",
+      .texture = {.path = tex + "-empty", .repeat = true},
       .args = {colorAmplifier[0], colorAmplifier[1], colorAmplifier[2], colorAmplifier[3]},
       .ctx = game.ctxUI,
   };

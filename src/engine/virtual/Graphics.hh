@@ -40,10 +40,17 @@ struct DrawContext {
   glm::mat4 viewMat, projMat;
 };
 
+struct TextureOptn {
+  std::string path;
+  bool external = false; // Whether this texture should be loaded using absolute path
+  bool repeat = false; // Enable if this texture needs to repeat
+  bool mipmap = false; // Whether to enable mipmap
+  bool linear = true; // Linear filter or nearest filter
+};
+
 struct DrawParam {
   std::string shader;
-  std::string texture;
-  bool external = false; // Whether the specified assets shoule be intepreted as external assets
+  TextureOptn texture;
   bool transparent = false; // Transparent objects will be drawn above all other objects with blending on
 
   // Arguments for shaders
