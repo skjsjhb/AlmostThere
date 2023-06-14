@@ -59,17 +59,19 @@ bool isPressed2D(const glm::vec3 origin[4], View &v, const InputBuffer &ibuf) {
   }
 
   for (auto &i : ibuf) {
-    glm::vec2 ndc;
-    ndc[0] = float(2 * i->x) / 1600.0f - 1.0f;
-    ndc[1] = float(2 * i->y) / 900.0f - 1.0f;
-    if (isInTriangle(ndc, ptsc[0], ptsc[1], ptsc[2]))
-      return true;
-    if (isInTriangle(ndc, ptsc[0], ptsc[1], ptsc[3]))
-      return true;
-    if (isInTriangle(ndc, ptsc[0], ptsc[2], ptsc[3]))
-      return true;
-    if (isInTriangle(ndc, ptsc[1], ptsc[2], ptsc[3]))
-      return true;
+    if (i->pressed) {
+      glm::vec2 ndc;
+      ndc[0] = float(2 * i->x) / 1600.0f - 1.0f;
+      ndc[1] = float(2 * i->y) / 900.0f - 1.0f;
+      if (isInTriangle(ndc, ptsc[0], ptsc[1], ptsc[2]))
+        return true;
+      if (isInTriangle(ndc, ptsc[0], ptsc[1], ptsc[3]))
+        return true;
+      if (isInTriangle(ndc, ptsc[0], ptsc[2], ptsc[3]))
+        return true;
+      if (isInTriangle(ndc, ptsc[1], ptsc[2], ptsc[3]))
+        return true;
+    }
   }
   return false;
 }
