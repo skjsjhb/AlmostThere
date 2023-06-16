@@ -1,7 +1,8 @@
 #include "SingletonNote.hh"
 
+#include "event/Event.hh"
 #include "gameplay/base/Game.hh"
-
+#include "gameplay/objs/NoteEvents.hh"
 #include "util/Util.hh"
 #include "NoteTools.hh"
 
@@ -12,8 +13,9 @@ void SingletonNote::performJudge() {
     return;
   }
   auto range = game.rules.judgeTimeWindow.range;
-
   auto lifeTime = controller->getLifeTime();
+
+  ScoreGrade grade;
 
   switch (judgeStage) {
   case BUSY:
@@ -25,7 +27,7 @@ void SingletonNote::performJudge() {
     }
     // If it's too late...
     if (time > lifeTime.hitTime + range) {
-      game.score.addRecord(NoteScoreEntry::create(typ, LT));
+      grade = LT;
       judgeStage = JUDGED;
     }
     break;
@@ -37,7 +39,7 @@ void SingletonNote::performJudge() {
     } else {
       // If it's already too late...
       if (time > lifeTime.hitTime + range) {
-        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        grade = LT;
         judgeStage = JUDGED;
       }
         // If the position is pressed again, but still too early, then reset it to BUSY.
@@ -51,18 +53,20 @@ void SingletonNote::performJudge() {
     // Now in judge window
     if (isPressed()) {
       judgeStage = JUDGED;
-      auto scr = getTimingGrade(time, lifeTime.hitTime, game.rules);
-      game.score.addRecord(NoteScoreEntry::create(typ, scr));
+      grade = getTimingGrade(time, lifeTime.hitTime, game.rules);
     } else if (!isOverlapped(lifeTime.hitTime, range, time, 0)) {
       // Already too late. Ready to lost
       judgeStage = CLEAR;
     }
     break;
   case JUDGED:
-  default:
-    // End judge
-    // TODO: play effect
-    isActive = false;
+  default:isActive = false;
     return;
+  }
+  // This is executed only once when judged
+  if (judgeStage == JUDGED) {
+    game.score.addRecord(NoteScoreEntry::create(typ, grade)); // TODO: replace with score event listeners
+    NoteHitEvent e(game, *this, grade);
+    dispatchEvent(e);
   }
 }

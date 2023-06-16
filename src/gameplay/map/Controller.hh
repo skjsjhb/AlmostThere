@@ -1,7 +1,7 @@
 /**
  * @brief Abstract controller module.
  *
- * This module acts as a replacement of the old tick controller module, and supports multiple control mode.
+ * This module acts as a replacement of the old draw controller module, and supports multiple control mode.
  * Controller is a map-generated object. It acts as an 'indicator', which means it generates output according
  * to the map, telling the main game loop how to draw/load objects. However, it does not control the object
  * directly.
@@ -41,13 +41,13 @@ public:
    * @brief Get the output status.
    * @return A const reference to the status.
    */
-  virtual const ControllerOutput &getOutput() = 0;
+  [[nodiscard]] virtual const ControllerOutput &getOutput() const = 0;
 
   /**
    * @brief Get the lifetime of the controlled object.
    * @return A const reference to the lifetime indicator.
    */
-  virtual const ControllerLifeTime &getLifeTime() = 0;
+  [[nodiscard]] virtual const ControllerLifeTime &getLifeTime() const = 0;
 
   // Virtual destructor
   virtual ~Controller() = default;

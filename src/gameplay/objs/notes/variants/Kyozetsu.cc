@@ -1,6 +1,10 @@
 #include "Kyozetsu.hh"
 
+#include "event/Event.hh"
 #include "gameplay/base/Game.hh"
+#include "gameplay/objs/Note.hh"
+#include "gameplay/objs/NoteEvents.hh"
+#include "gameplay/score/ScoreValue.hh"
 #include "util/Util.hh"
 
 void Kyozetsu::performJudge() {
@@ -11,6 +15,8 @@ void Kyozetsu::performJudge() {
   auto lifeTime = controller->getLifeTime();
   auto time = game.mapTimer.getTime();
 
+  ScoreGrade grade;
+
   switch (judgeStage) {
   case JUDGED:isActive = false;
     return;
@@ -19,15 +25,20 @@ void Kyozetsu::performJudge() {
     if (isOverlapped(lifeTime.hitTime, game.rules.judgeTimeWindow.good, time, 0)) {
       if (isPressed()) {
         // You touched the zone!
-        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        grade = LT;
         judgeStage = JUDGED;
       }
     } else {
       if (time > lifeTime.hitTime + game.rules.judgeTimeWindow.good) {
         // OK very well!
-        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        grade = PF;
         judgeStage = JUDGED;
       }
     }
+  }
+  if (judgeStage == JUDGED) {
+    game.score.addRecord(NoteScoreEntry::create(typ, grade));
+    NoteHitEvent e(game, *this, grade);
+    dispatchEvent(e);
   }
 }

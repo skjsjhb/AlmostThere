@@ -56,7 +56,7 @@ void Game::initGame(const std::string &mapId) {
 
   if (!mapData.meta.audio.empty()) {
     audio.bgmBuf = vtLoadAudio(getMapResource(mapId, mapData.meta.audio));
-    // Audio playing will be done during each tick
+    // Audio playing will be done during each draw
   }
 
   if (audio.bgmBuf == 0) {
@@ -120,7 +120,7 @@ void Game::runOnce() {
 
   // Poll inputs
   inputBuf = vtGetInputPoints();
-  
+
   // Load and unload objects
   while (mapObjectPtr != mapData.content.objects.end()) {
     auto n = *mapObjectPtr;
@@ -145,7 +145,7 @@ void Game::runOnce() {
 
   // Tick objects
   for (auto &s : activeObjects) {
-    // Judgement of notes have been integrated into tick method, no need to run them again.
+    // Judgement of notes have been integrated into draw method, no need to run them again.
     s->tick();
   }
 
@@ -169,6 +169,9 @@ void Game::runOnce() {
 
     // Draw HUD
     hudManager.draw();
+
+    // Draw Ambient
+    ambient.draw();
 
     vtDrawList(drawList);
     drawList.clear();

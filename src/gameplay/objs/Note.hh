@@ -1,5 +1,5 @@
 /**
- * @brief Note object tick/render proxy module.
+ * @brief Note object draw/render proxy module.
  *
  * This module is a wrapper of an obj controller and some misc state, with
  * additional judgement and render method implemented.

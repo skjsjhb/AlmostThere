@@ -8,9 +8,9 @@ use("atm")
 make_ { CAMERA, 0, 12.5, id = "cam" }
 ---
 out(MODE, { ABS, ABS, ABS })
-out(POS, { 0, 2, 25 })
-out(UP, { 0, 1, 0 })
-out(NORM, { 0, 0, -1 })
+out(POS, { 0, -15, 25 })
+out(UP, { 0, 0.866, 0.5 })
+out(NORM, { 0, 0.5, -0.866 })
 usecam("cam")
 ----
 make_ { CAMERA, 0, 12.5, id = "base" }
@@ -21,28 +21,28 @@ out(POS, { 0, 0, 0 })
 out(UP, { math.cos(t), math.sin(t), 0 })
 out(NORM, { 0, 0, 1 })
 ----
-make_ { EUREKA, 0, 12.5, id = "1", rel = "base" }
+make_ { LINE, 0, 12.5, id = "1", rel = "base" }
 ---
 out(MODE, { PSP, RPJ, ABS })
 out(POS, { 0, 6, 0 })
 out(UP, { 0, -1, 0 })
 out(NORM, { 0, 0, 1 })
 ----
-make_ { EUREKA, 0, 12.5, id = "2", rel = "base" }
+make_ { LINE, 0, 12.5, id = "2", rel = "base" }
 ---
 out(MODE, { PSP, RPJ, ABS })
 out(POS, { -6, 0, 0 })
 out(UP, { 1, 0, 0 })
 out(NORM, { 0, 0, 1 })
 ----
-make_ { EUREKA, 0, 12.5, id = "3", rel = "base" }
+make_ { LINE, 0, 12.5, id = "3", rel = "base" }
 ---
 out(MODE, { PSP, RPJ, ABS })
 out(POS, { 0, -6, 0 })
 out(UP, { 0, 1, 0 })
 out(NORM, { 0, 0, 1 })
 ----
-make_ { EUREKA, 0, 12.5, id = "4", rel = "base" }
+make_ { LINE, 0, 12.5, id = "4", rel = "base" }
 ---
 out(MODE, { PSP, RPJ, ABS })
 out(POS, { 6, 0, 0 })
@@ -269,9 +269,9 @@ out(NORM, { 0, 0, 1 })
 
 ----
 local a = 9.750
-make_ { SHIZUKU, a - 1, a, player = 1, rel = "2" }
+make_ { HOSHI, a - 1, a, player = 1, rel = "2" }
 ---
-pos = { 0, 30, 0 }
+pos = { 0, 0, 30 }
 move_ { pos, { 0, 0, 0 } }
 out(MODE, { PSP, RPJ, ABS });
 out(POS, pos)
@@ -280,9 +280,9 @@ out(NORM, { 0, 0, 1 })
 
 ----
 local a = 10.257
-make_ { SHIZUKU, a - 1, a, player = 1, rel = "2" }
+make_ { HOSHI, a - 1, a, player = 1, rel = "2" }
 ---
-pos = { 0, 30, 0 }
+pos = { 0, 0, 30 }
 move_ { pos, { 0, 0, 0 } }
 out(MODE, { PSP, RPJ, ABS });
 out(POS, pos)
@@ -290,9 +290,9 @@ out(UP, { 0, 1, 0 })
 out(NORM, { 0, 0, 1 })
 ----
 local a = 10.765
-make_ { SHIZUKU, a - 1, a, player = 1, rel = "2" }
+make_ { HOSHI, a - 1, a, player = 1, rel = "2" }
 ---
-pos = { 0, 30, 0 }
+pos = { 0, 0, 30 }
 move_ { pos, { 0, 0, 0 } }
 out(MODE, { PSP, RPJ, ABS });
 out(POS, pos)

@@ -5,20 +5,29 @@
 #include <glm/glm.hpp>
 
 class DrawList;
+class Game;
 
 class Particle {
 public:
-  Particle(const glm::vec3 &initPos, const glm::vec3 &initV,
-           const glm::vec3 &g, const glm::vec3 &norm, double genTime, double lifeTime);
+  Particle(Game &game, const glm::vec3 &pos, const glm::vec3 &dir, const glm::vec3 &norm, double genTime);
 
-  bool tick(double absTime);
+  [[nodiscard]] bool shouldUnload() const;
 
-  void draw(DrawList &d);
+  virtual void draw();
+
+  virtual ~Particle() = default;
 
 protected:
-  glm::vec3 initPos, initV, gravity, normal;
-  glm::vec3 currentPos, currentV;
-  double genTime, lifeTime;
+  Game &game;
+  glm::vec3 initPos, dir, normal;
+  double genTime;
+  std::string partTex;
+};
+
+class LostParticle : public Particle {
+public:
+  using Particle::Particle;
+  void draw() override;
 };
 
 #endif /* GAMEPLAY_AMBIENT_PARTICLE */

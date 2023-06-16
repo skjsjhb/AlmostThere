@@ -92,7 +92,6 @@ class Rect : public DrawObject {
 public:
   Rect(const Point &p1, const Point &p2, const Point &p3, const Point &p4,
        const DrawParam &p) : DrawObject(p), pt({Triangle(p1, p2, p3, p), Triangle(p3, p2, p4, p)}) {};
-
   void draw() const override;
 
 protected:

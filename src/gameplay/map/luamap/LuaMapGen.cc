@@ -55,8 +55,8 @@ struct LuaMapCreationParams {
 class LuaMapObjectController : public Controller {
 public:
   void tick(double absTime) override;
-  const ControllerOutput &getOutput() override { return out; };
-  const ControllerLifeTime &getLifeTime() override { return lifeTime; };
+  [[nodiscard]] const ControllerOutput &getOutput() const override { return out; };
+  [[nodiscard]] const ControllerLifeTime &getLifeTime() const override { return lifeTime; };
 
   static std::shared_ptr<LuaMapObjectController> create(const LuaMapCreationParams &lp,
                                                         const std::string &tickScript);
@@ -90,7 +90,7 @@ protected:
   ControllerLifeTime lifeTime;
   ControllerOutput out;
   int tickScriptId = LUA_NOREF;
-  double lastTickTime = -1; // Indicator to prevent multiple tick
+  double lastTickTime = -1; // Indicator to prevent multiple draw
 };
 
 static std::list<LuaMapCreationParams> objCreationBuffer;
@@ -99,7 +99,7 @@ std::shared_ptr<LuaMapObjectController> LuaMapObjectController::create(const Lua
                                                                        const std::string &tickScript) {
   auto pid = luaPrecompile(tickScript);
   if (pid == LUA_NOREF) {
-    error("Failed to compile tick script. Skipped object creation.");
+    error("Failed to compile draw script. Skipped object creation.");
     return nullptr;
   }
 
@@ -211,7 +211,7 @@ MapData generateLuaMap(const std::string &mapId, Game &g) {
     luaRun(objSecs[0]); // Register section
 
     if (objCreationBuffer.empty()) {
-      warn("No object registered. The corresponding tick script won't be executed.");
+      warn("No object registered. The corresponding draw script won't be executed.");
       continue;
     }
 

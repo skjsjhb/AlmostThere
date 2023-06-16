@@ -120,7 +120,7 @@ bool vtWindowLoop() {
     auto tps = int(frames / (currentTime - lastTime));
     info("TPS: " + std::to_string(tps));
     if (tps < TPS_MINIMUM_COUNT) {
-      warn("Low TPS (<" + std::to_string(TPS_MINIMUM_COUNT) + ") detected. Game tick might delay.");
+      warn("Low TPS (<" + std::to_string(TPS_MINIMUM_COUNT) + ") detected. Game draw might delay.");
     }
     lastTime = currentTime;
     frames = 0;

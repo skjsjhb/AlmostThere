@@ -76,7 +76,7 @@ extern void vtDeCoord(int rx, int ry, int &sx, int &sy);
  * may become lower if hardware failed to support.
  *
  * @note Even by setting fps to the same as screen this does not enable VSYNC.
- * @note FPS cannot be higher than TPS, since frames are rendered inside the loop of each tick.
+ * @note FPS cannot be higher than TPS, since frames are rendered inside the loop of each draw.
  * @see \c vtSetTPSCap
  * @param fps The max fps cap.
  */

@@ -3,6 +3,7 @@
 #include "NoteTools.hh"
 #include "gameplay/base/Game.hh"
 #include "util/Util.hh"
+#include "gameplay/objs/NoteEvents.hh"
 
 #define CATCH_NOTE_WINDOW 0.005
 
@@ -13,6 +14,7 @@ void CatchNote::performJudge() {
   auto time = game.mapTimer.getTime();
   auto lifeTime = controller->getLifeTime();
 
+  ScoreGrade grade;
   switch (judgeStage) {
   case JUDGED:isActive = false;
     return;
@@ -21,15 +23,21 @@ void CatchNote::performJudge() {
     if (isOverlapped(lifeTime.hitTime, CATCH_NOTE_WINDOW, time, 0)) {
       if (isPressed()) {
         // You got it
-        game.score.addRecord(NoteScoreEntry::create(typ, PF));
+        grade = PF;
         judgeStage = JUDGED;
       }
     } else {
       if (time > lifeTime.hitTime) {
         // You failed!
-        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        grade = LT;
         judgeStage = JUDGED;
       }
     }
+  }
+
+  if (judgeStage == JUDGED) {
+    game.score.addRecord(NoteScoreEntry::create(typ, grade));
+    NoteHitEvent e(game, *this, grade);
+    dispatchEvent(e);
   }
 }

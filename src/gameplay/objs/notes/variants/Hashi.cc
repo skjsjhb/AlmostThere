@@ -1,6 +1,10 @@
 #include "Hashi.hh"
 
+#include "event/Event.hh"
 #include "gameplay/base/Game.hh"
+#include "gameplay/objs/Note.hh"
+#include "gameplay/objs/NoteEvents.hh"
+#include "gameplay/score/ScoreValue.hh"
 #include "util/Util.hh"
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -14,6 +18,8 @@ void Hashi::performJudge() {
 
   auto ref = controller->getLifeTime();
 
+  ScoreGrade grade;
+// TODO: add judge event during pressing
   switch (judgeStage) {
   case JUDGED:isActive = false;
     return;
@@ -31,19 +37,24 @@ void Hashi::performJudge() {
       judgeStage = JUDGED;
       auto comRate = judgedLength / ref.length;
       if (comRate > 0.95) {
-        game.score.addRecord(NoteScoreEntry::create(typ, PF));
+        grade = PF;
       } else if (comRate > 0.85) {
-        game.score.addRecord(NoteScoreEntry::create(typ, AT));
+        grade = AT;
       } else if (comRate > 0.70) {
-        game.score.addRecord(NoteScoreEntry::create(typ, AC));
+        grade = AC;
       } else if (comRate > 0.45) {
-        game.score.addRecord(NoteScoreEntry::create(typ, MD));
+        grade = MD;
       } else if (comRate > 0) {
-        game.score.addRecord(NoteScoreEntry::create(typ, TC));
+        grade = TC;
       } else {
-        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        grade = LT;
       }
     }
+  }
+  if (judgeStage == JUDGED) {
+    game.score.addRecord(NoteScoreEntry::create(typ, grade));
+    NoteHitEvent e(game, *this, grade);
+    dispatchEvent(e);
   }
 }
 

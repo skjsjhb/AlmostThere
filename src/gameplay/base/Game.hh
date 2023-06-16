@@ -3,6 +3,7 @@
 
 #include "engine/virtual/Audio.hh"
 #include "engine/virtual/Graphics.hh"
+#include "gameplay/ambient/AmbientManager.hh"
 #include "gameplay/player/chars/CharList.hh"
 #include "gameplay/rules/GameRules.hh"
 #include "gameplay/score/ScoreRecord.hh"
@@ -35,7 +36,7 @@ struct AudioStat {
 
 class Game final {
 public:
-  Game() : hudManager(*this) {}
+  Game() : hudManager(*this), ambient(*this) {}
 
   void runMainLoop(); // Start the whole main loop, return when game completed
   void runOnce();     // Run the loop once, suitable for external calls
@@ -82,6 +83,7 @@ public:
   std::list<const InputPoint *> inputBuf;
   DrawContext ctx3D{}, ctxUI{};
   DrawList drawList;
+  AmbientManager ambient;
 };
 
 #endif /* GAMEPLAY_BASE_GAME */

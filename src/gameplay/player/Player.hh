@@ -80,7 +80,7 @@ public:
   // However, changes like judge window must be done manually
   virtual void tick(Game &g);
 
-  // Mark a skill as activated. It will be activated formally on the next tick.
+  // Mark a skill as activated. It will be activated formally on the next draw.
   virtual void activateSkill(SkillType st);
 
   /**

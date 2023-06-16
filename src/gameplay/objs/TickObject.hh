@@ -19,7 +19,7 @@ public:
   [[nodiscard]] virtual bool shouldTick() const;
 
   /**
-   * @brief Get the generate time (first tick time) of the object.
+   * @brief Get the generate time (first draw time) of the object.
    *
    * The value returned are used for objects sorting. It's not required to return the accurate generate time (although
    * this impl does). In fact, even returing a proper pre-defined <tt>unsigned int</tt> indexes will work.
@@ -32,9 +32,9 @@ public:
   [[nodiscard]] virtual double getGenTime() const { return controller->getLifeTime().genTime; };
 
   /**
-   * @brief Main tick method for any tickable object.
+   * @brief Main draw method for any tickable object.
    *
-   * Tickable objects will update their state on every tick. The speed of ticking is unstable and non-predictable, so
+   * Tickable objects will update their state on every draw. The speed of ticking is unstable and non-predictable, so
    * the use of timer is necessary to keep animation running at a preset speed.
    *
    * Call this method to update the state of the object.
@@ -65,6 +65,13 @@ public:
    */
   std::weak_ptr<Controller> getController() {
     return controller;
+  };
+
+  /**
+   * @brief The const override of \c getController.
+   */
+  [[nodiscard]] const Controller &getControllerConst() const {
+    return *controller;
   };
 
 protected:

@@ -1,7 +1,11 @@
 #include "Puresu.hh"
 
 #include "../NoteTools.hh"
+#include "event/Event.hh"
 #include "gameplay/base/Game.hh"
+#include "gameplay/objs/Note.hh"
+#include "gameplay/objs/NoteEvents.hh"
+#include "gameplay/score/ScoreValue.hh"
 #include "util/Util.hh"
 
 #define PURESU_LENGTH_SCALE 10
@@ -18,6 +22,8 @@ void Puresu::performJudge() {
   auto good = game.rules.judgeTimeWindow.good;
   auto lifeTime = controller->getLifeTime();
 
+  ScoreGrade grade;
+
   switch (judgeStage) {
   case JUDGED:
   default:isActive = false;
@@ -29,7 +35,7 @@ void Puresu::performJudge() {
     if (!isOverlapped(lifeTime.hitTime, range, time, 0) &&
         time > lifeTime.hitTime) {
       // Lost
-      game.score.addRecord(NoteScoreEntry::create(typ, LT));
+      grade = LT;
       judgeStage = JUDGED;
     }
     break;
@@ -43,7 +49,7 @@ void Puresu::performJudge() {
       if (time > lifeTime.hitTime &&
           !isOverlapped(lifeTime.hitTime, range, time, 0)) {
         // Lost
-        game.score.addRecord(NoteScoreEntry::create(typ, LT));
+        grade = LT;
         judgeStage = JUDGED;
       } else if (isPressed()) {
         // Too early
@@ -54,22 +60,21 @@ void Puresu::performJudge() {
   case ACTIVE:
     if (time >= lifeTime.hitTime + lifeTime.length) {
       // Well done!
-      game.score.addRecord(NoteScoreEntry::create(typ, PF));
+      grade = PF;
       judgeStage = JUDGED;
-      return;
+      break;
     }
     if (!isPressed()) {
       if (isOverlapped((lifeTime.hitTime + lifeTime.length), almost, time, 0)) {
         // AT
-        game.score.addRecord(NoteScoreEntry::create(typ, AT));
+        grade = AT;
         judgeStage = JUDGED;
-        return;
       } else if (isOverlapped((lifeTime.hitTime + lifeTime.length), good, time, 0)) {
         // AC
-        game.score.addRecord(NoteScoreEntry::create(typ, AC));
+        grade = AC;
         judgeStage = JUDGED;
-        return;
       }
+      break;
       // Do not lifeTimeresh time
     } else {
       lastSuccJudge = time; // Refresh time
@@ -80,15 +85,18 @@ void Puresu::performJudge() {
     if (lastSuccJudge != -1 &&
         time - lastSuccJudge > game.rules.judgeTimeWindow.allowBreak) {
       if (lastSuccJudge - lifeTime.hitTime > 0.5 * lifeTime.length) {
-        game.score.addRecord(NoteScoreEntry::create(typ, MD));
+        grade = MD;
       } else {
         // At least you've got to ACTIVE
-        game.score.addRecord(NoteScoreEntry::create(typ, TC));
+        grade = TC;
       }
       judgeStage = JUDGED;
     }
-
-    break;
+  }
+  if (judgeStage == JUDGED) {
+    game.score.addRecord(NoteScoreEntry::create(typ, grade));
+    NoteHitEvent e(game, *this, grade);
+    dispatchEvent(e);
   }
 }
 
