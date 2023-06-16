@@ -1,13 +1,13 @@
 #include "Game.hh"
 
-#include "engine/virtual/Input.hh"
+#include "engine/virtual/Graphics.hh"
+#include "event/Event.hh"
 #include "gameplay/map/MapLoad.hh"
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
-#include "gameplay/player/Player.hh"
-#include "user/Account.hh"
+#include "gameplay/player/PlayerEvents.hh"
+#include "gameplay/player/chars/Default.hh"
 #include <glm/gtc/matrix_transform.hpp>
-#include <stdio.h>
 #include "lua/LuaSupport.hh"
 #include "spdlog/spdlog.h"
 #include "support/Resource.hh"
@@ -78,45 +78,25 @@ void Game::initGame(const std::string &mapId) {
   mapTimer = Timer(vtGetTime);
   absTimer = Timer(vtGetTime);
 
-  // Check players
-  if (pid > players.size() || pid < 0) {
-    error("Invalid player ID specified. This causes undefined behaviour.");
-  }
-}
+  // Game process controller
 
-void Game::addPlayer(const Account &account, CharID selectedChar) {
-  auto epid = players.size() + 1;
-  auto xp = Player::createPlayer(selectedChar, account.getUserName(), account.getUID(), epid,
-                                 account.getAccountType() == AC_REMOTE);
-  if (account.getAccountType() != AC_REMOTE) {
-    if (pid != -1) {
-      warn("Duplicated local player detected. This causes undefined behaviour.");
-    }
-    pid = int(epid);
-  }
-  players.push_back(xp);
+  addEventListener<PlayerDieEvent>([this](PlayerDieEvent &e) -> void {
+    this->status = FAILED;
+  });
+
 }
 
 void Game::runOnce() {
-  if (audio.bgmBuf) {
-    if (status == RUNNING && !audio.bgmPlaying) {
-      vtPlayAudio(audio.bgmBuf);
-      audio.bgmPlaying = true;
-    }
-    if (status != RUNNING && audio.bgmPlaying) {
-      vtPauseAudio(audio.bgmBuf);
-      audio.bgmPlaying = false;
-    }
-  }
-
   mapTimer.update();
   auto mapTimeNow = mapTimer.getTime();
 
   if (mapTimeNow > mapData.meta.duration) {
     status = DONE;
-    return;
-  } // TODO: end when squad eliminated
+  }
 
+  if (status == DONE) {
+    return;
+  }
 
   // Poll inputs
   inputBuf = vtGetInputPoints();
@@ -178,12 +158,43 @@ void Game::runOnce() {
     vtDisplayFlip();
   }
 
+  // Process audio
+  if (audio.bgmBuf) {
+    if (status == RUNNING && !audio.bgmPlaying) {
+      vtPlayAudio(audio.bgmBuf);
+      audio.bgmPlaying = true;
+    }
+    if (status != RUNNING && audio.bgmPlaying) {
+      vtPauseAudio(audio.bgmBuf);
+      audio.bgmPlaying = false;
+    }
+  }
+
+  // Clear background if necessary
+  if (status != RUNNING) {
+    vtSetBackground("");
+  }
+
   // Close signals are ignored during gameplay
   vtWindowLoop();
 }
 
 void Game::runMainLoop() {
-  while (status != DONE) {
+  while (status == RUNNING) {
     runOnce();
+  }
+}
+void Game::setPlayer(CharID ch) {
+  switch (ch) {
+  case DEFAULT:player = std::make_shared<DefaultChar>(*this);
+    break;
+  default:break;
+  }
+  player->addEventListeners();
+}
+
+Game::~Game() {
+  if (player) {
+    player->removeEventListeners();
   }
 }

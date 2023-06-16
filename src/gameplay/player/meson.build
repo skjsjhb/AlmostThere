@@ -1,2 +1,2 @@
-src += files(['Player.cc'])
+src += files(['Player.cc', 'PlayerEvents.cc'])
 subdir('chars')

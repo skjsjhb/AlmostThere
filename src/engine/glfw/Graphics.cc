@@ -1,4 +1,5 @@
 #include "engine/virtual/Graphics.hh"
+#include "engine/virtual/Framework.hh"
 #include "support/Resource.hh"
 #include "util/Util.hh"
 #include <glad/gl.h>
@@ -7,6 +8,7 @@
 #include <sstream>
 #include <stb_image.h>
 #include <unordered_map>
+#include <fmt/core.h>
 #include "spdlog/spdlog.h"
 #include <ft2build.h>
 #include <set>
@@ -23,6 +25,8 @@ using namespace spdlog;
 #define SHADER_VAR_COLOR "aColor"
 
 static std::unordered_map<std::string, GLuint> texturesCtl, shadersCtl;
+
+static std::list<TextureOptn> preloadTextures = {{"hud/shield-effect"}, {"hud/blood-effect"}};
 
 struct Glyph {
   unsigned int texID;
@@ -269,6 +273,12 @@ float bgDrawVert[6][4] = {
     {-1, -1, 0, 0},
     {1, -1, 1, 0}};
 
+static void runPreloadTasks() {
+  for (auto &pt : preloadTextures) {
+    loadTexture(pt);
+  }
+}
+
 void vtInitGraphics() {
   info("Initializing graphics buffers.");
   glGenBuffers(1, &vbo);
@@ -314,6 +324,10 @@ void vtInitGraphics() {
 
   info("Loading fonts.");
   loadFont();
+
+  info("Running preload tasks.");
+  runPreloadTasks();
+
 }
 
 void vtDeInitGraphics() {

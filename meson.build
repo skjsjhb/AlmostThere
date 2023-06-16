@@ -19,6 +19,7 @@ if backend == 'glfw'
     deps += dependency('glfw3')
     deps += dependency('freetype')
 endif
+deps += dependency('fmt')
 deps += dependency('spdlog')
 
 found = false

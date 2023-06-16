@@ -1,15 +1,17 @@
 #include "Boot.hh"
 
+#include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
 #include "engine/virtual/Graphics.hh"
 #include "engine/virtual/Audio.hh"
 #include "engine/virtual/Input.hh"
 #include "gameplay/map/MapLoad.hh"
+#include "gameplay/player/chars/CharList.hh"
 #include "lua/LuaSupport.hh"
 #include "lua/LuaExt.hh"
 #include "gameplay/base/Game.hh"
-#include "user/Account.hh"
 #include "spdlog/spdlog.h"
+#include "ui/loader/UILoader.hh"
 
 #define AT_NAME_ARTWORK "\n=================================================\n             _                             _\n\
      /\\     | |                           | |\n\
@@ -28,12 +30,17 @@ void sysInitFull() {
   spdlog::info("Initializing log module.");
   spdlog::info("Welcome to...");
   spdlog::info(AT_NAME_ARTWORK);
-  spdlog::info("System is setting up.");
+  spdlog::info("Engine is setting up.");
+
+  auto t1 = vtGetTime();
+
   // Engine init
   vtInitWindow();
   vtInitGraphics();
   vtInitAudio();
   vtInitInput();
+
+  spdlog::info("VMC Engine initialized (" + fmt::format("{:.2f}", vtGetTime() - t1) + "s)!");
 
   // Support env init
   luaInit();
@@ -44,11 +51,24 @@ void sysInitFull() {
 }
 
 void playDemoMap() {
-  auto demoAc = Account::createLocalProfile("Player");
   Game g;
-  g.addPlayer(demoAc, NEKO);
+  g.setPlayer(DEFAULT);
   g.initGame("example");
   g.runMainLoop();
+  if (g.status == FAILED) {
+    auto t1 = vtGetTime();
+    auto t = loadUITree("failed");
+    t->computeLayout();
+    DrawList uid;
+    t->draw(uid);
+    while (vtShouldDraw()) {
+      if (vtGetTime() - t1 > 5) {
+        break;
+      }
+      vtDrawList(uid);
+      vtDisplayFlip();
+    }
+  }
 }
 
 void sysStop() {
