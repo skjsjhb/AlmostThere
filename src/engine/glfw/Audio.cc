@@ -19,6 +19,7 @@ struct AudioObject {
 };
 
 std::map<unsigned int, std::unique_ptr<AudioObject>> audioObjectsIndex;
+std::map<std::string, unsigned int> cachedSoundIndex;
 
 unsigned int
 vtLoadAudio(const std::string &fname) {
@@ -79,4 +80,12 @@ void vtResumeAudio(unsigned int sid) {
       engine.setPause(pt->handler, false);
     }
   }
+}
+
+void vtPlaySound(const std::string &s) {
+  if (!cachedSoundIndex.contains(s)) {
+    auto id = vtLoadAudio(s);
+    cachedSoundIndex[s] = id;
+  }
+  vtPlayAudio(cachedSoundIndex[s]);
 }

@@ -69,4 +69,12 @@ extern void vtAudioSpeed(unsigned int sid, float spd);
  */
 extern void vtResumeAudio(unsigned int sid);
 
+/**
+ * @brief Load and play a short sound effect.
+ *
+ * The audio source should be pre-loaded and cached.
+ * @param s The path to the sound file.
+ */
+extern void vtPlaySound(const std::string &s);
+
 #endif /* ENGINE_VIRTUAL_AUDIO */
