@@ -9,7 +9,7 @@
 
 using namespace spdlog;
 
-static std::unordered_map<std::string, std::string> lcMap;
+static std::unordered_map<std::string, std::wstring> lcMap;
 
 void setLocale(const std::string &name) {
   info("Loading locale " + name);
@@ -25,7 +25,6 @@ void setLocale(const std::string &name) {
   for (auto &l : lines) {
     auto kv = splitStr(l, "=", 2);
     if (kv.size() != 2) {
-
       warn("Invalid language file entry detected. Skipping.");
       continue;
     }
@@ -33,15 +32,15 @@ void setLocale(const std::string &name) {
     auto v = kv[1];
     trimStr(k);
     trimStr(v);
-    lcMap[k] = lcMap[v];
+    lcMap[k] = unicode2wstring(v);
   }
   info("Locale " + name + " loaded.");
 }
 
-std::string getLocaleText(const std::string &key) {
+std::wstring getLocaleText(const std::string &key) {
   if (!lcMap.contains(key)) {
     warn("Missing translation for key: " + key);
-    return "";
+    return L"";
   }
   return lcMap[key];
 }

@@ -1,8 +1,12 @@
 #include "AmbientManager.hh"
 #include "Particle.hh"
+#include "engine/virtual/Audio.hh"
 #include "event/Event.hh"
 #include "gameplay/base/Game.hh"
 #include "gameplay/objs/NoteEvents.hh"
+#include "gameplay/player/Player.hh"
+#include "gameplay/player/PlayerEvents.hh"
+#include "support/Resource.hh"
 
 #include <glm/gtx/rotate_vector.hpp>
 
@@ -22,9 +26,22 @@ void AmbientManager::addEventListeners() {
       this->particles.emplace_back(std::make_unique<LostParticle>(game, st.pos, st.up, st.norm, time));
     }
   });
+  playerDamageHandler = addEventListener<PlayerDamageEvent>([](PlayerDamageEvent &e) -> void {
+    if (e.getDamageType() == DamageType::Shield) {
+      vtPlaySound(getAppResource("sound/ping.wav"), true);
+    } else {
+      vtPlaySound(getAppResource("sound/alert.wav"), true);
+    }
+  });
+
+  playerDieHandler = addEventListener<PlayerDieEvent>([](PlayerDieEvent &e) -> void {
+    vtPlaySound(getAppResource("sound/fail.wav"), false);
+  });
 }
 void AmbientManager::removeEventListeners() const {
   removeEventListener<NoteHitEvent>(noteHitHandler);
+  removeEventListener<PlayerDamageEvent>(playerDamageHandler);
+  removeEventListener<PlayerDieEvent>(playerDieHandler);
 }
 
 AmbientManager::~AmbientManager() noexcept {

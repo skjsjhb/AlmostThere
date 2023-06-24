@@ -1,18 +1,21 @@
 #include "Box.hh"
 #include "engine/virtual/Graphics.hh"
+#include "ui/comp/Component.hh"
 
 Box::Box(ComponentProps props) : Component(props) {
   applyLayoutParams(props, layout);
   background = props[Props::Background];
   visible = props[Props::Visible] == "1";
+  bgExternal = props[Props::External] == "1";
 }
 
 void Box::draw(DrawList &d) {
-  if (visible) {
+  if (visible && !background.empty()) {
     auto c = getDefaultDrawContext();
     DrawParam p = {
         .shader = "ui/box",
-        .texture = {background},
+        .texture = {.path = background, .external = bgExternal},
+        .transparent = true,
         .ctx = c,
     };
     auto x = layout.result.x;

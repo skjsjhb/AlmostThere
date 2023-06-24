@@ -21,7 +21,7 @@ struct MapContent {
 };
 
 struct MapMeta {
-  std::string id, songName, artist, mapper, chartName, audio, background;
+  std::string id, songName, artist, mapper, chartName, audio, background, banner;
   /**
    * @brief The duration of the map. This is the only value
    * controlling the actual length of the game.
@@ -30,7 +30,7 @@ struct MapMeta {
   /**
    * @brief The difficulty level.
    */
-  unsigned int diffLevel;
+  std::string diffLevel, diffColor;
 };
 
 struct MapData {

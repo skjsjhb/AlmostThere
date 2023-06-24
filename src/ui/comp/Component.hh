@@ -26,6 +26,8 @@ V Size = "size";
 V Color = "color";
 V XAlign = "xalign";
 V YAlign = "yalign";
+V Font = "font";
+V External = "external";
 };
 
 class Component {
@@ -70,7 +72,7 @@ protected:
   /**
    * @brief The id of a component.
    *
-   * IDs are NOT strictly required to be the same, except when indexing component using IDs.
+   * IDs are NOT strictly required to be different, except when indexing component using IDs.
    */
   std::string id;
 

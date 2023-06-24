@@ -18,4 +18,4 @@ void vtAudioSpeed(unsigned int, float) {}
 
 void vtResumeAudio(unsigned int) {}
 
-void vtPlaySound(const std::string &s) {}
+void vtPlaySound(const std::string &, bool) {}

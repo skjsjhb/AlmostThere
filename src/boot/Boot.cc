@@ -11,9 +11,13 @@
 #include "lua/LuaExt.hh"
 #include "gameplay/base/Game.hh"
 #include "spdlog/spdlog.h"
+#include "support/Locale.hh"
+#include "support/Resource.hh"
 #include "ui/loader/UILoader.hh"
+#include "ui/pages/ResultScreen.hh"
 
-#define AT_NAME_ARTWORK "\n=================================================\n             _                             _\n\
+#define AT_NAME_ARTWORK "\n=================================================\n\
+             _                             _\n\
      /\\     | |                           | |\n\
     /  \\    | |  _ __ ___     ___    ___  | |_\n\
    / /\\ \\   | | | '_ ` _ \\   / _ \\  / __| | __|\n\
@@ -48,6 +52,9 @@ void sysInitFull() {
 
   // Map loaders
   initMapLoaders();
+
+  // Locale
+  setLocale("zh-CN");
 }
 
 void playDemoMap() {
@@ -57,17 +64,36 @@ void playDemoMap() {
   g.runMainLoop();
   if (g.status == FAILED) {
     auto t1 = vtGetTime();
-    auto t = loadUITree("failed");
-    t->computeLayout();
-    DrawList uid;
-    t->draw(uid);
-    while (vtShouldDraw()) {
-      if (vtGetTime() - t1 > 5) {
+    ResultScreen rs({
+                        .variant = ResultScreenVariant::FAILED,
+                        .score = g.score.exportScore(),
+                        .songTitle = g.mapData.meta.songName,
+                        .artist= g.mapData.meta.artist + " // " + g.mapData.meta.mapper,
+                        .diffLevel = g.mapData.meta.diffLevel,
+                        .playerName = "Player",
+                        .banner = getMapResource(g.mapData.meta.id, g.mapData.meta.banner),
+                        .diffColor = g.mapData.meta.diffColor,
+                        .pf = 0, // TODO apply counts
+                        .at = 0,
+                        .ac = 0,
+                        .md = 0,
+                        .tc = 0,
+                        .lt = 0,
+                    }, vtGetTime());
+
+    while (true) {
+      if (vtGetTime() - t1 > 30) {
         break;
       }
-      vtDrawList(uid);
-      vtDisplayFlip();
+      if (vtShouldDraw()) {
+        DrawList uid;
+        rs.draw(vtGetTime(), uid);
+        vtDrawList(uid);
+        vtDisplayFlip();
+      }
+      vtWindowLoop();
     }
+
   }
 }
 

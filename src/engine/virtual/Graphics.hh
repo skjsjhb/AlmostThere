@@ -110,8 +110,15 @@ protected:
 
 class DisplayText : public DrawObject {
 public:
-  DisplayText(const glm::vec2 coord, float size, std::wstring st, glm::vec4 col, const DrawParam &p)
-      : DrawObject(p), pos(coord), fSize(size), color(col), text(std::move(st)) {};
+  DisplayText(const glm::vec2 coord,
+              float size,
+              std::wstring st,
+              glm::vec4 col,
+              std::string aFont,
+              const DrawParam &p,
+              bool exactYIn = false)
+      : DrawObject(p), pos(coord), fSize(size), color(col), text(std::move(st)), font(std::move(aFont)),
+        exactY(exactYIn) {};
 
   void draw() const override;
 
@@ -120,6 +127,12 @@ protected:
   float fSize;
   glm::vec4 color = {1, 1, 1, 1};
   std::wstring text;
+  std::string font;
+
+  // Glyphs has a bearing controlling method for them to align neatly on the baseline.
+  // However, this is not what we wanted when rendering in text box or similar containers which has strict limits
+  // on the height. Use this option to disable bearing calculation and use originY as yMin.
+  bool exactY;
 };
 
 class DrawList {
@@ -139,7 +152,7 @@ public:
  * @param[out] w A reference to the width.
  * @param[out] h A reference to the height.
  */
-extern void vtGetCharSize(wchar_t c, float &w, float &h);
+extern void vtGetCharSize(const std::string &font, wchar_t c, float &w, float &h);
 
 extern void vtInitGraphics();
 

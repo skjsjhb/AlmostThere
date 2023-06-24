@@ -23,7 +23,7 @@ uniform float args[1];
 
 void main () {
     color = texture(aTex, texCoord);
-    color.a *= args[0] * 0.6;
+    color.a *= args[0];
     if(color.a == 0){
         discard;
     }

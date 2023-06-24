@@ -1,0 +1,11 @@
+HUD/ShieldBroken/Title = 护盾遭到破坏
+HUD/ShieldBroken/SubTitle = 护盾损毁, 核心遭到威胁
+HUD/CoreUnstable/Title = 核心不稳定! 警告! 警告!
+HUD/CoreUnstable/SubTitle = 遭受过量伤害会摧毁核心!
+HUD/50%/Title = 已完成一半
+HUD/50%/SubTitle = 我们距离胜利不远了.
+HUD/90%/Title = 就快到了
+HUD/90%/SubTitle = 最后的时刻, 胜利就在那里!
+
+Result/Hint/Fail = 祝下次好运!
+Result/Hint/Pass = 恭喜！

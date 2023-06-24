@@ -6,7 +6,8 @@
 #define SCORE_BITS 8
 #define SCORE_XBEGIN 1350
 #define SCORE_YBEGIN 820
-#define SCORE_SIZE 0.4
+#define SCORE_SIZE 0.35
+#define SCORE_FONT "neat"
 
 void ScoreDisplay::draw() {
   auto t = game.mapTimer.getTime();
@@ -29,7 +30,7 @@ void ScoreDisplay::draw() {
       .transparent = true,
       .ctx = game.ctxUI,
   };
-  DisplayText text({SCORE_XBEGIN, SCORE_YBEGIN}, SCORE_SIZE, s, {1, 1, 1, alpha}, p);
+  DisplayText text({SCORE_XBEGIN, SCORE_YBEGIN}, SCORE_SIZE, s, {1, 1, 1, alpha}, SCORE_FONT, p);
   game.drawList.add(text);
 }
 

@@ -1,0 +1,23 @@
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 aProj;
+
+void main() {
+    gl_Position = aProj * vec4(aPos, 1.0);
+    gl_Position.z = -0.95;
+}
+
+// ---
+
+#version 330 core
+out vec4 color;
+
+uniform float args[4];
+
+void main () {
+    color = vec4(args[0], args[1], args[2], args[3]);
+    if(color.a == 0){
+        discard;
+    }
+}

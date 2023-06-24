@@ -28,3 +28,7 @@ void ScoreRecords::addAmplifier(double a) {
 void ScoreRecords::addScore(unsigned int s) {
   total += lround(amplifier * s);
 }
+
+ScoreGradeCount ScoreRecords::exportCount() {
+  return sc;
+}

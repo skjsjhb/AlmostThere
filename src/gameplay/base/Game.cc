@@ -1,7 +1,5 @@
 #include "Game.hh"
 
-#include "engine/virtual/Graphics.hh"
-#include "event/Event.hh"
 #include "gameplay/map/MapLoad.hh"
 #include "engine/virtual/Framework.hh"
 #include "engine/virtual/Window.hh"
@@ -56,7 +54,7 @@ void Game::initGame(const std::string &mapId) {
 
   if (!mapData.meta.audio.empty()) {
     audio.bgmBuf = vtLoadAudio(getMapResource(mapId, mapData.meta.audio));
-    // Audio playing will be done during each draw
+    vtPlayAudio(audio.bgmBuf);
   }
 
   if (audio.bgmBuf == 0) {
@@ -81,15 +79,23 @@ void Game::initGame(const std::string &mapId) {
   // Game process controller
 
   addEventListener<PlayerDieEvent>([this](PlayerDieEvent &e) -> void {
-    this->status = FAILED;
+    if (audio.bgmBuf) {
+      vtPauseAudio(audio.bgmBuf);
+    }
+    mapTimer.setSpeed(0.1); // Make everything seems slower
+    mapTimer.setTimeout(0.2, [this]() -> void {
+      status = FAILED;
+    });
   });
 
+  // Update ortho projection, as they are of constant values
+  ctxUI.viewMat = glm::mat4();
+  ctxUI.projMat = glm::ortho<float>(0, 1600, 0, 900);
 }
 
 void Game::runOnce() {
   mapTimer.update();
   auto mapTimeNow = mapTimer.getTime();
-
   if (mapTimeNow > mapData.meta.duration) {
     status = DONE;
   }
@@ -125,7 +131,6 @@ void Game::runOnce() {
 
   // Tick objects
   for (auto &s : activeObjects) {
-    // Judgement of notes have been integrated into draw method, no need to run them again.
     s->tick();
   }
 
@@ -137,42 +142,21 @@ void Game::runOnce() {
     ctx3D.viewMat = view.camera.lock()->getViewMatrix();
     ctx3D.projMat = view.camera.lock()->getProjectionMatrix();
 
-    // Update ortho projection
-    ctxUI.viewMat = glm::mat4();
-    ctxUI.projMat = glm::ortho(0.0f, 1600.0f, 0.0f, 900.0f); // Constant projection matrix
 
     // Draw objects
-
     for (auto &s : activeObjects) {
       s->draw();
     }
 
-    // Draw HUD
-    hudManager.draw();
-
     // Draw Ambient
     ambient.draw();
+
+    // Draw HUD
+    hudManager.draw();
 
     vtDrawList(drawList);
     drawList.clear();
     vtDisplayFlip();
-  }
-
-  // Process audio
-  if (audio.bgmBuf) {
-    if (status == RUNNING && !audio.bgmPlaying) {
-      vtPlayAudio(audio.bgmBuf);
-      audio.bgmPlaying = true;
-    }
-    if (status != RUNNING && audio.bgmPlaying) {
-      vtPauseAudio(audio.bgmBuf);
-      audio.bgmPlaying = false;
-    }
-  }
-
-  // Clear background if necessary
-  if (status != RUNNING) {
-    vtSetBackground("");
   }
 
   // Close signals are ignored during gameplay

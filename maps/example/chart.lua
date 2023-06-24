@@ -1,7 +1,14 @@
 MapVersion = 1
 Duration = 12.5
+SongName = "Test"
+Artist = "Me"
+Mapper = "You"
+ID = "example"
+DiffColor = "233,191,211,255"
+DiffLevel = "Example Lv.10"
 Audio = "test.mp3"
 Background = "test.png"
+Banner = "banner.png"
 use("at")
 use("atm")
 -----

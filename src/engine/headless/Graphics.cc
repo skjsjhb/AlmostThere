@@ -20,4 +20,4 @@ void TriangleStrip::draw() const {}
 
 void DisplayText::draw() const {}
 
-void vtGetCharSize(wchar_t, float &, float &) {}
+void vtGetCharSize(const std::string &, wchar_t, float &, float &) {}

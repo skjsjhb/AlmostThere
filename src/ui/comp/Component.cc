@@ -1,7 +1,6 @@
 #include "Component.hh"
 
 #include "engine/virtual/Graphics.hh"
-#include "ui/layout/Layout.hh"
 #include "util/Util.hh"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>

@@ -1,7 +1,6 @@
 #include "TestTools.hh"
 
 #include "ui/layout/Layout.hh"
-#include <stdio.h>
 
 int main() {
   LayoutUnit t1, t2;

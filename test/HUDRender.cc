@@ -4,6 +4,8 @@
 #include "engine/virtual/Window.hh"
 #include "gameplay/base/Game.hh"
 #include "engine/virtual/Framework.hh"
+#include "gameplay/hud/EffectMask.hh"
+#include "gameplay/hud/TextBox.hh"
 #include <glm/gtc/matrix_transform.hpp>
 
 int main() {
@@ -19,9 +21,17 @@ int main() {
   ScoreDisplay sd(g);
   HPBar b(g, HP_NORMAL, 100, 100);
 
-  EffectMask em(g, "hud/effect-mask", "hud/shield-effect");
-  EffectMask emb(g, "hud/effect-mask", "hud/blood-effect");
+  TextBox tb(g, glm::vec4(0.83, 0, 0.16, 0.6), 100);
+  tb.setText(L"UNSTABLE CORE");
+  tb.setIndex(0);
 
+  TextBox tb2(g, glm::vec4(0.549, 1, 0.984, 0.6), 100);
+  tb2.setText(L"NEKO SENSE: 07.22");
+  tb2.setIndex(1);
+
+  FloatText ft(g, L"SHIELD CHARGED", 700, 0.4);
+
+  FloatText ft2(g, L"Recharge Complete.", 650, 0.2);
   g.mapTimer = Timer(vtGetTime);
   unsigned int a = 1;
   unsigned hp = 100;
@@ -37,19 +47,19 @@ int main() {
       s.draw();
       b.draw();
       sd.draw();
-      em.draw();
-      emb.draw();
+      tb.draw();
+      tb2.draw();
+      ft.draw();
+      ft2.draw();
       if (vtGetTime() > a) {
         ++a;
         auto inv = (rand() % 10); // NOLINT Test only
 
         if (shield > 0) {
           shield = std::max(0, int(shield) - inv);
-          em.refresh();
         } else {
           if (!revive) {
             hp = std::max(0, int(hp) - inv);
-            emb.refresh();
           }
         }
 

@@ -13,6 +13,11 @@ protected:
   std::string background;
 
   /**
+   * @brief Whether to interpret background image path as external path.
+   */
+  bool bgExternal;
+
+  /**
    * @brief Whether this box is visible.
    *
    * Boxes are designed to be insivible. If there is any necessity to display them, the props should set \c visible to

@@ -9,7 +9,7 @@ Timer::Timer() {
 
 Timer::Timer(NativeTimerFunc f) {
   _nativeGetTime = std::move(f);
-  baseTimeOffset = _nativeGetTime();
+  innerTime = innerNativeTime = baseTimeOffset = _nativeGetTime();
 }
 
 double Timer::getTime() const {
@@ -28,14 +28,32 @@ void Timer::pause() {
 }
 
 void Timer::update() {
+  if (paused) {
+    return;
+  }
   if (_nativeGetTime != nullptr) {
-    innerTime = _nativeGetTime();
+    auto nt = _nativeGetTime();
+    auto dt = nt - innerNativeTime; // Native passed time
+    innerTime += dt * speed;
+    innerNativeTime = nt;
+    auto t = getTime();
+    for (auto it = timerMap.begin(); it != timerMap.end();) {
+      auto &p = *it;
+      if (t >= p.first) {
+        for (auto &e : p.second) {
+          e();
+        }
+        it = timerMap.erase(it);
+      } else {
+        break; // Maps are sorted, if the first timer doesn't match, the latters won't either
+      }
+    }
   }
 }
 
 void Timer::unpause() {
   if (_nativeGetTime != nullptr) {
-    baseTimeOffset += _nativeGetTime() - timeBeforePause;
+    baseTimeOffset += (_nativeGetTime() - timeBeforePause) * speed;
     paused = false;
   }
 }

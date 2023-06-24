@@ -24,15 +24,16 @@
 class Player;
 
 enum GameStatus {
+  INTRO, // Showing info about this map
   RUNNING, // Player is playing
   PAUSED,  // Paused, either resting, syncing data, or playing animation
   DONE,    // Completed
+  BEFORE_FAIL, // Play fail animation
   FAILED, // Player died or map error
 };
 
 struct AudioStat {
   unsigned int bgmBuf = 0;
-  bool bgmPlaying = false;
 };
 
 class Game final {

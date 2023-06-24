@@ -74,7 +74,8 @@ extern void vtResumeAudio(unsigned int sid);
  *
  * The audio source should be pre-loaded and cached.
  * @param s The path to the sound file.
+ * @param throttle Whether to throttle this sound.
  */
-extern void vtPlaySound(const std::string &s);
+extern void vtPlaySound(const std::string &s, bool throttle);
 
 #endif /* ENGINE_VIRTUAL_AUDIO */

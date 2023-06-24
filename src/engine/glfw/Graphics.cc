@@ -1,5 +1,4 @@
 #include "engine/virtual/Graphics.hh"
-#include "engine/virtual/Framework.hh"
 #include "support/Resource.hh"
 #include "util/Util.hh"
 #include <glad/gl.h>
@@ -8,7 +7,6 @@
 #include <sstream>
 #include <stb_image.h>
 #include <unordered_map>
-#include <fmt/core.h>
 #include "spdlog/spdlog.h"
 #include <ft2build.h>
 #include <set>
@@ -35,10 +33,15 @@ struct Glyph {
   unsigned int advance;
 };
 
-static std::vector<std::string> faces = {"en.ttf", "zh.otf", "jp.ttf"};
-static std::vector<FT_Face> alterFaces;
-static std::unordered_map<unsigned int, std::unordered_map<wchar_t, Glyph>> glyphBuf; // Size -> (Char -> Glyph)
-static std::set<wchar_t> missingChar;
+static std::map<std::string, std::vector<std::string>> faces =
+    {
+        {"mono", {"SourceCodePro.ttf", "NotoSansSC.otf", "NotoSansJP.ttf"}},
+        {"neat", {"Rajdhani.ttf", "NotoSansSC.otf", "NotoSansJP.ttf"}},
+        {"styled", {"Fredoka.ttf", "NotoSansSC.otf", "NotoSansJP.ttf"}},
+    };
+static std::map<std::string, std::vector<FT_Face>> alterFaces;
+static std::map<std::string, std::unordered_map<unsigned int, std::unordered_map<wchar_t, Glyph>>> glyphBuf;
+static std::map<std::string, std::set<wchar_t>> missingChar;
 static FT_Library ftlib;
 
 static unsigned int bgTex = 0;
@@ -56,16 +59,17 @@ static unsigned int bgTex = 0;
  * @param size The size of the character.
  * @return Whether the glyph is successfully loaded.
  */
-static bool loadCharGlyph(wchar_t c, unsigned int size) {
-  if (missingChar.contains(c)) {
+static bool loadCharGlyph(const std::string &font, wchar_t c, unsigned int size) {
+
+  if (missingChar[font].contains(c)) {
     return false;
   }
-  if (glyphBuf.contains(size) && glyphBuf[size].contains(c)) {
+  if (glyphBuf[font].contains(size) && glyphBuf[font][size].contains(c)) {
     return true;
   } else {
     // Generate a new glyph
-    for (auto &f : alterFaces) {
-      FT_Set_Pixel_Sizes(f, 0, size);
+    for (auto &f : alterFaces[font]) {
+      FT_Set_Char_Size(f, 0, long(size) * 64, 96, 96);
       if (FT_Load_Glyph(f, FT_Get_Char_Index(f, c), FT_LOAD_RENDER) || f->glyph->glyph_index == 0) {
         // Try next
         continue;
@@ -84,7 +88,7 @@ static bool loadCharGlyph(wchar_t c, unsigned int size) {
           GL_RED,
           GL_UNSIGNED_BYTE,
           f->glyph->bitmap.buffer);
-      // set texture options
+
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -97,11 +101,11 @@ static bool loadCharGlyph(wchar_t c, unsigned int size) {
       gp.bearing[0] = float(f->glyph->bitmap_left);
       gp.bearing[1] = float(f->glyph->bitmap_top);
       gp.advance = f->glyph->advance.x;
-      glyphBuf[size][c] = gp; // Cache
+      glyphBuf[font][size][c] = gp; // Cache
       return true;
     }
     warn("Missing font for char unicode " + std::to_string((long) c) + ". Check font files.");
-    missingChar.insert(c);
+    missingChar[font].insert(c);
   }
   return false;
 }
@@ -111,26 +115,32 @@ static void loadFont() {
     error("Could not initialize FreeType library. Is it missing, or not compatible with current platform?");
     return;
   }
-  for (auto &f : faces) {
-    FT_Face face;
-    if (FT_New_Face(ftlib, getAppResource("fonts/" + f).c_str(), 0, &face)) {
-      error("Could not load font file '" + f + "'. Is this font file corrupted, or not supported by FreeType?");
-      return;
+  for (auto &p : faces) {
+    for (auto &f : p.second) {
+      FT_Face face;
+      if (FT_New_Face(ftlib, getAppResource("fonts/" + f).c_str(), 0, &face)) {
+        error("Could not load font file '" + f + "'. Is this font file corrupted, or not supported by FreeType?");
+        return;
+      }
+      info("Loaded font file '" + f + "'");
+      FT_Set_Char_Size(face, 0, 64, 96, 96);
+      alterFaces[p.first].push_back(face);
     }
-    info("Loaded font file '" + f + "'");
-    FT_Set_Pixel_Sizes(face, 0, 96);
-    alterFaces.push_back(face);
   }
 }
 
 static void cleanFont() {
   for (auto &p : glyphBuf) {
     for (auto &r : p.second) {
-      glDeleteTextures(1, &r.second.texID);
+      for (auto &c : r.second) {
+        glDeleteTextures(1, &c.second.texID);
+      }
     }
   }
   for (auto &f : alterFaces) {
-    FT_Done_Face(f);
+    for (auto &c : f.second) {
+      FT_Done_Face(c);
+    }
   }
   FT_Done_FreeType(ftlib);
 }
@@ -458,15 +468,30 @@ void DisplayText::draw() const {
   auto x = pos.x;
   auto y = pos.y;
   unsigned int tSize = CHAR_BASE_SIZE * fSize;
+
+  float ycomp = 0;
   for (auto gp : text) {
-    if (!loadCharGlyph(gp, tSize)) {
+    if (!loadCharGlyph(font, gp, tSize)) {
       continue; // The warning has already been given
     }
-    Glyph &g = glyphBuf[tSize][gp];
+    Glyph &g = glyphBuf[font][tSize][gp];
+    float ccomp = g.size[1] - g.bearing[1];
+    if (ccomp > ycomp) {
+      ycomp = ccomp;
+    }
+  }
+
+  for (auto gp : text) {
+    Glyph &g = glyphBuf[font][tSize][gp];
     float w = g.size[0];
     float h = g.size[1];
     float xpos = x + g.bearing[0];
-    float ypos = y - (g.size[1] - g.bearing[1]);
+    float ypos;
+    if (exactY) {
+      ypos = y + ycomp - (g.size[1] - g.bearing[1]);
+    } else {
+      ypos = y - (g.size[1] - g.bearing[1]);
+    }
     float vertices[6][4] = {
         {xpos, ypos + h, 0.0f, 0.0f},
         {xpos, ypos, 0.0f, 1.0f},
@@ -520,13 +545,13 @@ void vtDrawList(DrawList &buf) {
   }
 }
 
-void vtGetCharSize(wchar_t c, float &w, float &h) {
-  auto g = loadCharGlyph(c, CHAR_BASE_SIZE);
+void vtGetCharSize(const std::string &font, wchar_t c, float &w, float &h) {
+  auto g = loadCharGlyph(font, c, CHAR_BASE_SIZE);
   if (!g) {
     w = h = 0;
     return;
   }
-  auto gl = glyphBuf[CHAR_BASE_SIZE][c];
+  auto gl = glyphBuf[font][CHAR_BASE_SIZE][c];
   w = float(gl.advance >> 6);
   h = gl.size[1];
 }

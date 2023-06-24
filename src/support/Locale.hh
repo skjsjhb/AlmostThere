@@ -23,6 +23,6 @@ void setLocale(const std::string &name);
  * @param key Translation key
  * @return Translated text, or \c "" if not found.
  */
-std::string getLocaleText(const std::string &key);
+std::wstring getLocaleText(const std::string &key);
 
 #endif /* SUPPORT_LOCALE */

@@ -1,8 +1,6 @@
 #include "TestTools.hh"
 
 #include "gameplay/time/Timer.hh"
-#include <chrono>
-#include <thread>
 
 static int virtualTime = 0;
 
@@ -11,7 +9,7 @@ double implGetTime() {
 }
 
 void timeChange() {
-  virtualTime += rand() % 0xfffff; // NOLINT Test only
+  virtualTime++;
 }
 
 int main() {
@@ -34,5 +32,19 @@ int main() {
   t.update();
   WANT(t.getTime() == t3 - t2 + t1 - t0)
 
+  t.setSpeed(0.5);
+  auto bt = t.getTime();
+  auto t4 = implGetTime();
+  timeChange();
+  t.update();
+  auto t5 = implGetTime();
+  auto rt = t.getTime();
+  WANT(2 * (rt - bt) == t5 - t4)
+
+  t.pause();
+  timeChange();
+  t.unpause();
+  t.update();
+  WANT(t.getTime() == rt) // Pause won't change consistency
   TEND
 }

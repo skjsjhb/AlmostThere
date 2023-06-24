@@ -6,6 +6,7 @@ Label::Label(ComponentProps props) : Component(props) {
   applyLayoutParams(props, layout);
   size = std::stof(props[Props::Size]);
   text = unicode2wstring(props[Props::Text]);
+  font = props[Props::Font];
   color = props[Props::Color];
 
   if (layout.w.value == 0 || layout.h.value == 0) {
@@ -22,7 +23,7 @@ Label::Label(ComponentProps props) : Component(props) {
     float maxh = -1;
     for (auto &t : text) {
       float w, h;
-      vtGetCharSize(t, w, h);
+      vtGetCharSize(font, t, w, h);
       if (h > maxh) {
         maxh = h;
       }
@@ -33,7 +34,6 @@ Label::Label(ComponentProps props) : Component(props) {
     if (correctH) {
       layout.h.value = maxh * size;
     }
-
   }
 }
 
@@ -43,7 +43,7 @@ void Label::draw(DrawList &d) {
       .transparent = true,
       .ctx = getDefaultDrawContext()
   };
-  DisplayText t({layout.result.x, layout.result.y}, float(size), text, parseColorStr(color), p);
+  DisplayText t({layout.result.x, layout.result.y}, float(size), text, parseColorStr(color), font, p);
   d.add(t);
 }
 

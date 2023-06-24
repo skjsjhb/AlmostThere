@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include "engine/virtual/Framework.hh"
 #include "spdlog/spdlog.h"
 #include <memory>
 #include <utility>
@@ -20,6 +21,7 @@ struct AudioObject {
 
 std::map<unsigned int, std::unique_ptr<AudioObject>> audioObjectsIndex;
 std::map<std::string, unsigned int> cachedSoundIndex;
+std::map<std::string, double> throttleMap;
 
 unsigned int
 vtLoadAudio(const std::string &fname) {
@@ -49,6 +51,7 @@ void vtPlayAudio(unsigned int sid) {
 }
 
 void vtCloseAudio() {
+  engine.stopAll();
   engine.deinit();
 }
 
@@ -82,10 +85,22 @@ void vtResumeAudio(unsigned int sid) {
   }
 }
 
-void vtPlaySound(const std::string &s) {
+#define THROTTLE_TIME 0.5
+
+void vtPlaySound(const std::string &s, bool throttle) {
   if (!cachedSoundIndex.contains(s)) {
     auto id = vtLoadAudio(s);
     cachedSoundIndex[s] = id;
+  }
+  if (throttle) {
+    if (!throttleMap.contains(s)) {
+      throttleMap[s] = 0;
+    }
+    auto t = vtGetTime();
+    if (t - throttleMap[s] <= THROTTLE_TIME) {
+      return;
+    }
+    throttleMap[s] = t;
   }
   vtPlayAudio(cachedSoundIndex[s]);
 }

@@ -187,10 +187,12 @@ MapData generateLuaMap(const std::string &mapId, Game &g) {
   m.meta.songName = luaGetStr("SongName");
   m.meta.id = luaGetStr("ID");
   m.meta.mapper = luaGetStr("Mapper");
-  m.meta.diffLevel = luaGetInt("DiffLevel");
+  m.meta.diffLevel = luaGetStr("DiffLevel");
   m.meta.audio = luaGetStr("Audio");
   m.meta.background = luaGetStr("Background");
   m.meta.duration = luaGetNumber("Duration");
+  m.meta.banner = luaGetStr("Banner");
+  m.meta.diffColor = luaGetStr("DiffColor");
 
   // Load objects
   auto objSrcs = splitStr(metaBody[1], OBJ_SEC_DELM);

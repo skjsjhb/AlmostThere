@@ -31,6 +31,12 @@ std::wstring unicode2wstring(const std::string &str) {
   std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
   return conv.from_bytes(str);
 }
+
+std::string wstring2unicode(const std::wstring &wstr) {
+  std::wstring_convert<std::codecvt_utf8<wchar_t>> conv;
+  return conv.to_bytes(wstr);
+}
+
 bool isOverlapped(double p1, double r1, double p2, double r2) {
   return std::abs(p2 - p1) <= std::abs(r1) + std::abs(r2);
 }
@@ -64,3 +70,4 @@ void trimStr(std::string &s) {
               .base(),
           s.end());
 }
+

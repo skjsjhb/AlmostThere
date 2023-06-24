@@ -17,6 +17,10 @@
 
 class ScoreRecords;
 
+struct ScoreGradeCount {
+  unsigned int pf = 0, at = 0, ac = 0, md = 0, tc = 0, lt = 0;
+};
+
 class ScoreEntry {
 public:
   /**
@@ -60,6 +64,12 @@ public:
   unsigned int exportScore();
 
   /**
+   * @brief Get the number of each judge score type.
+   * @return The counter struct.
+   */
+  ScoreGradeCount exportCount();
+
+  /**
    * @brief Remove a record from buffer.
    * @param id The id of the entry to be removed.
    */
@@ -85,6 +95,23 @@ public:
    */
   void addScore(unsigned int s);
 
+  void addGrade(ScoreGrade g) {
+    switch (g) {
+    case PF:++sc.pf;
+      break;
+    case AT:++sc.at;
+      break;
+    case AC:++sc.ac;
+      break;
+    case MD:++sc.md;
+      break;
+    case TC:++sc.tc;
+      break;
+    case LT:
+    default:++sc.lt;
+    }
+  };
+
 protected:
   double amplifier = 1.0;
   unsigned int total = 0;
@@ -93,6 +120,7 @@ protected:
   unsigned int eid = 1;
   // Indexing the entries
   std::map<unsigned int, std::unique_ptr<ScoreEntry>> entries;
+  ScoreGradeCount sc;
 };
 
 class NoteScoreEntry : public ScoreEntry {
@@ -105,6 +133,7 @@ public:
 
   void apply(ScoreRecords &sr) const override {
     sr.addScore(NOTE_SCORE_VALUE[int(nt)][gd]);
+    sr.addGrade(gd);
   };
 
 protected:

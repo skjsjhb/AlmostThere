@@ -20,28 +20,41 @@ void Player::removeEventListeners() const {
 }
 
 void Player::damage(unsigned int amount) {
+  if (health.state == HealthState::Killed) {
+    return;
+  }
   if (health.shield >= amount) {
     health.shield -= amount;
-    PlayerDamageEvent de(DamageType::Shield);
+    if (health.shield == 0) {
+      PlayerShieldBreakEvent e(*this);
+      e.dispatch();
+    }
+    PlayerDamageEvent de(*this, DamageType::Shield);
     de.dispatch();
     return;
   }
   auto r = amount - health.shield;
+  if (health.shield > 0) {
+    PlayerShieldBreakEvent e(*this);
+    e.dispatch();
+  }
   health.shield = 0;
 
   if (health.hp > r) {
     health.hp -= r;
   } else if (health.state == HealthState::Normal) {
     // Broken core
+    PlayerCoreUnstableEvent e(*this);
+    e.dispatch();
     health.hp = health.maxHealth;
     health.state = HealthState::Unstable;
   } else {
     // Killed
     health.hp = 0;
     health.state = HealthState::Killed;
-    PlayerDieEvent d;
+    PlayerDieEvent d(*this);
     d.dispatch();
   }
-  PlayerDamageEvent e(DamageType::Health);
+  PlayerDamageEvent e(*this, DamageType::Health);
   e.dispatch();
 }

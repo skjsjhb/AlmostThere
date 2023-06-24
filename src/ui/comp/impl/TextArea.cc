@@ -7,13 +7,14 @@ TextArea::TextArea(ComponentProps props) : Component(props) {
   size = std::stof(props[Props::Size]);
   text = unicode2wstring(props[Props::Text]);
   color = props[Props::Color];
+  font = props[Props::Font];
 
   if (layout.w.value == 0) {
     // Infer width
     layout.w.mode = LengthMode::ABSOLUTE;
     for (auto &t : text) {
       float w, h;
-      vtGetCharSize(t, w, h);
+      vtGetCharSize(font, t, w, h);
       layout.w.value += w * size;
     }
   }
@@ -29,7 +30,7 @@ void TextArea::draw(DrawList &d) {
   };
 
   float chw, chh;
-  vtGetCharSize(L'\u3007', chw, chh); // Using a CJK font to align line spacing
+  vtGetCharSize(font, L'\u3007', chw, chh); // Using a CJK font to align line spacing
   if (chh == 0) {
     return; // Unable to draw
   }
@@ -42,11 +43,10 @@ void TextArea::draw(DrawList &d) {
     if (c == '\n') {
       posy -= lineHeight;
       deltaW = 0;
-      posx = layout.result.x;
       continue;
     }
     float cw, ch;
-    vtGetCharSize(c, cw, ch);
+    vtGetCharSize(font, c, cw, ch);
     cw *= size;
     ch *= size;
     if (deltaW + cw > maxw) {
@@ -59,7 +59,7 @@ void TextArea::draw(DrawList &d) {
     }
     std::wstring s;
     s += c;
-    DisplayText t({posx, posy}, size, s, parseColorStr(color), p);
+    DisplayText t({posx, posy}, size, s, parseColorStr(color), font, p);
     d.add(t);
   }
 }

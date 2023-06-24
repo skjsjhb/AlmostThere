@@ -4,20 +4,28 @@
 #include <string>
 #include <utility>
 
-class Game;
+class DrawList;
+
+enum class EffectMaskVariant {
+  PULSE,
+  GROW,
+  FADE,
+  STATIC
+};
 
 class EffectMask {
 public:
-  EffectMask(Game &g, std::string sd, std::string tx) : game(g), shader(std::move(sd)), texture(std::move(tx)) {};
+  EffectMask(std::string sd, std::string tx, EffectMaskVariant v)
+      : shader(std::move(sd)), texture(std::move(tx)), variant(v) {};
 
-  void refresh();
+  void refresh(double absTime);
 
-  void draw() const;
+  void draw(double absTime, DrawList &d) const;
 
 protected:
-  Game &game;
   std::string shader, texture;
-  double beginTime = -1;
+  double beginTime = -10;
+  EffectMaskVariant variant;
 };
 
 #endif /* GAMEPLAY_HUD_EFFECTMASK */

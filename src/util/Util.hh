@@ -10,6 +10,8 @@ glm::vec4 parseColorStr(const std::string &colorIn);
 
 std::wstring unicode2wstring(const std::string &str);
 
+std::string wstring2unicode(const std::wstring &wstr);
+
 bool isOverlapped(double p1, double r1, double p2, double r2);
 
 std::vector<std::string> splitStr(const std::string &src, const std::string &del, int maxn = INT_MAX);

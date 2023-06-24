@@ -13,7 +13,7 @@ public:
 protected:
   std::wstring text;
   double size;
-  std::string color;
+  std::string color, font;
 };
 
 #endif // ALMOSTTHERE_SRC_UI_COMP_IMPL_LABEL_HH
